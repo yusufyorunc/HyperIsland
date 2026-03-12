@@ -268,7 +268,10 @@ object InProcessController {
     // ── id=-1 降级：操作所有匹配状态的下载 ───────────────────────────────────
 
     private fun pauseAll(context: Context) {
-        val values = ContentValues().apply { put("control", CONTROL_PAUSED) }
+        val values = ContentValues().apply {
+            put("status",  STATUS_PAUSED_BY_APP)
+            put("control", CONTROL_PAUSED)
+        }
         for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
             try {
                 val rows = context.contentResolver.update(

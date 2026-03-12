@@ -26,7 +26,7 @@ object DownloadIslandNotification {
     ) {
         try {
             val isComplete = progress >= 100
-            val displayTitle = if (progress in 0..99) "$fileName下载中 $progress%" else title
+            val displayTitle = if (progress in 0..99) "$fileName 下载中 $progress%" else title
             val displayContent = if (isComplete) "下载完成" else text.ifEmpty { fileName }
 
             val downloadIconRes = if (isComplete) android.R.drawable.stat_sys_download_done
