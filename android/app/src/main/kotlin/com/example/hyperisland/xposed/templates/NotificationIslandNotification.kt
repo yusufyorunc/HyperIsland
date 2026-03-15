@@ -73,7 +73,7 @@ object NotificationIslandNotification : IslandTemplate {
                     enableFloat = (enableFloatMode == "on")
                 }
                 updatable        = true
-                isShowNotification = false
+                isShowNotification = focusNotificaiton
                 ticker = title
                 island {
                     islandProperty = 1
@@ -115,7 +115,7 @@ object NotificationIslandNotification : IslandTemplate {
                 }
 
                 val effectiveActions = actions.take(2)
-                if (effectiveActions.isNotEmpty() && focusNotificaiton) {
+                if (effectiveActions.isNotEmpty()) {
                     textButton {
                         effectiveActions.forEachIndexed { index, action ->
                             addActionInfo {

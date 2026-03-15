@@ -161,7 +161,7 @@ object GenericProgressIslandNotification : IslandTemplate {
                 islandFirstFloat   = resolvedFirstFloat
                 enableFloat        = resolvedEnableFloat
                 updatable          = !isComplete && !isPaused
-
+                isShowNotification = focusNotificaiton
                 ticker = title
                 island{
                     islandProperty = 1

@@ -89,6 +89,18 @@ object InProcessController {
         // 读取设置（进程首次初始化时）
         loadSettings(appCtx)
 
+        // 注册 ContentObserver，实时监听设置变化
+        val settingsUri = android.net.Uri.parse("content://com.example.hyperisland.settings/")
+        appCtx.contentResolver.registerContentObserver(
+            settingsUri, true,
+            object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    loadSettings(appCtx)
+                    XposedBridge.log("HyperIsland: settings reloaded via ContentObserver")
+                }
+            }
+        )
+
         // 打印当前进程的 DownloadManager 实际类型，方便调试
         runCatching {
             val dm = appCtx.getSystemService(Context.DOWNLOAD_SERVICE)

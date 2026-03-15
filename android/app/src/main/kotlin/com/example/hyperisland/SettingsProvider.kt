@@ -3,6 +3,7 @@ package com.example.hyperisland
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
@@ -21,7 +22,17 @@ class SettingsProvider : ContentProvider() {
         context!!.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
     }
 
-    override fun onCreate() = true
+    // 必须持有强引用，否则 SharedPreferences 内部会弱引用导致 GC 回收
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        context?.contentResolver?.notifyChange(
+            Uri.parse("content://$AUTHORITY/"), null, false
+        )
+    }
+
+    override fun onCreate(): Boolean {
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        return true
+    }
 
     override fun query(
         uri: Uri, projection: Array<String>?, selection: String?,

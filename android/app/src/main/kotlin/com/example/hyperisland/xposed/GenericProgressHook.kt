@@ -29,15 +29,30 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 class GenericProgressHook : IXposedHookLoadPackage {
 
     companion object {
-        // 白名单缓存：首次调用时从 SettingsProvider 加载，SystemUI 重启后自动刷新。
-        // 用户修改白名单后需重启 SystemUI 生效（与其他设置项行为一致）。
         @Volatile private var cachedWhitelist: Map<String, Set<String>>? = null
-
-        // 渠道模板缓存：key 为 "packageName/channelId"，首次遇到时懒加载。
         private val cachedTemplates = mutableMapOf<String, String>()
-
-        // 渠道级额外设置缓存，key 带前缀以区分不同设置项。
         private val cachedChannelSettings = mutableMapOf<String, String>()
+
+        @Volatile private var observerRegistered = false
+
+        /** 在 SystemUI 进程首次处理通知时注册，监听设置变化并实时清空缓存。 */
+        fun ensureObserver(context: android.content.Context) {
+            if (observerRegistered) return
+            val settingsUri = android.net.Uri.parse("content://com.example.hyperisland.settings/")
+            context.contentResolver.registerContentObserver(
+                settingsUri, true,
+                object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+                    override fun onChange(selfChange: Boolean) {
+                        cachedWhitelist = null
+                        cachedTemplates.clear()
+                        cachedChannelSettings.clear()
+                        XposedBridge.log("HyperIsland[Generic]: settings changed, cache cleared")
+                    }
+                }
+            )
+            observerRegistered = true
+            XposedBridge.log("HyperIsland[Generic]: ContentObserver registered in SystemUI")
+        }
 
         // 进度缓存：key 为 "packageName#notifId"，记录每条通知最后一次已知进度（0-100）。
         // 用于通知进度条消失后（暂停/等待）回显上次进度。
@@ -154,6 +169,7 @@ class GenericProgressHook : IXposedHookLoadPackage {
 
             // 先取 context，用于加载白名单
             val context = getContext(lpparam) ?: return
+            ensureObserver(context)
 
             // 白名单检查（动态从 SettingsProvider 读取）
             val allowedChannels = loadWhitelist(context)[pkg] ?: return
