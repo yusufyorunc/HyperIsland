@@ -211,7 +211,7 @@ object GenericProgressIslandNotification : IslandTemplate {
                 }
 
 
-                if (focusNotificaiton) iconTextInfo {
+                iconTextInfo {
                     this.title = title
                     content    = displayContent
                     animIconInfo {
