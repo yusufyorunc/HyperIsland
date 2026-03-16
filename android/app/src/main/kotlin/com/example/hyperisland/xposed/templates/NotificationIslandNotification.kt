@@ -37,7 +37,8 @@ object NotificationIslandNotification : IslandTemplate {
         focusNotif      = data.focusNotif,
         firstFloat      = data.firstFloat,
         enableFloatMode = data.enableFloatMode,
-        timeoutSecs   = data.islandTimeout,
+        timeoutSecs     = data.islandTimeout,
+        isOngoing       = data.isOngoing,
     )
 
     private fun inject(
@@ -53,6 +54,7 @@ object NotificationIslandNotification : IslandTemplate {
         firstFloat: String,
         enableFloatMode: String,
         timeoutSecs: Int,
+        isOngoing: Boolean,
     ) {
         try {
             val displayIcon = (largeIcon ?: notifIcon ?: appIconRaw
@@ -74,7 +76,7 @@ object NotificationIslandNotification : IslandTemplate {
                     islandFirstFloat = (firstFloat == "on")
                     enableFloat = (enableFloatMode == "on")
                 }
-                updatable        = false
+                updatable        = isOngoing
                 isShowNotification = focusNotificaiton
                 ticker = title
                 island {
