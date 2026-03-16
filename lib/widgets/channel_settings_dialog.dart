@@ -128,7 +128,7 @@ class _ChannelSettingsDialogState extends State<ChannelSettingsDialog> {
 
             // 图标样式
             _SettingRow(
-              label: '图标样式',
+              label: '超级岛图标',
               child: _DropdownField<String>(
                 value: _iconMode,
                 items: const [

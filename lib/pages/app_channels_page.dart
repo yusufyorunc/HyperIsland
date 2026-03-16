@@ -473,7 +473,7 @@ class _ChannelTile extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       Icons.settings_outlined,
-                      size: 20,
+                      size: 22,
                       color: appEnabled && channelEnabled
                           ? cs.onSurfaceVariant
                           : cs.onSurface.withValues(alpha: 0.28),
