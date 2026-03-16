@@ -36,7 +36,10 @@ class _WhitelistPageState extends State<WhitelistPage> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: _ctrl.refresh,
+        child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverAppBar.large(
             title: const Text('应用适配'),
@@ -49,6 +52,8 @@ class _WhitelistPageState extends State<WhitelistPage> {
                   switch (value) {
                     case 'toggle_system':
                       _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
+                    case 'refresh':
+                      await _ctrl.refresh();
                     case 'enable_all':
                       await _ctrl.enableAll();
                     case 'disable_all':
@@ -60,6 +65,11 @@ class _WhitelistPageState extends State<WhitelistPage> {
                     value: 'toggle_system',
                     checked: _ctrl.showSystemApps,
                     child: const Text('显示系统应用'),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem<String>(
+                    value: 'refresh',
+                    child: Text('刷新列表'),
                   ),
                   const PopupMenuDivider(),
                   const PopupMenuItem<String>(
@@ -138,8 +148,9 @@ class _WhitelistPageState extends State<WhitelistPage> {
                     app: apps[index],
                     enabled:
                         _ctrl.enabledPackages.contains(apps[index].packageName),
-                    onChanged: (v) =>
-                        _ctrl.setEnabled(apps[index].packageName, v),
+                    onChanged: apps[index].isSystem
+                        ? null
+                        : (v) => _ctrl.setEnabled(apps[index].packageName, v),
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -161,6 +172,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
 
         ],
       ),
+      ),
     );
   }
 }
@@ -177,7 +189,7 @@ class _AppTile extends StatelessWidget {
 
   final AppInfo app;
   final bool enabled;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
   final VoidCallback onTap;
   final bool isFirst;
   final bool isLast;
