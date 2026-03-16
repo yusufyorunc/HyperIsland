@@ -414,7 +414,7 @@ class _NotesCard extends StatelessWidget {
   static const _items = [
     '1.此页面仅用于测试是否支持超级岛，并不代表实际效果',
     '2.请在 HyperCeiler 中关闭系统界面和小米服务框架的焦点通知白名单',
-    '3.LSPosed 管理器中激活后，必须并重启相关作用域软件',
+    '3.LSPosed 管理器中激活后，必须重启相关作用域软件',
     '4.支持通用适配，自行勾选合适的模板尝试',
   ];
 
