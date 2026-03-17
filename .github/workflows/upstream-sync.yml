@@ -22,7 +22,7 @@ jobs:
       # 第二步：同步上游仓库
       - name: Sync upstream
         run: |
-          # 配置 git 用户信息（用于提交合并信息）
+          # 配置 git 用户信息（用于 rebase 操作）
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -41,12 +41,11 @@ jobs:
 
           # 比较两个 hash，如果不相同说明上游有新提交
           if [ "$UPSTREAM_HEAD" != "$LOCAL_HEAD" ]; then
-            # 合并上游的 main 分支到本地
-            # 提交信息包含上游最新提交的信息
-            git merge upstream/main -m "Sync upstream: $(git log -1 --pretty=%B upstream/main)"
+            # 使用 rebase 同步上游代码，保持线性历史
+            git rebase upstream/main
 
-            # 推送合并后的代码到本仓库的 main 分支
-            git push origin main
+            # 推送 rebase 后的代码到本仓库的 main 分支
+            git push origin main --force-with-lease
 
             # 输出成功信息
             echo "✓ Synced from upstream"
