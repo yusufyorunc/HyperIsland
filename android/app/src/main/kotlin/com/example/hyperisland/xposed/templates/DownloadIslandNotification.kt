@@ -105,7 +105,7 @@ object DownloadIslandNotification {
             builder.setEnableFloat(false)
 
             // 小岛：下载中时带环形进度，其他状态仅图标
-            if (!isComplete && progress > 0) {
+            if (!isComplete && !isWaiting && !isPaused) {
                 builder.setSmallIslandCircularProgress("key_download_icon", progress)
             } else {
                 builder.setSmallIsland("key_download_icon")
