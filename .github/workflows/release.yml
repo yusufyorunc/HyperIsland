@@ -37,21 +37,27 @@ jobs:
           VERSION_CODE=$(echo "$CURRENT" | cut -d'+' -f2)
           PREVIOUS_VERSION_NAME=$(echo "$PREVIOUS" | cut -d'+' -f1)
 
-          # 将版本信息输出到 GitHub Actions 环境变量，供后续步骤使用
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "version_code=$VERSION_CODE"  >> $GITHUB_OUTPUT
-          echo "previous_version=$PREVIOUS_VERSION_NAME" >> $GITHUB_OUTPUT
-
           # 判断版本是否变更
           if [ "$CURRENT" != "$PREVIOUS" ] && [ -n "$CURRENT" ]; then
             # 版本已变更，标记为 true，后续会发布 Release
             echo "changed=true" >> $GITHUB_OUTPUT
+            echo "build_version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+            echo "build_version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
             echo "::notice::Version changed: $PREVIOUS → $CURRENT, will release."
           else
             # 版本未变更，标记为 false，只编译不发布
+            # versionCode 递增，versionName 添加 -dev 后缀
+            NEW_VERSION_CODE=$((VERSION_CODE + 1))
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "::notice::No version change ($CURRENT), build only."
+            echo "build_version_name=$VERSION_NAME-dev" >> $GITHUB_OUTPUT
+            echo "build_version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
+            echo "::notice::No version change ($CURRENT), build only with dev suffix."
           fi
+
+          # 输出原始版本信息供后续步骤使用
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE"  >> $GITHUB_OUTPUT
+          echo "previous_version=$PREVIOUS_VERSION_NAME" >> $GITHUB_OUTPUT
 
       # 第三步：安装 Java 环境
       # Flutter 编译 Android 需要 Java 17
@@ -63,26 +69,47 @@ jobs:
 
       # 第四步：安装 Flutter SDK
       # 使用稳定版本的 Flutter
+      # 启用缓存加速下载
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
-      # 第五步：安装 Flutter 依赖
+      # 第五步：缓存 Pub 依赖
+      # 使用 pubspec.lock 作为 key，依赖变更时自动失效缓存
+      - name: Cache Pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # 第六步：缓存 Gradle
+      # 缓存 Gradle 依赖和构建缓存，加快编译速度
+      - name: Cache Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          cache-read-only: false
+
+      # 第七步：安装 Flutter 依赖
       # 执行 flutter pub get 下载 pubspec.yaml 中定义的所有依赖包
       - name: Install dependencies
         run: flutter pub get
 
-      # 第五步半：解码签名密钥
+      # 第八步：解码签名密钥
       # 将 base64 编码的密钥文件解码为 .jks 文件
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.jks
 
-      # 第六步：编译 APK
+      # 第九步：编译 APK
       # 使用 release 模式编译（包含代码混淆和资源压缩）
-      # 使用检测到的版本号作为 versionName 和 versionCode
-      # 使用签名密钥进行签名
+      # 发布版本：使用原始版本号
+      # 仅编译版本：versionName 添加 -dev 后缀，versionCode 递增
       - name: Build APK
         env:
           KEYSTORE_PATH: release.jks
@@ -91,24 +118,26 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           flutter build apk --release \
-            --build-name="${{ steps.version.outputs.version_name }}" \
-            --build-number="${{ steps.version.outputs.version_code }}"
+            --build-name="${{ steps.version.outputs.build_version_name }}" \
+            --build-number="${{ steps.version.outputs.build_version_code }}"
 
       # ────────────────────────────────────────────────────────────────────────
       # 以下步骤：上传编译产物和发布
       # ────────────────────────────────────────────────────────────────────────
 
-      # 第七步：上传 APK 作为 GitHub Actions 工件
+      # 第十步：上传 APK 作为 GitHub Actions 工件
       # 所有编译都会上传，保留 30 天
       # 可在 Actions 页面的 "Artifacts" 部分下载
+      # 禁用压缩，确保下载时直接是 APK 格式
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: HyperIsland-v${{ steps.version.outputs.version_name }}
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+          compression-level: 0
 
-      # 第八步：重命名 APK 文件（仅在版本变更时执行）
+      # 第十一步：重命名 APK 文件（仅在版本变更时执行）
       # 将编译输出的 app-release.apk 重命名为 HyperIsland-v1.5.0.apk
       # 这样便于在 Release 页面识别
       - name: Rename APK for release
@@ -117,7 +146,7 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk \
             "HyperIsland-v${{ steps.version.outputs.version_name }}.apk"
 
-      # 第九步：提取更新日志（仅在版本变更时执行）
+      # 第十二步：提取更新日志（仅在版本变更时执行）
       # 优先从 CHANGELOG.md 中提取，如果没有则从 git 记录生成
       - name: Extract changelog
         if: steps.version.outputs.changed == 'true'
@@ -152,7 +181,7 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 第十步：创建 GitHub Release（仅在版本变更时执行）
+      # 第十三步：创建 GitHub Release（仅在版本变更时执行）
       # 在 GitHub 的 Releases 页面创建新版本发布
       # 包含版本标签、发布说明和 APK 文件下载链接
       - name: Create GitHub Release
