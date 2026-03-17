@@ -71,10 +71,22 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # 第五步半：解码签名密钥
+      # 将 base64 编码的密钥文件解码为 .jks 文件
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
+
       # 第六步：编译 APK
       # 使用 release 模式编译（包含代码混淆和资源压缩）
       # 使用检测到的版本号作为 versionName 和 versionCode
+      # 使用签名密钥进行签名
       - name: Build APK
+        env:
+          KEYSTORE_PATH: release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           flutter build apk --release \
             --build-name="${{ steps.version.outputs.version_name }}" \
