@@ -186,10 +186,14 @@ jobs:
 
           # 尝试从 CHANGELOG.md 中提取版本日志
           if [ -f CHANGELOG.md ]; then
-            # 查找版本条目
-            if grep -q "^## \[$VERSION\]" CHANGELOG.md; then
-              # 提取从 ## [版本号] 开始到下一个 ## 的内容（不包括标题和下一个版本标题）
-              awk "/^## \[$VERSION\]/,/^## \[/ {print}" CHANGELOG.md | sed '1d;$d' >> changelog_content.txt
+            # 查找版本条目（格式：# V版本号）
+            if grep -q "^# V$VERSION " CHANGELOG.md; then
+              # 提取从 # V版本号 开始到下一个 # V 或 --- 分割线的内容
+              awk "/^# V$VERSION /,/^(# V|---)/ {
+                if (/^# V$VERSION /) { next }
+                if (/^(# V|---)/ && !/^# V$VERSION /) { exit }
+                print
+              }" CHANGELOG.md | sed -e '/^[[:space:]]*$/d' >> changelog_content.txt
             fi
           fi
 
