@@ -160,17 +160,15 @@ jobs:
         uses: actions/upload-artifact@v4.6.0
         with:
           name: HyperIsland-v${{ steps.version.outputs.version_name }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-*-release.apk
           retention-days: 30
           compression-level: 0
 
       # 第十一步：重命名 APK 文件（仅在版本变更时执行）
-      # 将编译输出的 app-release.apk 重命名为 HyperIsland-v1.5.0.apk
-      # 这样便于在 Release 页面识别
       - name: Rename APK for release
         if: steps.version.outputs.changed == 'true'
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk \
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
             "HyperIsland-v${{ steps.version.outputs.version_name }}.apk"
 
       # 第十二步：提取更新日志（仅在版本变更时执行）
