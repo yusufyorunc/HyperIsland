@@ -47,8 +47,8 @@ jobs:
           VERSION_CODE=$CURRENT_CODE
 
           # 2. 判断是否发布
-          # 如果手动指定了 build_only=true，则强制不发布
-          # 否则，根据版本是否变更来决定
+          # 手动触发时强制发布（除非指定 build_only=true）
+          # 自动触发时根据版本是否变更来决定
           PREVIOUS_FULL=$(git show HEAD~1:pubspec.yaml 2>/dev/null | grep '^version:' | awk '{print $2}' || echo "")
           PREVIOUS_NAME=$(echo "$PREVIOUS_FULL" | cut -d'+' -f1)
 
@@ -56,7 +56,8 @@ jobs:
           if [[ "${{ github.event.inputs.build_only }}" == "true" ]]; then
             SHOULD_RELEASE="false"
             echo "::notice::Build only mode enabled via input."
-          elif [[ "$VERSION_NAME" == "$PREVIOUS_NAME" ]]; then
+          elif [[ "${{ github.event_name }}" == "push" ]] && [[ "$VERSION_NAME" == "$PREVIOUS_NAME" ]]; then
+            # 仅在自动推送时检查版本变更，手动触发时忽略此检查
             SHOULD_RELEASE="false"
             echo "::notice::No version name change detected ($PREVIOUS_NAME -> $VERSION_NAME)."
           fi
@@ -180,16 +181,20 @@ jobs:
           VERSION="${{ steps.version.outputs.version_name }}"
           PREVIOUS_VERSION="${{ steps.version.outputs.previous_version }}"
 
-          # 尝试从 CHANGELOG.md 中提取版本日志
-          if [ -f CHANGELOG.md ] && grep -q "^## \[$VERSION\]" CHANGELOG.md; then
-            # 提取从 ## [版本号] 开始到下一个 ## 或文件末尾的内容
-            awk "/^## \[$VERSION\]/,/^## \[/ {print}" CHANGELOG.md | head -n -1 > changelog_content.txt
+          # 初始化日志文件
+          > changelog_content.txt
 
-            # 移除第一行标题，只保留内容
-            tail -n +2 changelog_content.txt > changelog_content_tmp.txt
-            mv changelog_content_tmp.txt changelog_content.txt
-          else
-            # 版本不存在或没有 CHANGELOG.md，从 git 记录生成
+          # 尝试从 CHANGELOG.md 中提取版本日志
+          if [ -f CHANGELOG.md ]; then
+            # 查找版本条目
+            if grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+              # 提取从 ## [版本号] 开始到下一个 ## 的内容（不包括标题和下一个版本标题）
+              awk "/^## \[$VERSION\]/,/^## \[/ {print}" CHANGELOG.md | sed '1d;$d' >> changelog_content.txt
+            fi
+          fi
+
+          # 如果 CHANGELOG.md 中没有找到版本条目或日志为空，从 git 记录生成
+          if [ ! -s changelog_content.txt ]; then
             echo "### 变更日志" > changelog_content.txt
             echo "" >> changelog_content.txt
 
