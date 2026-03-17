@@ -474,8 +474,8 @@ class MainActivity : FlutterActivity() {
             com.example.hyperisland.xposed.IslandDispatcher.sendBroadcast(
                 this,
                 com.example.hyperisland.xposed.IslandRequest(
-                    title            = "HyperIsland",
-                    content          = "欢迎使用",
+                    title            = "欢迎使用",
+                    content          = "HyperIsland",
                     icon             = icon,
                     firstFloat       = false,
                     highlightColor   = "#E040FB",
