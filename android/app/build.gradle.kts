@@ -19,13 +19,28 @@ android {
 
     signingConfigs {
         create("release") {
-            val propsFile = rootProject.file("keystore.properties")
-            val props = Properties()
-            if (propsFile.exists()) props.load(propsFile.inputStream())
-            storeFile     = props.getProperty("storeFile")?.let { file(it) }
-            storePassword = props.getProperty("storePassword") ?: ""
-            keyAlias      = props.getProperty("keyAlias") ?: ""
-            keyPassword   = props.getProperty("keyPassword") ?: ""
+            // 优先从环境变量读取（GitHub Actions 使用）
+            val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            val keyAlias = System.getenv("KEY_ALIAS") ?: ""
+            val keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+
+            if (keystorePath.isNotEmpty()) {
+                // 使用环境变量配置
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            } else {
+                // 回退到 keystore.properties 文件
+                val propsFile = rootProject.file("keystore.properties")
+                val props = Properties()
+                if (propsFile.exists()) props.load(propsFile.inputStream())
+                storeFile     = props.getProperty("storeFile")?.let { file(it) }
+                storePassword = props.getProperty("storePassword") ?: ""
+                this.keyAlias      = props.getProperty("keyAlias") ?: ""
+                this.keyPassword   = props.getProperty("keyPassword") ?: ""
+            }
         }
     }
 
