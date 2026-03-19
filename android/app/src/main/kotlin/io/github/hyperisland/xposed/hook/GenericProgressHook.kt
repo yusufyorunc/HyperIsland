@@ -59,6 +59,10 @@ class GenericProgressHook : IXposedHookLoadPackage {
         // 用于通知进度条消失后（暂停/等待）回显上次进度。
         private val lastProgressCache = mutableMapOf<String, Int>()
 
+        // 取消追踪：key 为 "packageName#sbnId" → 代理通知 ID
+        // 原始通知被移除时，据此调用 IslandDispatcher.cancel() 清除首次发送状态。
+        private val trackedForCancel = mutableMapOf<String, Int>()
+
         /** 通用字符串设置懒加载，带缓存。 */
         private fun loadChannelStringSetting(
             context: android.content.Context,
@@ -161,6 +165,53 @@ class GenericProgressHook : IXposedHookLoadPackage {
             XposedBridge.log("HyperIsland[Generic]: hooked MiuiBaseNotifUtil.generateInnerNotifBean")
         } catch (e: Throwable) {
             XposedBridge.log("HyperIsland[Generic]: hook failed: ${e.message}")
+        }
+
+        val cancelCallback = object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val sbn = param.args[0] as? StatusBarNotification ?: return
+                val key = "${sbn.packageName}#${sbn.id}"
+                val proxyId = trackedForCancel.remove(key) ?: return
+                val context = getContext(lpparam) ?: return
+                IslandDispatcher.cancel(context, proxyId)
+            }
+        }
+
+        // 优先 hook 3 参数版（Android 8+ 实际调用路径）
+        var cancelHooked = false
+        try {
+            val rankingMapClass = lpparam.classLoader.loadClass(
+                "android.service.notification.NotificationListenerService\$RankingMap"
+            )
+            XposedHelpers.findAndHookMethod(
+                "android.service.notification.NotificationListenerService",
+                lpparam.classLoader,
+                "onNotificationRemoved",
+                StatusBarNotification::class.java,
+                rankingMapClass,
+                Int::class.javaPrimitiveType!!,
+                cancelCallback
+            )
+            cancelHooked = true
+            XposedBridge.log("HyperIsland[Generic]: hooked onNotificationRemoved(sbn, rankingMap, reason)")
+        } catch (e: Throwable) {
+            XposedBridge.log("HyperIsland[Generic]: onNotificationRemoved 3-param hook failed: ${e.message}")
+        }
+
+        // 降级到单参数版本
+        if (!cancelHooked) {
+            try {
+                XposedHelpers.findAndHookMethod(
+                    "android.service.notification.NotificationListenerService",
+                    lpparam.classLoader,
+                    "onNotificationRemoved",
+                    StatusBarNotification::class.java,
+                    cancelCallback
+                )
+                XposedBridge.log("HyperIsland[Generic]: hooked onNotificationRemoved(sbn)")
+            } catch (e: Throwable) {
+                XposedBridge.log("HyperIsland[Generic]: onNotificationRemoved 1-param hook failed: ${e.message}")
+            }
         }
     }
 
@@ -282,6 +333,8 @@ class GenericProgressHook : IXposedHookLoadPackage {
             )
 
             extras.putBoolean("hyperisland_generic_processed", true)
+            // 记录本条通知对应的代理通知 ID，供 onNotificationRemoved 同步取消
+            trackedForCancel["$pkg#${sbn.id}"] = IslandDispatcher.NOTIF_ID
 
         } catch (e: Throwable) {
             XposedBridge.log("HyperIsland[Generic]: handleSbn error: ${e.message}")
