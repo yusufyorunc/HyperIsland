@@ -38,6 +38,8 @@ object TemplateRegistry {
             )
             return
         }
-        template.inject(context, extras, data)
+        // 通知进入黑名单处理
+        val filteredData = BlacklistFilter.applyTo(context, data) ?: return
+        template.inject(context, extras, filteredData)
     }
 }
