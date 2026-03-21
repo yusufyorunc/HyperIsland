@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
-import io.github.hyperisland.R
 import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
@@ -30,15 +29,9 @@ import io.github.d4viddf.hyperisland_kit.models.TextInfo
  */
 object NotificationIslandNotification : IslandTemplate {
 
-    const val TEMPLATE_ID   = "notification_island"
-    const val TEMPLATE_NAME = "通知超级岛"   // 硬编码回退值（中文）
+    const val TEMPLATE_ID = "notification_island"
 
-    override val id          = TEMPLATE_ID
-    override val displayName = TEMPLATE_NAME
-
-    override fun getDisplayName(context: Context): String = try {
-        context.moduleContext().getString(R.string.template_notification_island_name)
-    } catch (_: Exception) { TEMPLATE_NAME }
+    override val id = TEMPLATE_ID
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
         if (data.focusNotif == "off") {

@@ -97,10 +97,10 @@ class _WhitelistPageState extends State<WhitelistPage> {
   /// 对已选应用的已启用渠道批量应用配置。
   Future<void> _batchApplySelected() async {
     if (_selectedPackages.isEmpty) return;
-    final templateLabels = await _ctrl.getTemplates();
     if (!mounted) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n           = AppLocalizations.of(context)!;
+    final templateLabels = _ctrl.getTemplates(l10n);
     final selected = _selectedPackages.toList();
     final result = await BatchChannelSettingsSheet.show(
       context,

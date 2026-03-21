@@ -11,7 +11,6 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import io.github.hyperisland.xposed.getRegisteredTemplates
 import java.io.ByteArrayOutputStream
 
 class MainActivity : FlutterActivity() {
@@ -49,10 +48,6 @@ class MainActivity : FlutterActivity() {
                 "showTest" -> {
                     // 通过广播由 SystemUI 发送，无需本地通知权限
                     handleShowTest(result)
-                }
-
-                "getTemplates" -> {
-                    result.success(getRegisteredTemplates(this))
                 }
 
                 "getInstalledApps" -> {

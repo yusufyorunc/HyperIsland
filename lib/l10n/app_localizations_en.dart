@@ -409,6 +409,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get templateDownloadName => 'Download';
+
+  @override
+  String get templateNotificationIslandName => 'Notification Island';
+
+  @override
   String get template => 'Template';
 
   @override

@@ -28,15 +28,9 @@ import io.github.d4viddf.hyperisland_kit.models.TextInfo
 object GenericProgressIslandNotification : IslandTemplate {
 
     // const val 在调用处被编译器内联，供无 Xposed 依赖的 TemplateManifest 安全引用
-    const val TEMPLATE_ID   = "generic_progress"
-    const val TEMPLATE_NAME = "下载"   // 硬编码回退值（中文）
+    const val TEMPLATE_ID = "generic_progress"
 
-    override val id          = TEMPLATE_ID
-    override val displayName = TEMPLATE_NAME
-
-    override fun getDisplayName(context: Context): String = try {
-        context.moduleContext().getString(R.string.template_download_name)
-    } catch (_: Exception) { TEMPLATE_NAME }
+    override val id = TEMPLATE_ID
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) = inject(
         context         = context,

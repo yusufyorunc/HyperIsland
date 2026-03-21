@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 
 const _channel = MethodChannel('io.github.hyperisland/test');
 const kPrefGenericWhitelist = 'pref_generic_whitelist';
@@ -220,20 +221,11 @@ class WhitelistController extends ChangeNotifier {
         'pref_channels_$packageName', channelIds.join(','));
   }
 
-  /// 从原生侧读取所有可用模板，返回 id → 显示名称 的映射。
-  Future<Map<String, String>> getTemplates() async {
-    try {
-      final rawList =
-          await _channel.invokeMethod<List<dynamic>>('getTemplates') ?? [];
-      return Map.fromEntries(rawList.map((raw) {
-        final map = Map<String, dynamic>.from(raw as Map);
-        return MapEntry(map['id'] as String, map['name'] as String);
-      }));
-    } catch (e) {
-      debugPrint('getTemplates error: $e');
-      return {kTemplateNotificationIsland: '通知超级岛'};
-    }
-  }
+  /// 返回所有可用模板的 id → 显示名称 映射（从 ARB 本地化字符串构建）。
+  Map<String, String> getTemplates(AppLocalizations l10n) => {
+    kTemplateGenericProgress:    l10n.templateDownloadName,
+    kTemplateNotificationIsland: l10n.templateNotificationIslandName,
+  };
 
   /// 批量读取指定包内各渠道的模板设置，返回 channelId → template 映射。
   Future<Map<String, String>> getChannelTemplates(

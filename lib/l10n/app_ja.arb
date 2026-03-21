@@ -127,6 +127,9 @@
   "applyToEnabledChannels": "有効な {count} 個のチャンネルに適用されます",
   "applyToAllChannels": "すべての {count} 個のチャンネルに適用されます",
 
+  "templateDownloadName": "ダウンロード",
+  "templateNotificationIslandName": "通知 Island",
+
   "template": "テンプレート",
   "islandIcon": "Island のアイコン",
   "focusIconLabel": "フォーカスアイコン",

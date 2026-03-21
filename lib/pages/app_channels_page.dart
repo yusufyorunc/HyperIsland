@@ -50,12 +50,8 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
       channels = [];
     }
 
-    final results = await Future.wait([
-      widget.controller.getEnabledChannels(pkg),
-      widget.controller.getTemplates(),
-    ]);
-    final enabled        = results[0] as Set<String>;
-    final templateLabels = results[1] as Map<String, String>;
+    final enabled        = await widget.controller.getEnabledChannels(pkg);
+    final templateLabels = widget.controller.getTemplates(AppLocalizations.of(context)!);
     final channelIds = channels.map((c) => c.id).toList();
     final channelTemplates = await widget.controller.getChannelTemplates(pkg, channelIds);
     final channelExtras    = await widget.controller.getChannelExtraSettings(pkg, channelIds);

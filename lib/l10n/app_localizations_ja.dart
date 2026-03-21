@@ -398,6 +398,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get templateDownloadName => 'ダウンロード';
+
+  @override
+  String get templateNotificationIslandName => '通知 Island';
+
+  @override
   String get template => 'テンプレート';
 
   @override

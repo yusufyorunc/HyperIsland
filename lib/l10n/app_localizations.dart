@@ -790,6 +790,18 @@ abstract class AppLocalizations {
   /// **'将应用到全部 {count} 个渠道'**
   String applyToAllChannels(int count);
 
+  /// No description provided for @templateDownloadName.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载'**
+  String get templateDownloadName;
+
+  /// No description provided for @templateNotificationIslandName.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知超级岛'**
+  String get templateNotificationIslandName;
+
   /// No description provided for @template.
   ///
   /// In zh, this message translates to:

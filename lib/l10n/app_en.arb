@@ -127,6 +127,9 @@
   "applyToEnabledChannels": "Will apply to {count} enabled channels",
   "applyToAllChannels": "Will apply to all {count} channels",
 
+  "templateDownloadName": "Download",
+  "templateNotificationIslandName": "Notification Island",
+
   "template": "Template",
   "islandIcon": "Island icon",
   "focusIconLabel": "Focus icon",

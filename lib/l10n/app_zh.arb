@@ -225,6 +225,9 @@
     }
   },
 
+  "templateDownloadName": "下载",
+  "templateNotificationIslandName": "通知超级岛",
+
   "template": "模板",
   "islandIcon": "超级岛图标",
   "focusIconLabel": "焦点图标",

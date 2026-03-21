@@ -70,16 +70,6 @@ interface IslandTemplate {
     /** 唯一标识符，与 Flutter 侧 kTemplate* 常量对应。 */
     val id: String
 
-    /** 在 Flutter UI 中显示的模板名称（硬编码回退值）。 */
-    val displayName: String
-
-    /**
-     * 返回当前设备语言对应的模板显示名称。
-     * 默认实现通过 [moduleContext] 加载 Android 字符串资源，子类可覆盖。
-     * 语言跟随设备 locale，无需手动指定。
-     */
-    fun getDisplayName(context: Context): String = displayName
-
     /** 将通知数据注入 extras，使其触发灵动岛展示。 */
     fun inject(context: Context, extras: Bundle, data: NotifData)
 }
