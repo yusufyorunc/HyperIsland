@@ -174,8 +174,9 @@ object DownloadIslandNotification {
                 else       -> if (progress >= 0) mc.getString(R.string.island_aod_downloading_progress, progress) else mc.getString(R.string.island_downloading)
             }
             // 修正 textButton 字段名 + 注入 aodTitle/updatable
+            val wrapLongText = isWrapLongTextEnabled(context)
             val finalJson = try {
-                val json = org.json.JSONObject(fixTextButtonJson(builder.buildJsonParam()))
+                val json = org.json.JSONObject(fixTextButtonJson(builder.buildJsonParam(), wrapLongText))
                 val pv2  = json.optJSONObject("param_v2") ?: org.json.JSONObject()
                 pv2.put("aodTitle", aodTitle)
                 pv2.put("updatable", !isComplete)
@@ -201,20 +202,68 @@ object DownloadIslandNotification {
      * 将 textButton 数组里新库输出的 "actionIntent"+"actionIntentType"
      * 替换为 HyperOS V3 协议所需的 "action" 字段，否则按钮点击无响应。
      */
-    private fun fixTextButtonJson(jsonParam: String): String {
+    private fun fixTextButtonJson(jsonParam: String, wrapLongText: Boolean = false): String {
         return try {
             val json = org.json.JSONObject(jsonParam)
             val pv2  = json.optJSONObject("param_v2") ?: return jsonParam
-            val btns = pv2.optJSONArray("textButton") ?: return jsonParam
-            for (i in 0 until btns.length()) {
-                val btn = btns.getJSONObject(i)
-                val key = btn.optString("actionIntent").takeIf { it.isNotEmpty() } ?: continue
-                btn.put("action", key)
-                btn.remove("actionIntent")
-                btn.remove("actionIntentType")
+            val btns = pv2.optJSONArray("textButton")
+            if (btns != null) {
+                for (i in 0 until btns.length()) {
+                    val btn = btns.getJSONObject(i)
+                    val key = btn.optString("actionIntent").takeIf { it.isNotEmpty() } ?: continue
+                    btn.put("action", key)
+                    btn.remove("actionIntent")
+                    btn.remove("actionIntentType")
+                }
             }
+
+            // 处理超长文本：将 iconTextInfo 转换为 coverInfo，使 content/subContent 上下两行显示
+            if (wrapLongText) {
+            val iconTextInfo = pv2.optJSONObject("iconTextInfo")
+            if (iconTextInfo != null) {
+                val content = iconTextInfo.optString("content", "")
+                if (content.isNotEmpty()) {
+                    var visualLen = 0
+                    var splitIdx = -1
+                    for (i in content.indices) {
+                        val c = content[i]
+                        visualLen += if (c.code > 255) 2 else 1
+                        if (visualLen >= 36 && splitIdx == -1) {
+                            splitIdx = i + 1
+                        }
+                    }
+                    if (splitIdx != -1 && splitIdx < content.length) {
+                        val subContent = content.substring(splitIdx)
+                        val isUseless = subContent.all { it == '.' || it == '…' || it.isWhitespace() }
+                        if (!isUseless) {
+                            val coverInfo = org.json.JSONObject()
+                            val animIcon = iconTextInfo.optJSONObject("animIconInfo")
+                            if (animIcon != null) {
+                                coverInfo.put("picCover", animIcon.optString("src", ""))
+                            }
+                            coverInfo.put("title", iconTextInfo.optString("title", ""))
+                            coverInfo.put("content", content.substring(0, splitIdx))
+                            coverInfo.put("subContent", subContent)
+                            pv2.remove("iconTextInfo")
+                            pv2.put("coverInfo", coverInfo)
+                        }
+                    }
+                }
+            }
+            } // wrapLongText
+
             json.toString()
         } catch (_: Exception) { jsonParam }
+    }
+
+    private fun isWrapLongTextEnabled(context: Context): Boolean {
+        return try {
+            val uri = android.net.Uri.parse("content://io.github.hyperisland.settings/pref_wrap_long_text")
+            context.contentResolver.query(uri, null, null, null, null)
+                ?.use { if (it.moveToFirst()) it.getInt(0) != 0 else false } ?: false
+        } catch (_: Exception) {
+            false
+        }
     }
 
     /** 将 buildResourceBundle() 里嵌套的 "miui.focus.actions" 展开到 extras 顶层 */

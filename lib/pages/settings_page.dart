@@ -64,6 +64,14 @@ class _SettingsPageState extends State<SettingsPage> {
     await _ctrl.setRoundIcon(value);
   }
 
+  Future<void> _onMarqueeFeatureChanged(bool value) async {
+    await _ctrl.setMarqueeFeature(value);
+  }
+
+  Future<void> _onWrapLongTextChanged(bool value) async {
+    await _ctrl.setWrapLongText(value);
+  }
+
   void _showSnack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -306,6 +314,28 @@ class _SettingsPageState extends State<SettingsPage> {
                           subtitle: Text(l10n.roundIconSubtitle),
                           value: _ctrl.roundIcon,
                           onChanged: _onRoundIconChanged,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.marqueeFeatureTitle),
+                          subtitle: Text(l10n.marqueeFeatureSubtitle),
+                          value: _ctrl.marqueeFeature,
+                          onChanged: _onMarqueeFeatureChanged,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.wrapLongTextTitle),
+                          subtitle: Text(l10n.wrapLongTextSubtitle),
+                          value: _ctrl.wrapLongText,
+                          onChanged: _onWrapLongTextChanged,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16)),
                         ),

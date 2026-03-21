@@ -170,6 +170,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roundIconSubtitle => 'Add rounded corners to notification icons';
 
   @override
+  String get marqueeFeatureTitle => 'Scrolling Island (Experimental)';
+
+  @override
+  String get marqueeFeatureSubtitle => 'Auto scroll long text notification';
+
+  @override
+  String get wrapLongTextTitle => 'Auto Wrap (Experimental)';
+
+  @override
+  String get wrapLongTextSubtitle =>
+      'Split long focus notification text into two lines';
+
+  @override
   String get themeModeTitle => 'Color mode';
 
   @override
