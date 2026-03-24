@@ -145,6 +145,8 @@
 
   "templateDownloadName": "Download",
   "templateNotificationIslandName": "Notification Island",
+  "templateNotificationIslandLiteName": "Notification Island|Lite",
+  "templateDownloadLiteName": "Download|Lite",
   "islandSection": "Island",
 
   "template": "Template",

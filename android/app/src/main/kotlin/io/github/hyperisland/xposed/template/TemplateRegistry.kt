@@ -2,7 +2,9 @@ package io.github.hyperisland.xposed
 
 import android.content.Context
 import android.os.Bundle
+import io.github.hyperisland.xposed.templates.DownloadLiteIslandNotification
 import io.github.hyperisland.xposed.templates.GenericProgressIslandNotification
+import io.github.hyperisland.xposed.templates.NotificationIslandLiteNotification
 import io.github.hyperisland.xposed.templates.NotificationIslandNotification
 import de.robv.android.xposed.XposedBridge
 
@@ -19,6 +21,8 @@ object TemplateRegistry {
     private val registry: Map<String, IslandTemplate> = listOf<IslandTemplate>(
         GenericProgressIslandNotification,
         NotificationIslandNotification,
+        NotificationIslandLiteNotification,
+        DownloadLiteIslandNotification,
     ).associateBy { it.id }
 
     fun dispatch(

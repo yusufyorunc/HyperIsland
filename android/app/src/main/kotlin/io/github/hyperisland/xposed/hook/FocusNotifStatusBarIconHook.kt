@@ -43,20 +43,6 @@ class FocusNotifStatusBarIconHook : IXposedHookLoadPackage {
         @Volatile private var cachedDirectProxyActiveUntilElapsed = 0L
         @Volatile private var hooked = false
 
-        private val mainHandler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
-        private var trueCallCount = 0
-        private var pendingTrueLog: Runnable? = null
-
-        private fun logTrueDebounced() {
-            trueCallCount++
-            pendingTrueLog?.let { mainHandler.removeCallbacks(it) }
-            pendingTrueLog = Runnable {
-                XposedBridge.log("$TAG: updateStatusBarVisibilities | keepIcons=true ×$trueCallCount")
-                trueCallCount = 0
-                pendingTrueLog = null
-            }.also { mainHandler.postDelayed(it, 1000) }
-        }
-
         @JvmStatic
         internal fun markDirectProxyPosted(timeoutSecs: Int) {
             val safeTimeoutSecs = timeoutSecs.coerceAtLeast(3)
@@ -103,13 +89,8 @@ class FocusNotifStatusBarIconHook : IXposedHookLoadPackage {
 
                         try {
                             XposedHelpers.setBooleanField(model, "isFocusNotification", false)
-                            XposedBridge.log(
-                                "$TAG: forced ActiveNotificationModel.isFocusNotification=false for preserve-enabled HyperIsland proxy"
-                            )
                         } catch (e: Throwable) {
-                            XposedBridge.log(
-                                "$TAG: failed to override ActiveNotificationModel.isFocusNotification — ${e.message}"
-                            )
+                            XposedBridge.log("$TAG: failed to override isFocusNotification — ${e.message}")
                         }
                     }
                 }
@@ -134,10 +115,10 @@ class FocusNotifStatusBarIconHook : IXposedHookLoadPackage {
 
                         if (!keepIcons) return
 
-                        logTrueDebounced()
                         forceShowNotificationIconsModel(fragment)
                         restoreNotificationIconArea(fragment)
                         refreshNotificationIconArea(fragment)
+                        XposedBridge.log("$TAG: icon area restored")
                     }
                 }
             )
@@ -162,7 +143,6 @@ class FocusNotifStatusBarIconHook : IXposedHookLoadPackage {
                 XposedHelpers.getBooleanField(oldModel, "showNotifPromptView")
             )
             XposedHelpers.setObjectField(fragment, "mLastModifiedVisibility", newModel)
-            XposedBridge.log("$TAG: forced StatusBarVisibilityModel.showNotificationIcons=true")
         } catch (e: Throwable) {
             XposedBridge.log("$TAG: forceShowNotificationIconsModel failed — ${e.message}")
         }
@@ -172,7 +152,6 @@ class FocusNotifStatusBarIconHook : IXposedHookLoadPackage {
         if (fragment == null) return
         try {
             XposedHelpers.callMethod(fragment, "updateNotificationIconAreaAndOngoingActivityChip", false)
-            XposedBridge.log("$TAG: refreshed notification icon area")
         } catch (e: Throwable) {
             XposedBridge.log("$TAG: refreshNotificationIconArea failed — ${e.message}")
         }

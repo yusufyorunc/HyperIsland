@@ -440,6 +440,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get templateNotificationIslandName => 'Notification Island';
 
   @override
+  String get templateNotificationIslandLiteName => 'Notification Island|Lite';
+
+  @override
+  String get templateDownloadLiteName => 'ダウンロード|Lite';
+
+  @override
   String get islandSection => 'Island';
 
   @override

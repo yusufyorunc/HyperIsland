@@ -243,6 +243,8 @@
 
   "templateDownloadName": "下载",
   "templateNotificationIslandName": "通知超级岛",
+  "templateNotificationIslandLiteName": "通知超级岛|精简",
+  "templateDownloadLiteName": "下载|Lite",
   "islandSection": "岛",
 
   "template": "模板",

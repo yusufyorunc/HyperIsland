@@ -868,6 +868,18 @@ abstract class AppLocalizations {
   /// **'通知超级岛'**
   String get templateNotificationIslandName;
 
+  /// No description provided for @templateNotificationIslandLiteName.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知超级岛|精简'**
+  String get templateNotificationIslandLiteName;
+
+  /// No description provided for @templateDownloadLiteName.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载|Lite'**
+  String get templateDownloadLiteName;
+
   /// No description provided for @islandSection.
   ///
   /// In zh, this message translates to:

@@ -11,6 +11,8 @@ const kPrefGenericWhitelist = 'pref_generic_whitelist';
 const kTemplateGenericProgress    = 'generic_progress';
 const kTemplateNotificationIsland = 'notification_island';
 const kTemplateDownload           = 'download';
+const kTemplateDownloadLite            = 'download_lite';
+const kTemplateNotificationIslandLite  = 'notification_island_lite';
 
 // 图标模式选项（图标样式 & 焦点图标共用）
 const kIconModeAuto       = 'auto';
@@ -224,7 +226,9 @@ class WhitelistController extends ChangeNotifier {
   /// 返回所有可用模板的 id → 显示名称 映射（从 ARB 本地化字符串构建）。
   Map<String, String> getTemplates(AppLocalizations l10n) => {
     kTemplateGenericProgress:    l10n.templateDownloadName,
-    kTemplateNotificationIsland: l10n.templateNotificationIslandName,
+    kTemplateNotificationIsland:     l10n.templateNotificationIslandName,
+    kTemplateNotificationIslandLite: l10n.templateNotificationIslandLiteName,
+    kTemplateDownloadLite:           l10n.templateDownloadLiteName,
   };
 
   /// 批量读取指定包内各渠道的模板设置，返回 channelId → template 映射。

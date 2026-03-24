@@ -436,6 +436,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get templateNotificationIslandName => '通知超级岛';
 
   @override
+  String get templateNotificationIslandLiteName => '通知超级岛|精简';
+
+  @override
+  String get templateDownloadLiteName => '下载|Lite';
+
+  @override
   String get islandSection => '岛';
 
   @override
