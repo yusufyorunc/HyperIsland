@@ -8,6 +8,7 @@ import android.os.Bundle
 import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
+import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.moduleContext
 import io.github.hyperisland.xposed.toRounded
@@ -43,6 +44,7 @@ object NotificationIslandNotification : IslandTemplate {
         inject(
             context         = context,
             extras          = extras,
+            notifId         = data.notifId,
             title           = data.title,
             subtitle        = data.subtitle,
             actions         = data.actions,
@@ -52,6 +54,7 @@ object NotificationIslandNotification : IslandTemplate {
             iconMode        = data.iconMode,
             focusIconMode   = data.focusIconMode,
             focusNotif      = data.focusNotif,
+            preserveStatusBarSmallIcon = data.preserveStatusBarSmallIcon,
             firstFloat      = data.firstFloat,
             enableFloatMode = data.enableFloatMode,
             timeoutSecs     = data.islandTimeout,
@@ -87,6 +90,7 @@ object NotificationIslandNotification : IslandTemplate {
                     firstFloat       = resolvedFirstFloat,
                     enableFloat      = resolvedEnableFloat,
                     showNotification = false,
+                    preserveStatusBarSmallIcon = data.preserveStatusBarSmallIcon,
                     contentIntent    = data.contentIntent,
                     isOngoing        = data.isOngoing,
                     actions          = data.actions.take(2),
@@ -104,6 +108,7 @@ object NotificationIslandNotification : IslandTemplate {
     private fun inject(
         context: Context,
         extras: Bundle,
+        notifId: Int,
         title: String,
         subtitle: String,
         actions: List<Notification.Action>,
@@ -113,6 +118,7 @@ object NotificationIslandNotification : IslandTemplate {
         iconMode: String?,
         focusIconMode: String?,
         focusNotif: String,
+        preserveStatusBarSmallIcon: Boolean,
         firstFloat: String,
         enableFloatMode: String,
         timeoutSecs: Int,
@@ -142,6 +148,8 @@ object NotificationIslandNotification : IslandTemplate {
             val resolvedFirstFloat  = firstFloat      == "on"
             val resolvedEnableFloat = enableFloatMode == "on"
             val showNotification    = focusNotif != "off"
+            val shouldPreserveStatusBarSmallIcon =
+                showNotification && preserveStatusBarSmallIcon
 
             val builder = HyperIslandNotification.Builder(context, "notif_island", title)
 
@@ -200,6 +208,16 @@ object NotificationIslandNotification : IslandTemplate {
             val jsonParam = fixTextButtonJson(builder.buildJsonParam(), wrapLongText)
                 .let { if (!isOngoing) injectUpdatable(it, false) else it }
             extras.putString("miui.focus.param", jsonParam)
+            if (showNotification) {
+                extras.putBoolean("hyperisland_focus_proxy", true)
+            }
+            if (shouldPreserveStatusBarSmallIcon) {
+                extras.putBoolean("hyperisland_preserve_status_bar_small_icon", true)
+                FocusNotifStatusBarIconHook.markDirectProxyPosted(timeoutSecs)
+            }
+            XposedBridge.log(
+                "HyperIsland[NotifIsland]: preserve marker written=$shouldPreserveStatusBarSmallIcon | title=$title | notifId=$notifId | showNotification=$showNotification"
+            )
 
             XposedBridge.log(
                 "HyperIsland[NotifIsland]: Island injected — $title | left=$leftText | right=$rightContent | buttons=${actions.size} | isOngoing=${isOngoing}"

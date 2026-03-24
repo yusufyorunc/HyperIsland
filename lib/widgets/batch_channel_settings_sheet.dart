@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../controllers/settings_controller.dart';
 import '../controllers/whitelist_controller.dart';
 import '../l10n/app_localizations.dart';
 
@@ -18,6 +19,7 @@ class SingleChannelMode extends ChannelSettingsMode {
     required this.iconMode,
     required this.focusIconMode,
     required this.focusNotif,
+    required this.preserveSmallIcon,
     required this.firstFloat,
     required this.enableFloat,
     required this.islandTimeout,
@@ -29,6 +31,7 @@ class SingleChannelMode extends ChannelSettingsMode {
   final String iconMode;
   final String focusIconMode;
   final String focusNotif;
+  final String preserveSmallIcon;
   final String firstFloat;
   final String enableFloat;
   final String islandTimeout;
@@ -123,10 +126,23 @@ class BatchChannelSettingsSheet extends StatefulWidget {
 
 class _BatchChannelSettingsSheetState
     extends State<BatchChannelSettingsSheet> {
+  AppLocalizations _l10n(BuildContext context) => AppLocalizations.of(context)!;
+
+  String _defaultOnLabel(BuildContext context) => _l10n(context).optDefaultOn;
+
+  String _defaultOffLabel(BuildContext context) => _l10n(context).optDefaultOff;
+
+  String _preserveSmallIconDefaultLabel(BuildContext context) {
+    final l10n = _l10n(context);
+    final enabled = SettingsController.instance.preserveStatusBarSmallIcon;
+    return enabled ? l10n.optDefaultOn : l10n.optDefaultOff;
+  }
+
   String? _template;
   String? _iconMode;
   String? _focusIconMode;
   String? _focusNotif;
+  String? _preserveSmallIcon;
   String? _firstFloat;
   String? _enableFloat;
   String? _islandTimeout;
@@ -145,14 +161,15 @@ class _BatchChannelSettingsSheetState
   void initState() {
     super.initState();
     if (widget.mode case SingleChannelMode m) {
-      _template      = m.template;
-      _iconMode      = m.iconMode;
-      _focusIconMode = m.focusIconMode;
-      _focusNotif    = m.focusNotif;
-      _firstFloat    = m.firstFloat;
-      _enableFloat   = m.enableFloat;
-      _islandTimeout = m.islandTimeout;
-      _marquee       = m.marquee;
+      _template          = m.template;
+      _iconMode          = m.iconMode;
+      _focusIconMode     = m.focusIconMode;
+      _focusNotif        = m.focusNotif;
+      _preserveSmallIcon = m.preserveSmallIcon;
+      _firstFloat        = m.firstFloat;
+      _enableFloat       = m.enableFloat;
+      _islandTimeout     = m.islandTimeout;
+      _marquee           = m.marquee;
       _timeoutController = TextEditingController(text: m.islandTimeout);
     } else {
       _timeoutController = TextEditingController();
@@ -187,6 +204,7 @@ class _BatchChannelSettingsSheetState
       _iconMode != null ||
       _focusIconMode != null ||
       _focusNotif != null ||
+      _preserveSmallIcon != null ||
       _firstFloat != null ||
       _enableFloat != null ||
       _islandTimeout != null ||
@@ -213,14 +231,15 @@ class _BatchChannelSettingsSheetState
       context,
       BatchApplyResult(
         settings: {
-          'template':     _template,
-          'icon':         _iconMode,
-          'focus_icon':   _focusIconMode,
-          'focus':        _focusNotif,
-          'first_float':  _firstFloat,
-          'enable_float': _enableFloat,
-          'timeout':      _islandTimeout,
-          'marquee':      _marquee,
+          'template':              _template,
+          'icon':                  _iconMode,
+          'focus_icon':            _focusIconMode,
+          'focus':                 _focusNotif,
+          'preserve_small_icon':   _focusNotif == kTriOptOff ? kTriOptOff : _preserveSmallIcon,
+          'first_float':           _firstFloat,
+          'enable_float':          _enableFloat,
+          'timeout':               _islandTimeout,
+          'marquee':               _marquee,
         },
         onlyEnabled: switch (widget.mode) {
           BatchChannelMode(scope: SingleAppScope()) => _onlyEnabled,
@@ -342,7 +361,7 @@ class _BatchChannelSettingsSheetState
                     value: _firstFloat,
                     showNotChange: !_isSingle,
                     items: [
-                      DropdownMenuItem(value: kTriOptDefault, child: Text(l10n.optDefault)),
+                      DropdownMenuItem(value: kTriOptDefault, child: Text(_defaultOffLabel(context))),
                       DropdownMenuItem(value: kTriOptOn,      child: Text(l10n.optOn)),
                       DropdownMenuItem(value: kTriOptOff,     child: Text(l10n.optOff)),
                     ],
@@ -354,7 +373,7 @@ class _BatchChannelSettingsSheetState
                     value: _enableFloat,
                     showNotChange: !_isSingle,
                     items: [
-                      DropdownMenuItem(value: kTriOptDefault, child: Text(l10n.optDefault)),
+                      DropdownMenuItem(value: kTriOptDefault, child: Text(_defaultOffLabel(context))),
                       DropdownMenuItem(value: kTriOptOn,      child: Text(l10n.optOn)),
                       DropdownMenuItem(value: kTriOptOff,     child: Text(l10n.optOff)),
                     ],
@@ -443,10 +462,26 @@ class _BatchChannelSettingsSheetState
                     value: _focusNotif,
                     showNotChange: !_isSingle,
                     items: [
-                      DropdownMenuItem(value: kTriOptDefault, child: Text(l10n.optDefault)),
+                      DropdownMenuItem(value: kTriOptDefault, child: Text(_defaultOnLabel(context))),
+                      DropdownMenuItem(value: kTriOptOn,      child: Text(l10n.optOn)),
                       DropdownMenuItem(value: kTriOptOff,     child: Text(l10n.optOff)),
                     ],
-                    onChanged: (v) => setState(() => _focusNotif = v),
+                    onChanged: (v) => setState(() {
+                      _focusNotif = v;
+                      if (v == kTriOptOff) _preserveSmallIcon = kTriOptOff;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  _BatchSettingRow(
+                    label: l10n.preserveStatusBarSmallIconLabel,
+                    value: _focusNotif == kTriOptOff ? kTriOptOff : _preserveSmallIcon,
+                    showNotChange: !_isSingle,
+                    items: [
+                      DropdownMenuItem(value: kTriOptDefault, child: Text(_preserveSmallIconDefaultLabel(context))),
+                      DropdownMenuItem(value: kTriOptOn,      child: Text(l10n.optOn)),
+                      DropdownMenuItem(value: kTriOptOff,     child: Text(l10n.optOff)),
+                    ],
+                    onChanged: _focusNotif == kTriOptOff ? null : (v) => setState(() => _preserveSmallIcon = v),
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -595,7 +630,7 @@ class _BatchSettingRow extends StatelessWidget {
   final String label;
   final String? value;
   final List<DropdownMenuItem<String?>> items;
-  final ValueChanged<String?> onChanged;
+  final ValueChanged<String?>? onChanged;
   final bool showNotChange;
 
   @override

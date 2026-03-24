@@ -150,6 +150,11 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     await widget.controller.setChannelFocusNotif(widget.app.packageName, channelId, value);
   }
 
+  Future<void> _setPreserveSmallIcon(String channelId, String value) async {
+    _updateExtra(channelId, 'preserve_small_icon', value);
+    await widget.controller.setChannelPreserveSmallIcon(widget.app.packageName, channelId, value);
+  }
+
   Future<void> _setFirstFloat(String channelId, String value) async {
     _updateExtra(channelId, 'first_float', value);
     await widget.controller.setChannelFirstFloat(widget.app.packageName, channelId, value);
@@ -175,6 +180,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     if (settings['icon'] case final v?) await _setIconMode(channelId, v);
     if (settings['focus_icon'] case final v?) await _setFocusIconMode(channelId, v);
     if (settings['focus'] case final v?) await _setFocusNotif(channelId, v);
+    if (settings['preserve_small_icon'] case final v?) await _setPreserveSmallIcon(channelId, v);
     if (settings['first_float'] case final v?) await _setFirstFloat(channelId, v);
     if (settings['enable_float'] case final v?) await _setEnableFloat(channelId, v);
     if (settings['timeout'] case final v?) await _setIslandTimeout(channelId, v);
@@ -407,6 +413,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                       iconMode: extras['icon'] ?? kIconModeAuto,
                       focusIconMode: extras['focus_icon'] ?? kIconModeAuto,
                       focusNotif: extras['focus'] ?? kTriOptDefault,
+                      preserveSmallIcon: extras['preserve_small_icon'] ?? kTriOptDefault,
                       firstFloat: extras['first_float'] ?? kTriOptDefault,
                       enableFloat: extras['enable_float'] ?? kTriOptDefault,
                       islandTimeout: extras['timeout'] ?? '5',
@@ -441,6 +448,7 @@ class _ChannelTile extends StatelessWidget {
     required this.iconMode,
     required this.focusIconMode,
     required this.focusNotif,
+    required this.preserveSmallIcon,
     required this.firstFloat,
     required this.enableFloat,
     required this.islandTimeout,
@@ -460,6 +468,7 @@ class _ChannelTile extends StatelessWidget {
   final String iconMode;
   final String focusIconMode;
   final String focusNotif;
+  final String preserveSmallIcon;
   final String firstFloat;
   final String enableFloat;
   final String islandTimeout;
@@ -476,6 +485,7 @@ class _ChannelTile extends StatelessWidget {
         iconMode:      iconMode,
         focusIconMode: focusIconMode,
         focusNotif:    focusNotif,
+        preserveSmallIcon: preserveSmallIcon,
         firstFloat:    firstFloat,
         enableFloat:   enableFloat,
         islandTimeout: islandTimeout,

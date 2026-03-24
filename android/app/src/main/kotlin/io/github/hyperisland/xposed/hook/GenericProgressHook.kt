@@ -45,10 +45,32 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 settingsUri, true,
                 object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
                     override fun onChange(selfChange: Boolean) {
-                        cachedWhitelist = null
-                        cachedTemplates.clear()
-                        cachedChannelSettings.clear()
-                        XposedBridge.log("HyperIsland[Generic]: settings changed, cache cleared")
+                        clearAllCaches("root")
+                    }
+
+                    override fun onChange(selfChange: Boolean, uri: android.net.Uri?) {
+                        val segment = uri?.lastPathSegment
+                        when {
+                            segment == null || segment.isBlank() -> clearAllCaches("root")
+                            segment == "pref_generic_whitelist" || segment.startsWith("pref_channels_") -> {
+                                cachedWhitelist = null
+                                XposedBridge.log("HyperIsland[Generic]: whitelist cache cleared for $segment")
+                            }
+                            segment.startsWith("pref_channel_template_") -> {
+                                val suffix = segment.removePrefix("pref_channel_template_")
+                                cachedTemplates.removeSuffixMatch(suffix)
+                                XposedBridge.log("HyperIsland[Generic]: template cache cleared for $segment")
+                            }
+                            segment.startsWith("pref_channel_") ||
+                            segment == "pref_preserve_status_bar_small_icon" ||
+                            segment == "pref_marquee_speed" ||
+                            segment == "pref_round_icon" ||
+                            segment == "pref_wrap_long_text" -> {
+                                cachedChannelSettings.clear()
+                                XposedBridge.log("HyperIsland[Generic]: channel settings cache cleared for $segment")
+                            }
+                            else -> clearAllCaches(segment)
+                        }
                     }
                 }
             )
@@ -86,6 +108,53 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 XposedBridge.log("HyperIsland[Generic]: loadChannelStringSetting($prefKey) failed: ${e.message}")
                 default
             }
+        }
+
+        private fun loadBooleanSetting(
+            context: android.content.Context,
+            cacheKey: String,
+            prefKey: String,
+            default: Boolean
+        ): Boolean {
+            cachedChannelSettings[cacheKey]?.let { return it == "1" }
+            return try {
+                val uri = android.net.Uri.parse(
+                    "content://io.github.hyperisland.settings/$prefKey"
+                )
+                val value = context.contentResolver
+                    .query(uri, null, null, null, null)
+                    ?.use { if (it.moveToFirst()) it.getInt(0) != 0 else default }
+                    ?: default
+                cachedChannelSettings[cacheKey] = if (value) "1" else "0"
+                value
+            } catch (e: Exception) {
+                XposedBridge.log("HyperIsland[Generic]: loadBooleanSetting($prefKey) failed: ${e.message}")
+                default
+            }
+        }
+
+        private fun resolveTriStateBoolean(global: Boolean, channelValue: String): Boolean {
+            return when (channelValue) {
+                "on" -> true
+                "off" -> false
+                else -> global
+            }
+        }
+
+        private fun clearAllCaches(reason: String) {
+            cachedWhitelist = null
+            cachedTemplates.clear()
+            cachedChannelSettings.clear()
+            XposedBridge.log("HyperIsland[Generic]: settings changed, cache cleared ($reason)")
+        }
+
+        private fun MutableMap<String, String>.removeSuffixMatch(suffix: String) {
+            if (suffix.isBlank()) {
+                clear()
+                return
+            }
+            val matchedKeys = keys.filter { it.endsWith(suffix) }
+            matchedKeys.forEach { remove(it) }
         }
 
         /** 读取指定渠道的模板设置，结果会懒缓存，SystemUI 重启后刷新。 */
@@ -292,6 +361,16 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 context, "focus:$pkg/$channelId",
                 "pref_channel_focus_${pkg}_$channelId", "default"
             )
+            val preserveSmallIconGlobal = loadBooleanSetting(
+                context, "global:preserve_small_icon",
+                "pref_preserve_status_bar_small_icon", true
+            )
+            val preserveSmallIconChannel = loadChannelStringSetting(
+                context, "preserve_small_icon:$pkg/$channelId",
+                "pref_channel_preserve_small_icon_${pkg}_$channelId", "default"
+            )
+            val preserveStatusBarSmallIcon =
+                resolveTriStateBoolean(preserveSmallIconGlobal, preserveSmallIconChannel)
             val firstFloat = loadChannelStringSetting(
                 context, "first_float:$pkg/$channelId",
                 "pref_channel_first_float_${pkg}_$channelId", "default"
@@ -316,7 +395,7 @@ class GenericProgressHook : IXposedHookLoadPackage {
             MarqueeHook.pendingMarqueeEnabled = marqueeEnabled
 
             XposedBridge.log(
-                "HyperIsland[Generic]: $pkg/$channelId | $title | $progressPercent% | template=$template | buttons=${actions.size} | largeIcon=${largeIcon != null}"
+                "HyperIsland[Generic]: $pkg/$channelId | $title | $progressPercent% | template=$template | buttons=${actions.size} | largeIcon=${largeIcon != null} | preserveSmallIcon(global=$preserveSmallIconGlobal, channel=$preserveSmallIconChannel, effective=$preserveStatusBarSmallIcon)"
             )
 
             TemplateRegistry.dispatch(
@@ -326,6 +405,7 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 data       = NotifData(
                     pkg             = pkg,
                     channelId       = channelId,
+                    notifId         = sbn.id,
                     title           = title,
                     subtitle        = subtitle,
                     progress        = progressPercent,
@@ -336,6 +416,7 @@ class GenericProgressHook : IXposedHookLoadPackage {
                     iconMode        = iconMode,
                     focusIconMode   = focusIconMode,
                     focusNotif      = focusNotif,
+                    preserveStatusBarSmallIcon = preserveStatusBarSmallIcon,
                     firstFloat      = firstFloat,
                     enableFloatMode = enableFloatMode,
                     islandTimeout   = islandTimeout,

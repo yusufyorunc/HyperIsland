@@ -249,7 +249,7 @@ class WhitelistController extends ChangeNotifier {
 
   // ── 渠道级额外设置（图标、焦点通知、初次展开、更新展开）────────────────────
 
-  /// 批量读取各渠道的额外设置，返回 channelId → {icon, focus_icon, focus, first_float, enable_float, timeout, marquee}。
+  /// 批量读取各渠道的额外设置，返回 channelId → {icon, focus_icon, focus, preserve_small_icon, first_float, enable_float, timeout, marquee}。
   Future<Map<String, Map<String, String>>> getChannelExtraSettings(
       String packageName, List<String> channelIds) async {
     final prefs = await SharedPreferences.getInstance();
@@ -257,6 +257,7 @@ class WhitelistController extends ChangeNotifier {
           'icon': prefs.getString('pref_channel_icon_${packageName}_$id') ?? kIconModeAuto,
           'focus_icon': prefs.getString('pref_channel_focus_icon_${packageName}_$id') ?? kIconModeAuto,
           'focus': prefs.getString('pref_channel_focus_${packageName}_$id') ?? kTriOptDefault,
+          'preserve_small_icon': prefs.getString('pref_channel_preserve_small_icon_${packageName}_$id') ?? kTriOptDefault,
           'first_float': prefs.getString('pref_channel_first_float_${packageName}_$id') ?? kTriOptDefault,
           'enable_float': prefs.getString('pref_channel_enable_float_${packageName}_$id') ?? kTriOptDefault,
           'timeout': prefs.getString('pref_channel_timeout_${packageName}_$id') ?? '5',
@@ -280,6 +281,12 @@ class WhitelistController extends ChangeNotifier {
       String packageName, String channelId, String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('pref_channel_focus_${packageName}_$channelId', value);
+  }
+
+  Future<void> setChannelPreserveSmallIcon(
+      String packageName, String channelId, String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pref_channel_preserve_small_icon_${packageName}_$channelId', value);
   }
 
   Future<void> setChannelFirstFloat(
@@ -315,14 +322,15 @@ class WhitelistController extends ChangeNotifier {
     if (channelIds.isEmpty || settings.values.every((v) => v == null)) return;
     final prefs = await SharedPreferences.getInstance();
     const keyMap = {
-      'template':     'pref_channel_template',
-      'icon':         'pref_channel_icon',
-      'focus_icon':   'pref_channel_focus_icon',
-      'focus':        'pref_channel_focus',
-      'first_float':  'pref_channel_first_float',
-      'enable_float': 'pref_channel_enable_float',
-      'timeout':      'pref_channel_timeout',
-      'marquee':      'pref_channel_marquee',
+      'template':              'pref_channel_template',
+      'icon':                  'pref_channel_icon',
+      'focus_icon':            'pref_channel_focus_icon',
+      'focus':                 'pref_channel_focus',
+      'preserve_small_icon':   'pref_channel_preserve_small_icon',
+      'first_float':           'pref_channel_first_float',
+      'enable_float':          'pref_channel_enable_float',
+      'timeout':               'pref_channel_timeout',
+      'marquee':               'pref_channel_marquee',
     };
     final futures = <Future<bool>>[];
     for (final id in channelIds) {

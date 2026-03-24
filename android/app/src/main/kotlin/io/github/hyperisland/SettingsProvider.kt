@@ -23,10 +23,11 @@ class SettingsProvider : ContentProvider() {
     }
 
     // 必须持有强引用，否则 SharedPreferences 内部会弱引用导致 GC 回收
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-        context?.contentResolver?.notifyChange(
-            Uri.parse("content://$AUTHORITY/"), null, false
-        )
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, changedKey ->
+        val resolver = context?.contentResolver ?: return@OnSharedPreferenceChangeListener
+        resolver.notifyChange(Uri.parse("content://$AUTHORITY/"), null, false)
+        val segment = changedKey?.removePrefix("flutter.")?.takeIf { it.isNotBlank() } ?: return@OnSharedPreferenceChangeListener
+        resolver.notifyChange(Uri.parse("content://$AUTHORITY/$segment"), null, false)
     }
 
     override fun onCreate(): Boolean {
@@ -49,7 +50,9 @@ class SettingsProvider : ContentProvider() {
             segment.startsWith("pref_channels_") ||
             segment.startsWith("pref_channel_template_") ||
             segment.startsWith("pref_channel_icon_") ||
+            segment.startsWith("pref_channel_focus_icon_") ||
             segment.startsWith("pref_channel_focus_") ||
+            segment.startsWith("pref_channel_preserve_small_icon_") ||
             segment.startsWith("pref_channel_first_float_") ||
             segment.startsWith("pref_channel_enable_float_") ||
             segment.startsWith("pref_channel_timeout_") ||

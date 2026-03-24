@@ -40,6 +40,8 @@ data class IslandRequest(
     val enableFloat: Boolean = true,
     /** 是否在通知栏显示持久通知（焦点通知），默认 true。*/
     val showNotification: Boolean = true,
+    /** 是否保留状态栏左上角小图标。*/
+    val preserveStatusBarSmallIcon: Boolean = true,
     /**
      * 岛边框高亮颜色，十六进制字符串，如 `"#E040FB"`。
      * null 表示不设置，使用系统默认颜色。
@@ -72,6 +74,7 @@ data class IslandRequest(
         putBoolean(KEY_FIRST_FLOAT,   firstFloat)
         putBoolean(KEY_ENABLE_FLOAT,  enableFloat)
         putBoolean(KEY_SHOW_NOTIF,    showNotification)
+        putBoolean(KEY_PRESERVE_SMALL_ICON, preserveStatusBarSmallIcon)
         putString(KEY_HIGHLIGHT,      highlightColor)
         putBoolean(KEY_DISMISS,       dismissIsland)
         putParcelable(KEY_CONTENT_INTENT, contentIntent)
@@ -88,6 +91,7 @@ data class IslandRequest(
         private const val KEY_FIRST_FLOAT    = "firstFloat"
         private const val KEY_ENABLE_FLOAT   = "enableFloat"
         private const val KEY_SHOW_NOTIF     = "showNotification"
+        private const val KEY_PRESERVE_SMALL_ICON = "preserveStatusBarSmallIcon"
         private const val KEY_HIGHLIGHT      = "highlightColor"
         private const val KEY_DISMISS        = "dismissIsland"
         private const val KEY_CONTENT_INTENT = "contentIntent"
@@ -103,6 +107,7 @@ data class IslandRequest(
             firstFloat       = b.getBoolean(KEY_FIRST_FLOAT, true),
             enableFloat      = b.getBoolean(KEY_ENABLE_FLOAT, true),
             showNotification = b.getBoolean(KEY_SHOW_NOTIF, true),
+            preserveStatusBarSmallIcon = b.getBoolean(KEY_PRESERVE_SMALL_ICON, true),
             highlightColor   = b.getString(KEY_HIGHLIGHT),
             dismissIsland    = b.getBoolean(KEY_DISMISS, false),
             contentIntent    = pendingIntentFromBundle(b),

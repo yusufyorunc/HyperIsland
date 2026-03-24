@@ -80,6 +80,7 @@ interface IslandTemplate {
 data class NotifData(
     val pkg: String,
     val channelId: String,
+    val notifId: Int,
     val title: String,
     val subtitle: String,
     val progress: Int,
@@ -95,9 +96,11 @@ data class NotifData(
     val iconMode: String = "auto",
     /** 焦点图标来源（iconTextInfo）："auto" / "notif_small" / "notif_large" / "app_icon" */
     val focusIconMode: String = "auto",
-    /** 焦点通知（island 块）："default" / "off" */
+    /** 焦点通知（island 块）：“default” / “off” */
     val focusNotif: String = "default",
-    /** 初次自动展开 islandFirstFloat："default" / "on" / "off" */
+    /** 是否保留状态栏左上角小图标（已解析最终结果） */
+    val preserveStatusBarSmallIcon: Boolean = true,
+    /** 初次自动展开 islandFirstFloat：“default” / “on” / “off” */
     val firstFloat: String = "default",
     /** 更新时自动展开 enableFloat："default" / "on" / "off" */
     val enableFloatMode: String = "default",

@@ -180,6 +180,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get roundIconSubtitle => '通知アイコンの角を丸めます';
 
   @override
+  String get preserveStatusBarSmallIconTitle => 'ステータスバーの小さなアイコンを保持';
+
+  @override
+  String get preserveStatusBarSmallIconSubtitle =>
+      'プロキシのフォーカス通知で左上のステータスバー小アイコンを保持し、チャンネルごとに上書きできます';
+
+  @override
   String get marqueeChannelTitle => 'Island のテキストをスクロール';
 
   @override
@@ -452,6 +459,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get focusNotificationLabel => 'フォーカス通知';
 
   @override
+  String get preserveStatusBarSmallIconLabel => 'ステータスバーアイコン';
+
+  @override
   String get firstFloatLabel => '最初にフロート表示';
 
   @override
@@ -485,6 +495,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get optDefault => 'デフォルト';
+
+  @override
+  String get optDefaultOn => 'デフォルト（ON）';
+
+  @override
+  String get optDefaultOff => 'デフォルト（OFF）';
 
   @override
   String get optOn => 'ON';

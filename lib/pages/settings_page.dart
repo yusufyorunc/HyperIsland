@@ -60,6 +60,10 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _onPreserveStatusBarSmallIconChanged(bool value) async {
+    await _ctrl.setPreserveStatusBarSmallIcon(value);
+  }
+
   Future<void> _onRoundIconChanged(bool value) async {
     await _ctrl.setRoundIcon(value);
   }
@@ -270,6 +274,15 @@ class _SettingsPageState extends State<SettingsPage> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                   top: Radius.circular(16))),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.preserveStatusBarSmallIconTitle),
+                          subtitle: Text(l10n.preserveStatusBarSmallIconSubtitle),
+                          value: _ctrl.preserveStatusBarSmallIcon,
+                          onChanged: _onPreserveStatusBarSmallIconChanged,
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         SwitchListTile(

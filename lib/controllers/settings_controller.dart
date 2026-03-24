@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const kPrefResumeNotification = 'pref_resume_notification';
-const kPrefUseHookAppIcon     = 'pref_use_hook_app_icon';
-const kPrefRoundIcon          = 'pref_round_icon';
-const kPrefMarqueeFeature     = 'pref_marquee_feature';
-const kPrefMarqueeSpeed       = 'pref_marquee_speed';
-const kPrefWrapLongText       = 'pref_wrap_long_text';
-const kPrefUnlockAllFocus     = 'pref_unlock_all_focus';
-const kPrefUnlockFocusAuth    = 'pref_unlock_focus_auth';
-const kPrefThemeMode             = 'pref_theme_mode';
-const kPrefLocale                = 'pref_locale';
-const kPrefCheckUpdateOnLaunch   = 'pref_check_update_on_launch';
+const kPrefResumeNotification          = 'pref_resume_notification';
+const kPrefPreserveStatusBarSmallIcon = 'pref_preserve_status_bar_small_icon';
+const kPrefUseHookAppIcon             = 'pref_use_hook_app_icon';
+const kPrefRoundIcon                  = 'pref_round_icon';
+const kPrefMarqueeFeature             = 'pref_marquee_feature';
+const kPrefMarqueeSpeed               = 'pref_marquee_speed';
+const kPrefWrapLongText               = 'pref_wrap_long_text';
+const kPrefUnlockAllFocus             = 'pref_unlock_all_focus';
+const kPrefUnlockFocusAuth            = 'pref_unlock_focus_auth';
+const kPrefThemeMode                  = 'pref_theme_mode';
+const kPrefLocale                     = 'pref_locale';
+const kPrefCheckUpdateOnLaunch        = 'pref_check_update_on_launch';
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
 
@@ -20,6 +21,7 @@ class SettingsController extends ChangeNotifier {
   }
 
   bool resumeNotification = true;
+  bool preserveStatusBarSmallIcon = false;
   bool useHookAppIcon = true;
   bool roundIcon = true;
   bool marqueeFeature = false;
@@ -34,9 +36,11 @@ class SettingsController extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    resumeNotification    = prefs.getBool(kPrefResumeNotification) ?? true;
-    useHookAppIcon        = prefs.getBool(kPrefUseHookAppIcon) ?? true;
-    roundIcon             = prefs.getBool(kPrefRoundIcon) ?? true;
+    resumeNotification        = prefs.getBool(kPrefResumeNotification) ?? true;
+    preserveStatusBarSmallIcon =
+        prefs.getBool(kPrefPreserveStatusBarSmallIcon) ?? false;
+    useHookAppIcon            = prefs.getBool(kPrefUseHookAppIcon) ?? true;
+    roundIcon                 = prefs.getBool(kPrefRoundIcon) ?? true;
     marqueeFeature        = prefs.getBool(kPrefMarqueeFeature) ?? false;
     marqueeSpeed          = (prefs.getInt(kPrefMarqueeSpeed) ?? 100).clamp(20, 500);
     wrapLongText          = prefs.getBool(kPrefWrapLongText) ?? false;
@@ -58,6 +62,13 @@ class SettingsController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(kPrefResumeNotification, value);
     resumeNotification = value;
+    notifyListeners();
+  }
+
+  Future<void> setPreserveStatusBarSmallIcon(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kPrefPreserveStatusBarSmallIcon, value);
+    preserveStatusBarSmallIcon = value;
     notifyListeners();
   }
 
