@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _channel = MethodChannel('io.github.hyperisland/test');
 const kPrefAppBlacklist = 'pref_app_blacklist';
-const kPrefAppWhitelist = 'pref_app_whitelist';
 
 class AppInfo {
   final String packageName;
@@ -409,19 +408,11 @@ class BlacklistController extends ChangeNotifier {
   Future<void> setBlacklisted(String packageName, bool enabled) async {
     if (enabled) {
       blacklistedPackages.add(packageName);
-      // 互斥：从白名单中移除
-      final prefs = await SharedPreferences.getInstance();
-      final whitelistStr = prefs.getString(kPrefAppWhitelist) ?? '';
-      final whitelist = whitelistStr.isEmpty ? <String>{} : whitelistStr.split(',').where((s) => s.isNotEmpty).toSet();
-      if (whitelist.remove(packageName)) {
-        await prefs.setString(kPrefAppWhitelist, whitelist.join(','));
-      }
-      await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
     } else {
       blacklistedPackages.remove(packageName);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
     notifyListeners();
   }
 

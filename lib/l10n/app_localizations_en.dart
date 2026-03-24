@@ -546,13 +546,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Block focus notification float or hide for specific apps';
 
   @override
-  String get navFocusWhitelist => 'Focus Whitelist';
-
-  @override
-  String get navFocusWhitelistSubtitle =>
-      'Force focus notification float only when the foreground app is in the whitelist';
-
-  @override
   String get presetGamesTitle => 'Quick Filter Popular Games';
 
   @override
@@ -569,17 +562,4 @@ class AppLocalizationsEn extends AppLocalizations {
   String blacklistedAppsCountWithSystem(int count) {
     return 'Blocked focus notifications for $count apps (including system apps)';
   }
-
-  @override
-  String whitelistedAppsCount(int count) {
-    return 'Force-enabled focus notifications for $count apps';
-  }
-
-  @override
-  String whitelistedAppsCountWithSystem(int count) {
-    return 'Force-enabled focus notifications for $count apps (including system apps)';
-  }
-
-  @override
-  String get whitelistedAppsCountNone => 'No apps added yet';
 }

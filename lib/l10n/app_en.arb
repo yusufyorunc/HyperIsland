@@ -177,8 +177,6 @@
 
   "navBlacklist": "Focus Blacklist",
   "navBlacklistSubtitle": "Block focus notification float or hide for specific apps",
-  "navFocusWhitelist": "Focus Whitelist",
-  "navFocusWhitelistSubtitle": "Force focus notification float only when the foreground app is in the whitelist",
   "presetGamesTitle": "Quick Filter Popular Games",
   "presetGamesSuccess": "Added {count} installed games to blacklist from preset",
   "@presetGamesSuccess": {
@@ -189,18 +187,5 @@
     }
   },
   "blacklistedAppsCount": "Blocked focus notifications for {count} apps",
-  "blacklistedAppsCountWithSystem": "Blocked focus notifications for {count} apps (including system apps)",
-  "whitelistedAppsCount": "Force-enabled focus notifications for {count} apps",
-  "@whitelistedAppsCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "whitelistedAppsCountWithSystem": "Force-enabled focus notifications for {count} apps (including system apps)",
-  "@whitelistedAppsCountWithSystem": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "whitelistedAppsCountNone": "No apps added yet"
+  "blacklistedAppsCountWithSystem": "Blocked focus notifications for {count} apps (including system apps)"
 }

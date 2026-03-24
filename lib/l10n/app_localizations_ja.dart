@@ -530,12 +530,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navBlacklistSubtitle => '特定のアプリでのフォーカス通知をブロック、フローティングまたは非表示にします';
 
   @override
-  String get navFocusWhitelist => '焦点通知白名单';
-
-  @override
-  String get navFocusWhitelistSubtitle => '仅当前台应用在白名单中时，才强制触发焦点通知展开';
-
-  @override
   String get presetGamesTitle => '人気のゲームをクイックでフィルター';
 
   @override
@@ -552,17 +546,4 @@ class AppLocalizationsJa extends AppLocalizations {
   String blacklistedAppsCountWithSystem(int count) {
     return '$count 個のアプリのフォーカス通知をブロックしました (システムアプリを含む)';
   }
-
-  @override
-  String whitelistedAppsCount(int count) {
-    return '已设置 $count 个应用强制触发焦点通知';
-  }
-
-  @override
-  String whitelistedAppsCountWithSystem(int count) {
-    return '已设置 $count 个应用强制触发焦点通知（含系统应用）';
-  }
-
-  @override
-  String get whitelistedAppsCountNone => '尚未添加任何应用';
 }

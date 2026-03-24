@@ -8,7 +8,6 @@ import '../controllers/update_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/section_label.dart';
 import 'blacklist_page.dart';
-import 'focus_whitelist_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -234,69 +233,23 @@ class _SettingsPageState extends State<SettingsPage> {
                         borderRadius: BorderRadius.circular(16)),
                     child: Column(
                       children: [
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
-                          secondary: const Icon(Icons.block),
-                          title: Text(l10n.navBlacklist),
-                          subtitle: Text(l10n.navBlacklistSubtitle),
-                          value: _ctrl.blacklistEnabled,
-                          onChanged: _ctrl.setBlacklistEnabled,
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
                         ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
                           shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(16))),
-                          leading: const Icon(Icons.list_alt),
+                                  top: Radius.circular(16))),
+                          leading: const Icon(Icons.block),
                           title: Text(l10n.navBlacklist),
                           subtitle: Text(l10n.navBlacklistSubtitle),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const BlacklistPage()),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
-                          secondary: const Icon(Icons.verified_outlined),
-                          title: Text(l10n.navFocusWhitelist),
-                          subtitle: Text(l10n.navFocusWhitelistSubtitle),
-                          value: _ctrl.whitelistEnabled,
-                          onChanged: _ctrl.setWhitelistEnabled,
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(16))),
-                          leading: const Icon(Icons.playlist_add_check),
-                          title: Text(l10n.navFocusWhitelist),
-                          subtitle: Text(l10n.navFocusWhitelistSubtitle),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const FocusWhitelistPage()),
-                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const BlacklistPage()),
+                            );
+                          },
                         ),
                       ],
                     ),

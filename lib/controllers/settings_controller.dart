@@ -13,8 +13,6 @@ const kPrefUnlockFocusAuth            = 'pref_unlock_focus_auth';
 const kPrefThemeMode                  = 'pref_theme_mode';
 const kPrefLocale                     = 'pref_locale';
 const kPrefCheckUpdateOnLaunch        = 'pref_check_update_on_launch';
-const kPrefAppBlacklistEnabled        = 'pref_app_blacklist_enabled';
-const kPrefAppWhitelistEnabled        = 'pref_app_whitelist_enabled';
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
 
@@ -32,8 +30,6 @@ class SettingsController extends ChangeNotifier {
   bool unlockAllFocus = false;
   bool unlockFocusAuth = false;
   bool checkUpdateOnLaunch = true;
-  bool blacklistEnabled = false;
-  bool whitelistEnabled = false;
   ThemeMode themeMode = ThemeMode.system;
   Locale? locale; // null = follow system
   bool loading = true;
@@ -51,8 +47,6 @@ class SettingsController extends ChangeNotifier {
     unlockAllFocus        = prefs.getBool(kPrefUnlockAllFocus) ?? false;
     unlockFocusAuth       = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
     checkUpdateOnLaunch   = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
-    blacklistEnabled      = prefs.getBool(kPrefAppBlacklistEnabled) ?? false;
-    whitelistEnabled      = prefs.getBool(kPrefAppWhitelistEnabled) ?? false;
     themeMode = switch (prefs.getString(kPrefThemeMode)) {
       'light'  => ThemeMode.light,
       'dark'   => ThemeMode.dark,
@@ -132,20 +126,6 @@ class SettingsController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(kPrefCheckUpdateOnLaunch, value);
     checkUpdateOnLaunch = value;
-    notifyListeners();
-  }
-
-  Future<void> setBlacklistEnabled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kPrefAppBlacklistEnabled, value);
-    blacklistEnabled = value;
-    notifyListeners();
-  }
-
-  Future<void> setWhitelistEnabled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kPrefAppWhitelistEnabled, value);
-    whitelistEnabled = value;
     notifyListeners();
   }
 

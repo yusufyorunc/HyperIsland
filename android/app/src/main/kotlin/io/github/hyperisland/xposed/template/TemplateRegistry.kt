@@ -34,30 +34,8 @@ object TemplateRegistry {
             )
             return
         }
-        // 读取黑白名单开关（独立，白名单优先）
-        fun readBool(key: String): Boolean = try {
-            val uri = android.net.Uri.parse("content://io.github.hyperisland.settings/$key")
-            context.contentResolver.query(uri, null, null, null, null)
-                ?.use { if (it.moveToFirst()) it.getInt(0) != 0 else false } ?: false
-        } catch (_: Exception) { false }
-
-        val whitelistEnabled = readBool("pref_app_whitelist_enabled")
-        val blacklistEnabled = readBool("pref_app_blacklist_enabled")
-
-        // 白名单优先：命中→强制展开；未命中→null（继续判断黑名单）
-        val filteredData = if (whitelistEnabled) {
-            val result = WhitelistFilter.applyTo(context, data)
-            if (result != null) {
-                template.inject(context, extras, result)
-                return
-            }
-            // 白名单未命中，继续黑名单判断
-            if (blacklistEnabled) BlacklistFilter.applyTo(context, data) ?: return else data
-        } else if (blacklistEnabled) {
-            BlacklistFilter.applyTo(context, data) ?: return
-        } else {
-            data
-        }
+        // 通知进入黑名单处理
+        val filteredData = BlacklistFilter.applyTo(context, data) ?: return
         template.inject(context, extras, filteredData)
     }
 }

@@ -279,10 +279,8 @@
   "errorNoFilePath": "无法获取文件路径",
   "errorEmptyClipboard": "剪贴板为空",
 
-"navBlacklist": "通知黑名单",
+  "navBlacklist": "通知黑名单",
   "navBlacklistSubtitle": "启动黑名单应用时，停用焦点通知的自动展开功能",
-  "navFocusWhitelist": "焦点通知白名单",
-  "navFocusWhitelistSubtitle": "仅当前台应用在白名单中时，才强制触发焦点通知展开",
   "presetGamesTitle": "一键过滤热门游戏",
   "presetGamesSuccess": "已从模板中添加 {count} 款已安装游戏至黑名单",
   "@presetGamesSuccess": {
@@ -303,18 +301,5 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  },
-  "whitelistedAppsCount": "已设置 {count} 个应用强制触发焦点通知",
-  "@whitelistedAppsCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "whitelistedAppsCountWithSystem": "已设置 {count} 个应用强制触发焦点通知（含系统应用）",
-  "@whitelistedAppsCountWithSystem": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "whitelistedAppsCountNone": "尚未添加任何应用"
+  }
 }

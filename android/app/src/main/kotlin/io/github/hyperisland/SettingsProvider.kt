@@ -47,7 +47,6 @@ class SettingsProvider : ContentProvider() {
         // 字符串类型的 key（白名单、黑名单、渠道列表、渠道模板等），直接返回字符串值
         if (segment == "pref_generic_whitelist" ||
             segment == "pref_app_blacklist" ||
-            segment == "pref_app_whitelist" ||
             segment.startsWith("pref_channels_") ||
             segment.startsWith("pref_channel_template_") ||
             segment.startsWith("pref_channel_icon_") ||
@@ -82,9 +81,7 @@ class SettingsProvider : ContentProvider() {
             if (segment == "pref_marquee_feature" ||
                 segment == "pref_wrap_long_text" ||
                 segment == "pref_unlock_all_focus" ||
-                segment == "pref_unlock_focus_auth" ||
-                segment == "pref_app_blacklist_enabled" ||
-                segment == "pref_app_whitelist_enabled") 0 else 1
+                segment == "pref_unlock_focus_auth") 0 else 1
         }
         cursor.newRow().add(value)
         return cursor

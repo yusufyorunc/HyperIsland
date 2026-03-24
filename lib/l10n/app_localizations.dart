@@ -1042,18 +1042,6 @@ abstract class AppLocalizations {
   /// **'启动黑名单应用时，停用焦点通知的自动展开功能'**
   String get navBlacklistSubtitle;
 
-  /// No description provided for @navFocusWhitelist.
-  ///
-  /// In zh, this message translates to:
-  /// **'焦点通知白名单'**
-  String get navFocusWhitelist;
-
-  /// No description provided for @navFocusWhitelistSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'仅当前台应用在白名单中时，才强制触发焦点通知展开'**
-  String get navFocusWhitelistSubtitle;
-
   /// No description provided for @presetGamesTitle.
   ///
   /// In zh, this message translates to:
@@ -1077,24 +1065,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已拦截 {count} 个应用的焦点通知（含系统应用）'**
   String blacklistedAppsCountWithSystem(int count);
-
-  /// No description provided for @whitelistedAppsCount.
-  ///
-  /// In zh, this message translates to:
-  /// **'已设置 {count} 个应用强制触发焦点通知'**
-  String whitelistedAppsCount(int count);
-
-  /// No description provided for @whitelistedAppsCountWithSystem.
-  ///
-  /// In zh, this message translates to:
-  /// **'已设置 {count} 个应用强制触发焦点通知（含系统应用）'**
-  String whitelistedAppsCountWithSystem(int count);
-
-  /// No description provided for @whitelistedAppsCountNone.
-  ///
-  /// In zh, this message translates to:
-  /// **'尚未添加任何应用'**
-  String get whitelistedAppsCountNone;
 }
 
 class _AppLocalizationsDelegate

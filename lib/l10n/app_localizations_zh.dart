@@ -526,12 +526,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navBlacklistSubtitle => '启动黑名单应用时，停用焦点通知的自动展开功能';
 
   @override
-  String get navFocusWhitelist => '焦点通知白名单';
-
-  @override
-  String get navFocusWhitelistSubtitle => '仅当前台应用在白名单中时，才强制触发焦点通知展开';
-
-  @override
   String get presetGamesTitle => '一键过滤热门游戏';
 
   @override
@@ -548,17 +542,4 @@ class AppLocalizationsZh extends AppLocalizations {
   String blacklistedAppsCountWithSystem(int count) {
     return '已拦截 $count 个应用的焦点通知（含系统应用）';
   }
-
-  @override
-  String whitelistedAppsCount(int count) {
-    return '已设置 $count 个应用强制触发焦点通知';
-  }
-
-  @override
-  String whitelistedAppsCountWithSystem(int count) {
-    return '已设置 $count 个应用强制触发焦点通知（含系统应用）';
-  }
-
-  @override
-  String get whitelistedAppsCountNone => '尚未添加任何应用';
 }
