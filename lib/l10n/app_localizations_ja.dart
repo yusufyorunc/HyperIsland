@@ -107,27 +107,30 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get restartRootRequired => 'このアプリに root 権限が付与されているか確認してください';
+  String get restartRootRequired =>
+      'このアプリに root 権限が付与されているか確認してください';
 
   @override
-  String get note1 =>
+  String get note1 => 
       '1. このページは Dynamic Island の対応をテストするためのものであり、実際の効果を示すものではありません。';
 
   @override
   String get note2 =>
-      '2. HyperCeiler でシステム UI と MIUI フレームワークのフォーカス通知のホワイトリストを無効化してください。';
+        '2. HyperCeiler でシステム UI と MIUI フレームワークのフォーカス通知のホワイトリストを無効化してください。';
 
   @override
-  String get note3 => '3. LSPosed Manager で有効化後に関連するスコープアプリを再起動する必要があります。';
+  String get note3 =>
+        '3. LSPosed Manager で有効化後に関連するスコープアプリを再起動する必要があります。';
 
   @override
-  String get note4 => '4. 一般的なアダプティブ表示に対応しています。適切なテンプレートを確認してみてください。';
+  String get note4 =>
+        '4. 一般的なアダプティブ表示に対応しています。適切なテンプレートを確認してみてください。';
 
   @override
   String get behaviorSection => '動作';
 
   @override
-  String get defaultConfigSection => 'チャンネルのデフォルト設定';
+  String get defaultConfigSection => 'デフォルトのチャンネル設定';
 
   @override
   String get appearanceSection => '外観';
@@ -139,30 +142,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aboutSection => 'アプリについて';
 
   @override
-  String get keepFocusNotifTitle => 'ダウンロードの一時停止後もフォーカス通知を表示';
+  String get keepFocusNotifTitle =>
+        'ダウンロードの一時停止後もフォーカス通知を表示';
 
   @override
   String get keepFocusNotifSubtitle =>
-      'ダウンロードを再開するためのフォーカス通知を表示しますが、状態の同期でズレが発生する可能性があります';
+        'ダウンロードを再開するためのフォーカス通知を表示しますが、状態の同期でズレが発生する可能性があります';
 
   @override
   String get unlockAllFocusTitle => 'フォーカス通知のホワイトリストを削除';
 
   @override
-  String get unlockAllFocusSubtitle => 'システム認証がない場合でもすべてのアプリでフォーカス通知を送信可能にします';
+  String get unlockAllFocusSubtitle =>
+        'システム認証がない場合でもすべてのアプリでフォーカス通知を送信可能にします';
 
   @override
-  String get unlockFocusAuthTitle => 'フォーカス通知の署名検証を削除';
+  String get unlockFocusAuthTitle =>
+        'フォーカス通知の署名検証を削除';
 
   @override
   String get unlockFocusAuthSubtitle =>
-      '署名検証のバイパスとすべてのアプリでフォーカス通知を時計/ブレスレットに送信可能な状態にします (XMSF のフックが必要です)';
+        '署名検証のバイパスとすべてのアプリでフォーカス通知を時計/ブレスレットに送信可能な状態にします (XMSF のフックが必要です)';
 
   @override
   String get checkUpdateOnLaunchTitle => '起動時に更新を確認する';
 
   @override
-  String get checkUpdateOnLaunchSubtitle => 'アプリの起動時に最新のバージョンを自動で確認します';
+  String get checkUpdateOnLaunchSubtitle =>
+        'アプリの起動時に最新のバージョンを自動で確認します';
 
   @override
   String get checkUpdate => '更新を確認';
@@ -174,7 +181,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get useAppIconTitle => 'アプリアイコンを使用する';
 
   @override
-  String get useAppIconSubtitle => 'ダウンロードマネージャーの通知でアプリアイコンを使用します';
+  String get useAppIconSubtitle =>
+        'ダウンロードマネージャーの通知でアプリアイコンを使用します';
 
   @override
   String get roundIconTitle => 'アイコンの角を丸める';
@@ -186,18 +194,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get marqueeChannelTitle => 'Island のテキストをスクロール';
 
   @override
-  String get marqueeSpeedTitle => 'スクロールの速度';
+  String get marqueeSpeedTitle => '速度 ';
 
   @override
   String marqueeSpeedLabel(int speed) {
-    return '$speed px/s';
+    return '$speed px/秒';
   }
 
   @override
-  String get wrapLongTextTitle => '自動で折り返す';
+  String get wrapLongTextTitle => '自動で折り返す (試験的)';
 
   @override
-  String get wrapLongTextSubtitle => '長いフォーカス通知テキストを二行に分割します';
+  String get wrapLongTextSubtitle =>
+        '長いフォーカス通知テキストを二行に分割します';
 
   @override
   String get themeModeTitle => 'カラーモード';
@@ -248,13 +257,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get importFromClipboard => 'クリップボードからインポート';
 
   @override
-  String get importFromClipboardSubtitle => 'クリップボードの JSON テキストから構成を復元します';
+  String get importFromClipboardSubtitle =>
+        'クリップボードの JSON テキストから構成を復元します';
 
   @override
   String get qqGroup => 'QQ グループ';
 
   @override
-  String get restartScopeApp => '設定を適用するにはスコープアプリを再起動してください';
+  String get restartScopeApp =>
+        '設定を適用するにはスコープアプリを再起動してください';
 
   @override
   String get groupNumberCopied => 'グループ番号をクリップボードにコピーしました';
@@ -340,7 +351,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchApps => 'アプリ名またはパッケージ名で検索';
 
   @override
-  String get noAppsFound => 'インストール済みのアプリが見つかりません\nアプリリストの権限が有効か確認してください';
+  String get noAppsFound =>
+        'インストール済みのアプリが見つかりません\nアプリリストの権限が有効か確認してください';
 
   @override
   String get noMatchingApps => '一致するアプリがありません';
@@ -368,7 +380,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rootRequiredMessage =>
-      '通知チャンネルの読み取りには root 権限が必要です。\nroot 権限が付与されていることを確認後に再度お試しください。';
+        '通知チャンネルの読み取りには root 権限が必要です。\nroot 権限が付与されていることを確認後に再度お試しください。';
 
   @override
   String get enableAllChannels => 'すべてのチャンネルで有効';
@@ -377,7 +389,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noChannelsFound => '通知チャンネルがありません';
 
   @override
-  String get noChannelsFoundSubtitle => 'このアプリには通知チャンネルがありません。通知の読み取りはできません。';
+  String get noChannelsFoundSubtitle =>
+        'このアプリには通知チャンネルがありません。通知の読み取りはできません。';
 
   @override
   String allChannelsActive(int count) {
@@ -395,7 +408,8 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get appDisabledBanner => 'アプリが無効化されているため、以下のチャンネル設定は無効です';
+  String get appDisabledBanner =>
+        'アプリが無効化されているため、以下のチャンネル設定は無効です';
 
   @override
   String channelImportance(String importance, String id) {
@@ -443,7 +457,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get templateNotificationIslandLiteName => 'Notification Island|Lite';
 
   @override
-  String get templateDownloadLiteName => 'ダウンロード|Lite';
+  String get templateDownloadLiteName => 'Lite|をダウンロード';
 
   @override
   String get islandSection => 'Island';
@@ -499,10 +513,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get optDefault => 'デフォルト';
 
   @override
-  String get optDefaultOn => 'デフォルト（ON）';
+  String get optDefaultOn => 'デフォルト (ON)';
 
   @override
-  String get optDefaultOff => 'デフォルト（OFF）';
+  String get optDefaultOff => 'デフォルト (OFF)';
 
   @override
   String get optOn => 'ON';
@@ -529,7 +543,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navBlacklist => 'フォーカスのブラックリスト';
 
   @override
-  String get navBlacklistSubtitle => '特定のアプリでのフォーカス通知をブロック、フローティングまたは非表示にします';
+  String get navBlacklistSubtitle =>
+        '特定のアプリでのフォーカス通知をブロック、フローティングまたは非表示にします';
 
   @override
   String get presetGamesTitle => '人気のゲームをクイックでフィルター';
@@ -551,39 +566,43 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get firstFloatLabelSubtitle =>
-      'Islandが初めて通知を受信したときにフォーカス通知として展開するかどうか';
+        'Island が初めて通知を受信時にフォーカス通知として展開します';
 
   @override
-  String get updateFloatLabelSubtitle => 'Islandの更新時に通知を展開するかどうか';
+  String get updateFloatLabelSubtitle =>
+        'Island の更新時にフロート通知を展開します';
 
   @override
-  String get marqueeChannelTitleSubtitle => 'Islandで長いメッセージをスクロールするかどうか';
+  String get marqueeChannelTitleSubtitle =>
+        'Island で長いメッセージをスクロールします';
 
   @override
-  String get focusNotificationLabelSubtitle => '通知をフォーカス通知に置き換える（無効時は元の通知を表示）';
+  String get focusNotificationLabelSubtitle =>
+        '通知をフォーカス通知に置き換えます (無効で元の通知が表示されます)';
 
   @override
   String get preserveStatusBarSmallIconLabelSubtitle =>
-      'フォーカス通知表示時にステータスバーアイコンを強制的に保持するかどうか';
+        'フォーカス通知を表示時にステータスバーアイコンを強制的に保持します';
 
   @override
-  String get aiConfigSection => 'AI 強化';
+  String get aiConfigSection => 'AI エンハンスメント';
 
   @override
-  String get aiConfigTitle => 'AI 通知サマリー';
+  String get aiConfigTitle => 'AI 通知の概要';
 
   @override
-  String get aiConfigSubtitleEnabled => '有効 · タップして AI パラメータを設定';
+  String get aiConfigSubtitleEnabled =>
+        '有効 · タップで AI パラメータを構成';
 
   @override
-  String get aiConfigSubtitleDisabled => '無効 · タップして設定';
+  String get aiConfigSubtitleDisabled => '無効 · タップで構成';
 
   @override
-  String get aiEnabledTitle => 'AI サマリーを有効にする';
+  String get aiEnabledTitle => 'AI の概要を有効化';
 
   @override
   String get aiEnabledSubtitle =>
-      'AI が Island の左右テキストを生成。タイムアウト・エラー時は自動でフォールバック';
+        'AI が Island の左右のテキストを生成します。タイムアウトまたはエラーの発生時はフォールバックします。';
 
   @override
   String get aiApiSection => 'API パラメータ';
@@ -607,21 +626,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiModelHint => 'gpt-4o-mini';
 
   @override
-  String get aiTestButton => '接続テスト';
+  String get aiTestButton => 'テスト接続';
 
   @override
-  String get aiTestUrlEmpty => 'API URL を入力してください';
+  String get aiTestUrlEmpty => '始めに API URL を入力してください';
 
   @override
   String get aiConfigSaveButton => '保存';
 
   @override
-  String get aiConfigSaved => 'AI 設定を保存しました';
+  String get aiConfigSaved => 'AI の構成を保存しました';
 
   @override
   String get aiConfigTips =>
-      'AI は通知のパッケージ名・タイトル・本文を受け取り、左側（ソース）と右側（内容）の短いテキストを返します。OpenAI 互換 API（DeepSeek、Claude など）に対応。3 秒以内に応答がない場合はデフォルトロジックにフォールバックします。';
+        'AI は各通知のアプリパッケージ、タイトル、コンテンツを受信し短い左側 (ソース) と右側 (コンテンツ) のテキストを返します。OpenAI 形式の API (DeepSeek、Claude など) と互換性があります。3 秒以内に応答がない場合は、デフォルトのロジックにフォールバックします。';
 
   @override
-  String get templateAiNotificationIslandName => 'AI 通知Island';
+  String get templateAiNotificationIslandName => 'AI Notification Island';
 }
