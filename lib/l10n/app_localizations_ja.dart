@@ -202,7 +202,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get wrapLongTextTitle => '自動で折り返す (試験的)';
+  String get wrapLongTextTitle => '自動で折り返す';
 
   @override
   String get wrapLongTextSubtitle =>
