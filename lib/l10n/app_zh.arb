@@ -247,7 +247,7 @@
 
   "template": "模板",
   "rendererLabel": "样式",
-  "rendererImageTextWithButtons4Name": "新图文组件+按钮组件4",
+  "rendererImageTextWithButtons4Name": "新图文组件+底部文本按钮",
   "rendererCoverInfoName": "封面组件+自动换行",
   "rendererImageTextWithRightTextButtonName": "新图文组件+右侧文本按钮",
   "islandIcon": "超级岛图标",

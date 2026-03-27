@@ -149,7 +149,7 @@
 
   "template": "Template",
   "rendererLabel": "Style",
-  "rendererImageTextWithButtons4Name": "Image+Text+Buttons 4",
+  "rendererImageTextWithButtons4Name": "Image+Text+Bottom Text Buttons",
   "rendererCoverInfoName": "Cover Info+Auto Wrap",
   "rendererImageTextWithRightTextButtonName": "Image+Text+Right Text Button",
   "islandIcon": "Island icon",
