@@ -96,7 +96,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2.18.0
         with:
-          flutter-version: '3.32.6'
+          flutter-version: '3.41.6'
           cache: true
           cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
           pub-cache-key: 'flutter-pub-:os:-:channel:-:version:-:arch:-:hash:'
@@ -134,7 +134,7 @@ jobs:
           flutter build apk --release --no-pub \
             --target-platform android-arm64 \
             --build-name="${{ steps.version.outputs.build_version_name }}" \
-            --build-number="${{ steps.version.outputs.build_version_code }}" 
+            --build-number="${{ steps.version.outputs.build_version_code }}"
 
       # ────────────────────────────────────────────────────────────────────────
       # 以下步骤：上传编译产物和发布
@@ -145,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.0
         with:
           name: HyperIsland-v${{ steps.version.outputs.version_name }}
-          path: build/app/outputs/flutter-apk/app-*-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
           compression-level: 0
 
@@ -153,7 +153,7 @@ jobs:
       - name: Rename APK for release
         if: steps.version.outputs.changed == 'true'
         run: |
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+          cp build/app/outputs/flutter-apk/app-release.apk \
             "HyperIsland-v${{ steps.version.outputs.version_name }}.apk"
 
       # 第十一步：提取更新日志（仅在版本变更时执行）
