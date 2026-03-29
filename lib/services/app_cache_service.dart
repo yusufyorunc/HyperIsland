@@ -34,7 +34,8 @@ class AppCacheService extends ChangeNotifier {
   bool get initialized => _initialized;
 
   static const _excludedPackages = {
-    "com.android.providers.downloads.ui"
+    "com.android.providers.downloads.ui",
+    "com.android.systemui"
 
   };
 
