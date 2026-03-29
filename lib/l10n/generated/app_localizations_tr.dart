@@ -661,4 +661,15 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get templateAiNotificationIslandName =>
       'Yapay Zeka Bildirim Dynamic Island';
+
+  @override
+  String get aiPromptLabel => 'Özel Prompt';
+
+  @override
+  String get aiPromptHint =>
+      'Varsayılan için boş bırakın: Bildirimden önemli bilgiyi çıkar, sol ve sağ ayrı ayrı en fazla 6 kelime veya 12 karakter';
+
+  @override
+  String get aiPromptDefault =>
+      'Bildirimden önemli bilgiyi çıkar, sol ve sağ ayrı ayrı en fazla 6 kelime veya 12 karakter olsun';
 }

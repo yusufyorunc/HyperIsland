@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const kPrefResumeNotification          = 'pref_resume_notification';
-const kPrefUseHookAppIcon             = 'pref_use_hook_app_icon';
-const kPrefRoundIcon                  = 'pref_round_icon';
-const kPrefMarqueeFeature             = 'pref_marquee_feature';
-const kPrefMarqueeSpeed               = 'pref_marquee_speed';
-const kPrefUnlockAllFocus             = 'pref_unlock_all_focus';
-const kPrefUnlockFocusAuth            = 'pref_unlock_focus_auth';
-const kPrefThemeMode                  = 'pref_theme_mode';
-const kPrefLocale                     = 'pref_locale';
-const kPrefCheckUpdateOnLaunch        = 'pref_check_update_on_launch';
-const kPrefDefaultFirstFloat          = 'pref_default_first_float';
-const kPrefDefaultEnableFloat         = 'pref_default_enable_float';
-const kPrefDefaultMarquee             = 'pref_default_marquee';
-const kPrefDefaultFocusNotif          = 'pref_default_focus_notif';
-const kPrefDefaultPreserveSmallIcon   = 'pref_default_preserve_small_icon';
+const kPrefResumeNotification = 'pref_resume_notification';
+const kPrefUseHookAppIcon = 'pref_use_hook_app_icon';
+const kPrefRoundIcon = 'pref_round_icon';
+const kPrefMarqueeFeature = 'pref_marquee_feature';
+const kPrefMarqueeSpeed = 'pref_marquee_speed';
+const kPrefUnlockAllFocus = 'pref_unlock_all_focus';
+const kPrefUnlockFocusAuth = 'pref_unlock_focus_auth';
+const kPrefThemeMode = 'pref_theme_mode';
+const kPrefLocale = 'pref_locale';
+const kPrefCheckUpdateOnLaunch = 'pref_check_update_on_launch';
+const kPrefDefaultFirstFloat = 'pref_default_first_float';
+const kPrefDefaultEnableFloat = 'pref_default_enable_float';
+const kPrefDefaultMarquee = 'pref_default_marquee';
+const kPrefDefaultFocusNotif = 'pref_default_focus_notif';
+const kPrefDefaultPreserveSmallIcon = 'pref_default_preserve_small_icon';
 
-const kPrefAiEnabled  = 'pref_ai_enabled';
-const kPrefAiUrl      = 'pref_ai_url';
-const kPrefAiApiKey   = 'pref_ai_api_key';
-const kPrefAiModel    = 'pref_ai_model';
+const kPrefAiEnabled = 'pref_ai_enabled';
+const kPrefAiUrl = 'pref_ai_url';
+const kPrefAiApiKey = 'pref_ai_api_key';
+const kPrefAiModel = 'pref_ai_model';
+const kPrefAiPrompt = 'pref_ai_prompt';
 
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
@@ -46,33 +47,36 @@ class SettingsController extends ChangeNotifier {
   String aiUrl = '';
   String aiApiKey = '';
   String aiModel = '';
+  String aiPrompt = '';
   ThemeMode themeMode = ThemeMode.system;
   Locale? locale; // null = follow system
   bool loading = true;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    resumeNotification        = prefs.getBool(kPrefResumeNotification) ?? true;
-    useHookAppIcon            = prefs.getBool(kPrefUseHookAppIcon) ?? true;
-    roundIcon                 = prefs.getBool(kPrefRoundIcon) ?? true;
-    marqueeFeature        = prefs.getBool(kPrefMarqueeFeature) ?? false;
-    marqueeSpeed          = (prefs.getInt(kPrefMarqueeSpeed) ?? 100).clamp(20, 500);
-    unlockAllFocus        = prefs.getBool(kPrefUnlockAllFocus) ?? false;
-    unlockFocusAuth       = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
-    checkUpdateOnLaunch        = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
-    defaultFirstFloat          = prefs.getBool(kPrefDefaultFirstFloat) ?? false;
-    defaultEnableFloat         = prefs.getBool(kPrefDefaultEnableFloat) ?? false;
-    defaultMarquee             = prefs.getBool(kPrefDefaultMarquee) ?? false;
-    defaultFocusNotif          = prefs.getBool(kPrefDefaultFocusNotif) ?? true;
-    defaultPreserveSmallIcon   = prefs.getBool(kPrefDefaultPreserveSmallIcon) ?? false;
-    aiEnabled  = prefs.getBool(kPrefAiEnabled) ?? false;
-    aiUrl      = prefs.getString(kPrefAiUrl) ?? '';
-    aiApiKey   = prefs.getString(kPrefAiApiKey) ?? '';
-    aiModel    = prefs.getString(kPrefAiModel) ?? '';
+    resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
+    useHookAppIcon = prefs.getBool(kPrefUseHookAppIcon) ?? true;
+    roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
+    marqueeFeature = prefs.getBool(kPrefMarqueeFeature) ?? false;
+    marqueeSpeed = (prefs.getInt(kPrefMarqueeSpeed) ?? 100).clamp(20, 500);
+    unlockAllFocus = prefs.getBool(kPrefUnlockAllFocus) ?? false;
+    unlockFocusAuth = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
+    checkUpdateOnLaunch = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
+    defaultFirstFloat = prefs.getBool(kPrefDefaultFirstFloat) ?? false;
+    defaultEnableFloat = prefs.getBool(kPrefDefaultEnableFloat) ?? false;
+    defaultMarquee = prefs.getBool(kPrefDefaultMarquee) ?? false;
+    defaultFocusNotif = prefs.getBool(kPrefDefaultFocusNotif) ?? true;
+    defaultPreserveSmallIcon =
+        prefs.getBool(kPrefDefaultPreserveSmallIcon) ?? false;
+    aiEnabled = prefs.getBool(kPrefAiEnabled) ?? false;
+    aiUrl = prefs.getString(kPrefAiUrl) ?? '';
+    aiApiKey = prefs.getString(kPrefAiApiKey) ?? '';
+    aiModel = prefs.getString(kPrefAiModel) ?? '';
+    aiPrompt = prefs.getString(kPrefAiPrompt) ?? '';
     themeMode = switch (prefs.getString(kPrefThemeMode)) {
-      'light'  => ThemeMode.light,
-      'dark'   => ThemeMode.dark,
-      _        => ThemeMode.system,
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
     };
     final localeStr = prefs.getString(kPrefLocale);
     locale = localeStr != null ? Locale(localeStr) : null;
@@ -115,7 +119,6 @@ class SettingsController extends ChangeNotifier {
     marqueeSpeed = clamped;
     notifyListeners();
   }
-
 
   Future<void> setUnlockAllFocus(bool value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -201,11 +204,18 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setAiPrompt(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kPrefAiPrompt, value);
+    aiPrompt = value;
+    notifyListeners();
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
     final str = switch (mode) {
-      ThemeMode.light  => 'light',
-      ThemeMode.dark   => 'dark',
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
       ThemeMode.system => 'system',
     };
     await prefs.setString(kPrefThemeMode, str);

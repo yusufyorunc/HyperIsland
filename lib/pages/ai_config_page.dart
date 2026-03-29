@@ -18,6 +18,7 @@ class _AiConfigPageState extends State<AiConfigPage> {
   late final TextEditingController _urlCtrl;
   late final TextEditingController _keyCtrl;
   late final TextEditingController _modelCtrl;
+  late final TextEditingController _promptCtrl;
 
   bool _keyObscured = true;
   bool _testing = false;
@@ -34,6 +35,7 @@ class _AiConfigPageState extends State<AiConfigPage> {
     _urlCtrl = TextEditingController(text: _ctrl.aiUrl);
     _keyCtrl = TextEditingController(text: _ctrl.aiApiKey);
     _modelCtrl = TextEditingController(text: _ctrl.aiModel);
+    _promptCtrl = TextEditingController(text: _ctrl.aiPrompt);
   }
 
   @override
@@ -42,6 +44,7 @@ class _AiConfigPageState extends State<AiConfigPage> {
     _urlCtrl.dispose();
     _keyCtrl.dispose();
     _modelCtrl.dispose();
+    _promptCtrl.dispose();
     super.dispose();
   }
 
@@ -49,6 +52,7 @@ class _AiConfigPageState extends State<AiConfigPage> {
     await _ctrl.setAiUrl(_urlCtrl.text.trim());
     await _ctrl.setAiApiKey(_keyCtrl.text.trim());
     await _ctrl.setAiModel(_modelCtrl.text.trim());
+    await _ctrl.setAiPrompt(_promptCtrl.text.trim());
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -227,6 +231,34 @@ class _AiConfigPageState extends State<AiConfigPage> {
                             prefixIcon: const Icon(Icons.psychology_outlined),
                           ),
                           autocorrect: false,
+                        ),
+                        const SizedBox(height: 16),
+                        // Custom Prompt
+                        TextField(
+                          controller: _promptCtrl,
+                          decoration: InputDecoration(
+                            labelText: l10n.aiPromptLabel,
+                            hintText: l10n.aiPromptDefault,
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.edit_note),
+                            alignLabelWithHint: true,
+                          ),
+                          maxLines: 5,
+                          minLines: 3,
+                          autocorrect: false,
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Text(
+                            l10n.aiPromptHint,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         // Buttons row

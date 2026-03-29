@@ -80,6 +80,7 @@ object AINotificationIslandNotification : IslandTemplate {
         val url: String,
         val apiKey: String,
         val model: String,
+        val prompt: String,
     )
 
     private data class AiIslandText(val left: String, val right: String)
@@ -89,6 +90,7 @@ object AINotificationIslandNotification : IslandTemplate {
         url     = ConfigManager.getString("pref_ai_url"),
         apiKey  = ConfigManager.getString("pref_ai_api_key"),
         model   = ConfigManager.getString("pref_ai_model"),
+        prompt  = ConfigManager.getString("pref_ai_prompt"),
     )
 
     // ── AI 调用（带超时） ──────────────────────────────────────────────────────
@@ -110,7 +112,7 @@ object AINotificationIslandNotification : IslandTemplate {
     }
 
     private fun callAiApi(config: AiConfig, data: NotifData): AiIslandText? {
-        val requestBody = buildRequestBody(config.model, data)
+        val requestBody = buildRequestBody(config.model, config.prompt, data)
         val conn = (URL(config.url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
@@ -135,11 +137,13 @@ object AINotificationIslandNotification : IslandTemplate {
         }
     }
 
-    private fun buildRequestBody(model: String, data: NotifData): String {
+    private fun buildRequestBody(model: String, customPrompt: String, data: NotifData): String {
+        val defaultPrompt = "根据通知信息，提取关键信息，左右分别不超过6汉字12字符"
+        val userPrompt = if (customPrompt.isNotEmpty()) customPrompt else defaultPrompt
         val systemPrompt = """
-你是一个 Android 通知摘要助手。
-根据通知信息，提取关键信息，仅返回如下 JSON，不得包含任何其他文字或代码块：
-{"left":"通知来源（优先提取谁发的而不是应用名称，6字以内）","right":"核心内容（不超过6汉字或者12数字字母）"}
+$userPrompt
+仅返回如下 JSON，不得包含任何其他文字或代码块：
+{"left":"左侧文本","right":"右侧文本"}
 """.trimIndent()
 
         val userContent = buildString {

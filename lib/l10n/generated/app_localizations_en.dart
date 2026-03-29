@@ -653,4 +653,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templateAiNotificationIslandName => 'AI Notification Island';
+
+  @override
+  String get aiPromptLabel => 'Custom Prompt';
+
+  @override
+  String get aiPromptHint =>
+      'Leave empty to use default: Extract key info, left and right each no more than 6 words or 12 characters';
+
+  @override
+  String get aiPromptDefault =>
+      'Extract key info from notification, left and right each no more than 6 words or 12 characters';
 }

@@ -633,4 +633,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get templateAiNotificationIslandName => 'AI Notification Island';
+
+  @override
+  String get aiPromptLabel => 'カスタムプロンプト';
+
+  @override
+  String get aiPromptHint => '空のままにするとデフォルトを使用：通知から重要情報を抽出、左右それぞれ6語または12文字以内';
+
+  @override
+  String get aiPromptDefault => '通知から重要情報を抽出し、左右それぞれ6語または12文字以内にしてください';
 }

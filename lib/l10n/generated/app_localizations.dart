@@ -1235,6 +1235,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'AI 通知超级岛'**
   String get templateAiNotificationIslandName;
+
+  /// No description provided for @aiPromptLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义提示词'**
+  String get aiPromptLabel;
+
+  /// No description provided for @aiPromptHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'留空使用默认提示词：根据通知信息，提取关键信息，左右分别不超过6汉字12字符'**
+  String get aiPromptHint;
+
+  /// No description provided for @aiPromptDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'根据通知信息，提取关键信息，左右分别不超过6汉字12字符'**
+  String get aiPromptDefault;
 }
 
 class _AppLocalizationsDelegate

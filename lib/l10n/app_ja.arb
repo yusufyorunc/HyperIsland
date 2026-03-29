@@ -217,5 +217,8 @@
   "aiConfigSaveButton": "保存",
   "aiConfigSaved": "AI の構成を保存しました",
   "aiConfigTips": "AI は各通知のアプリパッケージ、タイトル、コンテンツを受信し短い左側 (ソース) と右側 (コンテンツ) のテキストを返します。OpenAI 形式の API (DeepSeek、Claude など) と互換性があります。3 秒以内に応答がない場合は、デフォルトのロジックにフォールバックします。",
-  "templateAiNotificationIslandName": "AI Notification Island"
+  "templateAiNotificationIslandName": "AI Notification Island",
+  "aiPromptLabel": "カスタムプロンプト",
+  "aiPromptHint": "空のままにするとデフォルトを使用：通知から重要情報を抽出、左右それぞれ6語または12文字以内",
+  "aiPromptDefault": "通知から重要情報を抽出し、左右それぞれ6語または12文字以内にしてください"
 }

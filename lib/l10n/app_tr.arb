@@ -331,5 +331,8 @@
   "aiConfigSaveButton": "Kaydet",
   "aiConfigSaved": "Yapay Zeka yapılandırması kaydedildi",
   "aiConfigTips": "Yapay Zeka, bildirimin uygulama paket adını, başlığını ve gövdesini alarak sol (kaynak) ve sağ (içerik) kısa metinleri döndürür. OpenAI biçimiyle uyumlu API'leri destekler (DeepSeek, Claude vb.). 3 saniye içinde yanıt gelmezse otomatik olarak varsayılan mantığa geri döner.",
-  "templateAiNotificationIslandName": "Yapay Zeka Bildirim Dynamic Island"
+  "templateAiNotificationIslandName": "Yapay Zeka Bildirim Dynamic Island",
+  "aiPromptLabel": "Özel Prompt",
+  "aiPromptHint": "Varsayılan için boş bırakın: Bildirimden önemli bilgiyi çıkar, sol ve sağ ayrı ayrı en fazla 6 kelime veya 12 karakter",
+  "aiPromptDefault": "Bildirimden önemli bilgiyi çıkar, sol ve sağ ayrı ayrı en fazla 6 kelime veya 12 karakter olsun"
 }

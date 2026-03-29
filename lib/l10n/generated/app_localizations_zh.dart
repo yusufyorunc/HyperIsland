@@ -626,4 +626,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get templateAiNotificationIslandName => 'AI 通知超级岛';
+
+  @override
+  String get aiPromptLabel => '自定义提示词';
+
+  @override
+  String get aiPromptHint => '留空使用默认提示词：根据通知信息，提取关键信息，左右分别不超过6汉字12字符';
+
+  @override
+  String get aiPromptDefault => '根据通知信息，提取关键信息，左右分别不超过6汉字12字符';
 }

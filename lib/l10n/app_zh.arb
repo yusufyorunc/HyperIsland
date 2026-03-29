@@ -331,5 +331,8 @@
   "aiConfigSaveButton": "保存",
   "aiConfigSaved": "AI 配置已保存",
   "aiConfigTips": "AI 将收到通知的应用包名、标题和正文，返回左侧（来源）和右侧（内容）短文本。支持兼容 OpenAI 格式的接口（如 DeepSeek、Claude 等）。超过 3 秒未响应时自动回退到默认逻辑。",
-  "templateAiNotificationIslandName": "AI 通知超级岛"
+  "templateAiNotificationIslandName": "AI 通知超级岛",
+  "aiPromptLabel": "自定义提示词",
+  "aiPromptHint": "留空使用默认提示词：根据通知信息，提取关键信息，左右分别不超过6汉字12字符",
+  "aiPromptDefault": "根据通知信息，提取关键信息，左右分别不超过6汉字12字符"
 }
