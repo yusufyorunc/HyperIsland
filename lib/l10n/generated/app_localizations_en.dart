@@ -481,6 +481,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preserveStatusBarSmallIconLabel => 'Status bar icon';
 
   @override
+  String get preserveStatusBarSmallIconLabelSubtitle =>
+      'Whether to force keep status bar icon when focus notification is displayed';
+
+  @override
+  String get hideIslandIconLabel => 'Hide large island icon';
+
+  @override
+  String get hideIslandIconLabelSubtitle =>
+      'Hide the large icon of the island (small island not affected)';
+
+  @override
   String get firstFloatLabel => 'First float';
 
   @override
@@ -582,10 +593,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get focusNotificationLabelSubtitle =>
       'Replace notification with focus notification (shows original notification when disabled)';
-
-  @override
-  String get preserveStatusBarSmallIconLabelSubtitle =>
-      'Whether to force keep status bar icon when focus notification is displayed';
 
   @override
   String get aiConfigSection => 'AI Enhancement';

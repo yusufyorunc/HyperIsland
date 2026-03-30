@@ -99,6 +99,8 @@ data class NotifData(
     val enableFloatMode: String = "default",
     /** 超级岛自动消失时间，默认 5 */
     val islandTimeout: Int = 5,
+    /** 是否隐藏大岛图标（小岛不受影响）："default" / "on" / "off" */
+    val hideIslandIcon: String = "default",
     /** 是否为实时（持续）通知，对应 Notification.FLAG_ONGOING_EVENT */
     val isOngoing: Boolean = false,
     /** 原通知的点击动作，用于代发通知时还原点击行为。 */

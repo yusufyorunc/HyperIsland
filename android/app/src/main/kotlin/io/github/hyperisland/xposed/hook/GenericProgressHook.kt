@@ -246,6 +246,7 @@ object GenericProgressHook {
             val defaultMarquee           = loadBooleanSetting("global:default_marquee",            "pref_default_marquee",            false)
             val defaultFocusNotif        = loadBooleanSetting("global:default_focus_notif",        "pref_default_focus_notif",        true)
             val defaultPreserveSmallIcon = loadBooleanSetting("global:default_preserve_small_icon","pref_default_preserve_small_icon", false)
+            val defaultHideIslandIcon    = loadBooleanSetting("global:default_hide_island_icon",   "pref_default_hide_island_icon",   false)
 
             val focusNotif = resolveTriOpt(
                 loadChannelStringSetting("focus:$pkg/$channelId", "pref_channel_focus_${pkg}_$channelId", "default"),
@@ -254,6 +255,10 @@ object GenericProgressHook {
             val preserveStatusBarSmallIcon = resolveTriOpt(
                 loadChannelStringSetting("preserve_small_icon:$pkg/$channelId", "pref_channel_preserve_small_icon_${pkg}_$channelId", "default"),
                 defaultPreserveSmallIcon
+            )
+            val hideIslandIcon = resolveTriOpt(
+                loadChannelStringSetting("hide_island_icon:$pkg/$channelId", "pref_channel_hide_island_icon_${pkg}_$channelId", "default"),
+                defaultHideIslandIcon
             )
             val firstFloat = resolveTriOpt(
                 loadChannelStringSetting("first_float:$pkg/$channelId", "pref_channel_first_float_${pkg}_$channelId", "default"),
@@ -306,6 +311,7 @@ object GenericProgressHook {
                     focusIconMode   = focusIconMode,
                     focusNotif      = focusNotif,
                     preserveStatusBarSmallIcon = preserveStatusBarSmallIcon,
+                    hideIslandIcon  = hideIslandIcon,
                     firstFloat      = firstFloat,
                     enableFloatMode = enableFloatMode,
                     islandTimeout   = islandTimeout,

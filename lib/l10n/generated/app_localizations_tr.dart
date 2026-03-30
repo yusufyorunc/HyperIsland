@@ -488,6 +488,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get preserveStatusBarSmallIconLabel => 'Durum Çubuğu Simgesi';
 
   @override
+  String get preserveStatusBarSmallIconLabelSubtitle =>
+      'Odaklanmış bildirim açıkken durum çubuğu küçük simgesinin zorla korunup korunmayacağı';
+
+  @override
+  String get hideIslandIconLabel => 'Büyük ada simgesini gizle';
+
+  @override
+  String get hideIslandIconLabelSubtitle =>
+      'Adanın büyük simgesini gizler (küçük ada etkilenmez)';
+
+  @override
   String get firstFloatLabel => 'İlk Açılış';
 
   @override
@@ -589,10 +600,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get focusNotificationLabelSubtitle =>
       'Bildirimi odaklanmış bildirimle değiştirir (kapatıldığında orijinal bildirim gösterilir)';
-
-  @override
-  String get preserveStatusBarSmallIconLabelSubtitle =>
-      'Odaklanmış bildirim açıkken durum çubuğu küçük simgesinin zorla korunup korunmayacağı';
 
   @override
   String get aiConfigSection => 'Yapay Zeka Geliştirme';

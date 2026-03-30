@@ -924,6 +924,24 @@ abstract class AppLocalizations {
   /// **'状态栏图标'**
   String get preserveStatusBarSmallIconLabel;
 
+  /// No description provided for @preserveStatusBarSmallIconLabelSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'焦点通知打开时，是否强制保留状态栏小图标'**
+  String get preserveStatusBarSmallIconLabelSubtitle;
+
+  /// No description provided for @hideIslandIconLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏大岛图标'**
+  String get hideIslandIconLabel;
+
+  /// No description provided for @hideIslandIconLabelSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏超级岛的大图标（小岛不受影响）'**
+  String get hideIslandIconLabelSubtitle;
+
   /// No description provided for @firstFloatLabel.
   ///
   /// In zh, this message translates to:
@@ -1103,12 +1121,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'替换通知为焦点通知（关闭后显示原始通知）'**
   String get focusNotificationLabelSubtitle;
-
-  /// No description provided for @preserveStatusBarSmallIconLabelSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'焦点通知打开时，是否强制保留状态栏小图标'**
-  String get preserveStatusBarSmallIconLabelSubtitle;
 
   /// No description provided for @aiConfigSection.
   ///

@@ -66,11 +66,18 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             }
 
             // 大岛
-            val leftSide = ImageTextInfoLeft(
-                type     = 1,
-                picInfo  = PicInfo(type = 1, pic = iconKey),
-                textInfo = TextInfo(title = vm.leftTitle),
-            )
+            val leftSide = if (vm.hideIslandIcon) {
+                ImageTextInfoLeft(
+                    type     = 1,
+                    textInfo = TextInfo(title = vm.leftTitle),
+                )
+            } else {
+                ImageTextInfoLeft(
+                    type     = 1,
+                    picInfo  = PicInfo(type = 1, pic = iconKey),
+                    textInfo = TextInfo(title = vm.leftTitle),
+                )
+            }
             when {
                 vm.circularProgress != null -> builder.setBigIslandInfo(
                     left = leftSide,

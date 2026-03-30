@@ -21,6 +21,7 @@ class SingleChannelMode extends ChannelSettingsMode {
     required this.focusIconMode,
     required this.focusNotif,
     required this.preserveSmallIcon,
+    required this.hideIslandIcon,
     required this.firstFloat,
     required this.enableFloat,
     required this.islandTimeout,
@@ -34,6 +35,7 @@ class SingleChannelMode extends ChannelSettingsMode {
   final String focusIconMode;
   final String focusNotif;
   final String preserveSmallIcon;
+  final String hideIslandIcon;
   final String firstFloat;
   final String enableFloat;
   final String islandTimeout;
@@ -140,6 +142,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   String? _focusIconMode;
   String? _focusNotif;
   String? _preserveSmallIcon;
+  String? _hideIslandIcon;
   String? _firstFloat;
   String? _enableFloat;
   String? _islandTimeout;
@@ -164,6 +167,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _focusIconMode = m.focusIconMode;
       _focusNotif = m.focusNotif;
       _preserveSmallIcon = m.preserveSmallIcon;
+      _hideIslandIcon = m.hideIslandIcon;
       _firstFloat = m.firstFloat;
       _enableFloat = m.enableFloat;
       _islandTimeout = m.islandTimeout;
@@ -204,6 +208,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _focusIconMode != null ||
       _focusNotif != null ||
       _preserveSmallIcon != null ||
+      _hideIslandIcon != null ||
       _firstFloat != null ||
       _enableFloat != null ||
       _islandTimeout != null ||
@@ -238,6 +243,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
           'preserve_small_icon': _focusNotif == kTriOptOff
               ? kTriOptOff
               : _preserveSmallIcon,
+          'hide_island_icon': _hideIslandIcon,
           'first_float': _firstFloat,
           'enable_float': _enableFloat,
           'timeout': _islandTimeout,
@@ -388,6 +394,29 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                   ),
                   const SizedBox(height: 12),
                   _BatchSettingRow(
+                    label: l10n.hideIslandIconLabel,
+                    value: _hideIslandIcon,
+                    showNotChange: !_isSingle,
+                    items: [
+                      DropdownMenuItem(
+                        value: kTriOptDefault,
+                        child: Text(
+                          _defaultLabel(context, _ctrl.defaultHideIslandIcon),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOn,
+                        child: Text(l10n.optOn),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOff,
+                        child: Text(l10n.optOff),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _hideIslandIcon = v),
+                  ),
+                  const SizedBox(height: 12),
+                  _BatchSettingRow(
                     label: l10n.firstFloatLabel,
                     value: _firstFloat,
                     showNotChange: !_isSingle,
@@ -459,12 +488,15 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                   // 自动消失
                   Row(
                     children: [
-                      SizedBox(
-                        width: 76,
-                        child: Text(
-                          l10n.autoDisappear,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: cs.onSurfaceVariant),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Text(
+                            l10n.autoDisappear,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
                         ),
                       ),
                       Expanded(
@@ -754,13 +786,16 @@ class _BatchSettingRow extends StatelessWidget {
 
     return Row(
       children: [
-        SizedBox(
-          width: 76,
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        Flexible(
+          fit: FlexFit.loose,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
         ),
         Expanded(

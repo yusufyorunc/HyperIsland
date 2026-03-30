@@ -253,6 +253,8 @@
   "focusIconLabel": "Odak Simgesi",
   "focusNotificationLabel": "Odaklanmış Bildirim",
   "preserveStatusBarSmallIconLabel": "Durum Çubuğu Simgesi",
+  "hideIslandIconLabel": "Büyük ada simgesini gizle",
+  "hideIslandIconLabelSubtitle": "Adanın büyük simgesini gizler (küçük ada etkilenmez)",
   "firstFloatLabel": "İlk Açılış",
   "updateFloatLabel": "Güncelleme Açılışı",
   "autoDisappear": "Otomatik Kaybol",

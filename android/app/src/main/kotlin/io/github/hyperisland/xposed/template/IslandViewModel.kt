@@ -49,4 +49,5 @@ data class IslandViewModel(
     val enableFloat: Boolean = false,
     val timeoutSecs: Int = 5,
     val isOngoing: Boolean = false,
+    val hideIslandIcon: Boolean = false,
 )

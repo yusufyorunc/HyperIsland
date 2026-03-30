@@ -155,6 +155,8 @@
   "focusIconLabel": "フォーカスアイコン",
   "focusNotificationLabel": "フォーカス通知",
   "preserveStatusBarSmallIconLabel": "ステータスバーアイコン",
+  "hideIslandIconLabel": "大きなアイコンを非表示",
+  "hideIslandIconLabelSubtitle": "Island の大きなアイコンを非表示にします（小さなアイコンは影響を受けません）",
   "firstFloatLabel": "最初にフロート表示",
   "updateFloatLabel": "更新時にフロート表示",
   "autoDisappear": "自動で無視",

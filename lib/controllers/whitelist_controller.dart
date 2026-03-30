@@ -393,6 +393,18 @@ class WhitelistController extends ChangeNotifier {
     );
   }
 
+  Future<void> setChannelHideIslandIcon(
+    String packageName,
+    String channelId,
+    String value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'pref_channel_hide_island_icon_${packageName}_$channelId',
+      value,
+    );
+  }
+
   Future<void> setChannelRenderer(
     String packageName,
     String channelId,
@@ -421,6 +433,7 @@ class WhitelistController extends ChangeNotifier {
       'focus_icon': 'pref_channel_focus_icon',
       'focus': 'pref_channel_focus',
       'preserve_small_icon': 'pref_channel_preserve_small_icon',
+      'hide_island_icon': 'pref_channel_hide_island_icon',
       'first_float': 'pref_channel_first_float',
       'enable_float': 'pref_channel_enable_float',
       'timeout': 'pref_channel_timeout',

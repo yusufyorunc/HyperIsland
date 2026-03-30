@@ -429,6 +429,17 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           value: _ctrl.defaultPreserveSmallIcon,
                           onChanged: _ctrl.setDefaultPreserveSmallIcon,
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          title: Text(l10n.hideIslandIconLabel),
+                          subtitle: Text(l10n.hideIslandIconLabelSubtitle),
+                          value: _ctrl.defaultHideIslandIcon,
+                          onChanged: _ctrl.setDefaultHideIslandIcon,
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.vertical(
                               bottom: Radius.circular(16),

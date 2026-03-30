@@ -96,6 +96,7 @@ object DownloadLiteIslandNotification : IslandTemplate {
             enableFloat       = data.enableFloatMode == "on",
             timeoutSecs       = data.islandTimeout,
             isOngoing         = data.isOngoing,
+            hideIslandIcon    = data.hideIslandIcon == "on",
         )
     }
 }
