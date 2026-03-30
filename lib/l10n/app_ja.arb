@@ -1,16 +1,13 @@
 {
   "@@locale": "ja",
-
   "navHome": "ホーム",
   "navApps": "アプリ",
   "navSettings": "設定",
-
   "cancel": "キャンセル",
   "confirm": "確認",
   "ok": "OK",
   "apply": "適用",
   "noChange": "変更しない",
-
   "newVersionFound": "新しいバージョンが利用可能です",
   "currentVersion": "現在のバージョン: {version}",
   "latestVersion": "最新のバージョン: {version}",
@@ -34,7 +31,9 @@
   "systemNotSupportedSubtitle": "システムは Dynamic Island に非対応です (現在のプロトコルバージョンは {version}、プロトコルバージョン 3 が必要です)",
   "@systemNotSupportedSubtitle": {
     "placeholders": {
-      "version": { "type": "int" }
+      "version": {
+        "type": "int"
+      }
     }
   },
   "restartFailed": "再起動に失敗しました: {message}",
@@ -43,7 +42,6 @@
   "note2": "2. HyperCeiler でシステム UI と MIUI フレームワークのフォーカス通知のホワイトリストを無効化してください。",
   "note3": "3. LSPosed Manager で有効化後に関連するスコープアプリを再起動する必要があります。",
   "note4": "4. 一般的なアダプティブ表示に対応しています。適切なテンプレートを確認してみてください。",
-
   "behaviorSection": "動作",
   "defaultConfigSection": "デフォルトのチャンネル設定",
   "appearanceSection": "外観",
@@ -59,14 +57,16 @@
   "checkUpdateOnLaunchSubtitle": "アプリの起動時に最新のバージョンを自動で確認します",
   "checkUpdate": "更新を確認",
   "alreadyLatest": "最新のバージョンを使用しています",
-"roundIconTitle": "アイコンの角を丸める",
+  "roundIconTitle": "アイコンの角を丸める",
   "roundIconSubtitle": "通知アイコンの角を丸めます",
   "marqueeChannelTitle": "Island のテキストをスクロール",
   "marqueeSpeedTitle": "速度 ",
   "marqueeSpeedLabel": "{speed} px/秒",
   "@marqueeSpeedLabel": {
     "placeholders": {
-      "speed": { "type": "int" }
+      "speed": {
+        "type": "int"
+      }
     }
   },
   "themeModeTitle": "カラーモード",
@@ -95,7 +95,6 @@
   "configCopied": "構成をクリップボードにコピーしました",
   "importSuccess": "{count} 個の項目をインポートしました。アプリを再起動してください。",
   "importFailed": "インポートに失敗しました: {error}",
-
   "appAdaptation": "アプリのアダプティブ表示",
   "selectedAppsCount": "{count} 個のアプリを選択済み",
   "cancelSelection": "選択をキャンセル",
@@ -119,7 +118,6 @@
   "applyingConfig": "構成を適用中です...",
   "progressApps": "進捗: {done} / {total}",
   "batchApplied": "{count} 個のアプリを適用しました",
-
   "cannotReadChannels": "通知チャンネルを読み込めません",
   "rootRequiredMessage": "通知チャンネルの読み取りには root 権限が必要です。\nroot 権限が付与されていることを確認後に再度お試しください。",
   "enableAllChannels": "すべてのチャンネルで有効",
@@ -139,24 +137,23 @@
   "importanceUnknown": "不明",
   "applyToEnabledChannels": "有効な {count} 個のチャンネルに適用されます",
   "applyToAllChannels": "すべての {count} 個のチャンネルに適用されます",
-
   "templateDownloadName": "ダウンロード",
   "templateNotificationIslandName": "Notification Island",
   "templateNotificationIslandLiteName": "Notification Island|Lite",
   "templateDownloadLiteName": "Lite|をダウンロード",
   "islandSection": "Island",
-
   "template": "テンプレート",
   "rendererLabel": "スタイル",
-  "rendererImageTextWithButtons4Name": "画像+テキスト＋下部テキストボタン",
-  "rendererCoverInfoName": "カバー情報+自動で折り返す",
-  "rendererImageTextWithRightTextButtonName": "画像+テキスト+右テキストボタン",
+  "rendererImageTextWithButtons4Name": "画像 + テキスト + 下部テキストボタン",
+  "rendererCoverInfoName": "カバー情報 + 自動で折りたたみ",
+  "rendererImageTextWithRightTextButtonName": "画像 + テキスト + 右テキストボタン",
   "islandIcon": "Island のアイコン",
   "focusIconLabel": "フォーカスアイコン",
   "focusNotificationLabel": "フォーカス通知",
   "preserveStatusBarSmallIconLabel": "ステータスバーアイコン",
-  "islandIconLabel": "大きなアイコン",
-  "islandIconLabelSubtitle": "有効にすると Island の大きなアイコンを表示します（小さなアイコンは影響を受けません）",
+  "preserveStatusBarSmallIconLabelSubtitle": "フォーカス通知を表示時にステータスバーアイコンを強制的に保持します",
+  "islandIconLabel": "大きな Island アイコン",
+  "islandIconLabelSubtitle": "有効にすると Island に大きなアイコンを表示します (小さな Island は影響を受けません)",
   "firstFloatLabel": "最初にフロート表示",
   "updateFloatLabel": "更新時にフロート表示",
   "autoDisappear": "自動で無視",
@@ -172,13 +169,11 @@
   "optDefaultOff": "デフォルト (OFF)",
   "optOn": "ON",
   "optOff": "OFF",
-
   "errorInvalidFormat": "無効な構成フォーマットです",
   "errorNoStorageDir": "ストレージディレクトリを取得できません",
   "errorNoFileSelected": "ファイルが選択されていません",
   "errorNoFilePath": "ファイルパスを取得できません",
   "errorEmptyClipboard": "クリップボードは空です",
-
   "navBlacklist": "フォーカスのブラックリスト",
   "navBlacklistSubtitle": "特定のアプリでのフォーカス通知をブロック、フローティングまたは非表示にします",
   "presetGamesTitle": "人気のゲームをクイックでフィルター",
@@ -192,13 +187,10 @@
   },
   "blacklistedAppsCount": "{count} 個のアプリのフォーカス通知をブロックしました",
   "blacklistedAppsCountWithSystem": "{count} 個のアプリのフォーカス通知をブロックしました (システムアプリを含む)",
-
   "firstFloatLabelSubtitle": "Island が初めて通知を受信時にフォーカス通知として展開します",
   "updateFloatLabelSubtitle": "Island の更新時にフロート通知を展開します",
   "marqueeChannelTitleSubtitle": "Island で長いメッセージをスクロールします",
   "focusNotificationLabelSubtitle": "通知をフォーカス通知に置き換えます (無効で元の通知が表示されます)",
-  "preserveStatusBarSmallIconLabelSubtitle": "フォーカス通知を表示時にステータスバーアイコンを強制的に保持します",
-
   "aiConfigSection": "AI エンハンスメント",
   "aiConfigTitle": "AI 通知の概要",
   "aiConfigSubtitleEnabled": "有効 · タップで AI パラメータを構成",
@@ -219,6 +211,9 @@
   "aiConfigTips": "AI は各通知のアプリパッケージ、タイトル、コンテンツを受信し短い左側 (ソース) と右側 (コンテンツ) のテキストを返します。OpenAI 形式の API (DeepSeek、Claude など) と互換性があります。3 秒以内に応答がない場合は、デフォルトのロジックにフォールバックします。",
   "templateAiNotificationIslandName": "AI Notification Island",
   "aiPromptLabel": "カスタムプロンプト",
-  "aiPromptHint": "空のままにするとデフォルトを使用：通知から重要情報を抽出、左右それぞれ6語または12文字以内",
-  "aiPromptDefault": "通知から重要情報を抽出し、左右それぞれ6語または12文字以内にしてください"
+  "aiPromptHint": "デフォルトを使用する場合は空欄: 左右それぞれ 6 単語または 12 文字以内の重要な情報を抽出します",
+  "aiPromptDefault": "通知から重要な情報を抽出します。左右それぞれ 6 単語または 12 文字以内とします。",
+  "aiPromptInUserTitle": "ユーザーメッセージにプロンプトを表示する",
+  "aiPromptInUserSubtitle": "一部のモデルではシステム命令がサポートされていないため、ユーザーメッセージにプロンプ​​トを表示させることができません",
+  "aiTimeoutLabel": "AI レスポンスのタイムアウト"
 }
