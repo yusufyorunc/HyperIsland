@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../controllers/whitelist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/batch_channel_settings_sheet.dart';
-import '../widgets/app_list_widgets.dart';
 import '../services/app_cache_service.dart';
 
 class AppChannelsPage extends StatefulWidget {
@@ -25,9 +24,6 @@ class AppChannelsPage extends StatefulWidget {
 }
 
 class _AppChannelsPageState extends State<AppChannelsPage> {
-  static const String _batchAction = 'batch';
-  static const String _enableAllChannelsAction = 'enable_all';
-
   List<ChannelInfo>? _channels;
   Set<String> _enabledChannels = {};
   Map<String, String> _channelTemplates = {};
@@ -154,29 +150,93 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     });
   }
 
-  Future<void> _setExtraSetting(
-    String channelId, {
-    required String key,
-    required String value,
-    required Future<void> Function(String, String, String) persist,
-  }) async {
-    _updateExtra(channelId, key, value);
-    await persist(widget.app.packageName, channelId, value);
+  Future<void> _setIconMode(String channelId, String value) async {
+    _updateExtra(channelId, 'icon', value);
+    await widget.controller.setChannelIconMode(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
   }
 
-  Future<void> _applyExtraSettingIfPresent(
-    String channelId,
-    Map<String, String?> settings, {
-    required String settingKey,
-    required Future<void> Function(String, String, String) persist,
-  }) async {
-    final value = settings[settingKey];
-    if (value == null) return;
-    await _setExtraSetting(
+  Future<void> _setFocusIconMode(String channelId, String value) async {
+    _updateExtra(channelId, 'focus_icon', value);
+    await widget.controller.setChannelFocusIconMode(
+      widget.app.packageName,
       channelId,
-      key: settingKey,
-      value: value,
-      persist: persist,
+      value,
+    );
+  }
+
+  Future<void> _setFocusNotif(String channelId, String value) async {
+    _updateExtra(channelId, 'focus', value);
+    await widget.controller.setChannelFocusNotif(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setPreserveSmallIcon(String channelId, String value) async {
+    _updateExtra(channelId, 'preserve_small_icon', value);
+    await widget.controller.setChannelPreserveSmallIcon(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setFirstFloat(String channelId, String value) async {
+    _updateExtra(channelId, 'first_float', value);
+    await widget.controller.setChannelFirstFloat(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setEnableFloat(String channelId, String value) async {
+    _updateExtra(channelId, 'enable_float', value);
+    await widget.controller.setChannelEnableFloat(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setIslandTimeout(String channelId, String value) async {
+    _updateExtra(channelId, 'timeout', value);
+    await widget.controller.setChannelTimeout(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setMarquee(String channelId, String value) async {
+    _updateExtra(channelId, 'marquee', value);
+    await widget.controller.setChannelMarquee(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setShowIslandIcon(String channelId, String value) async {
+    _updateExtra(channelId, 'show_island_icon', value);
+    await widget.controller.setChannelShowIslandIcon(
+      widget.app.packageName,
+      channelId,
+      value,
+    );
+  }
+
+  Future<void> _setRenderer(String channelId, String value) async {
+    _updateExtra(channelId, 'renderer', value);
+    await widget.controller.setChannelRenderer(
+      widget.app.packageName,
+      channelId,
+      value,
     );
   }
 
@@ -185,66 +245,28 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     Map<String, String?> settings,
   ) async {
     if (settings['template'] case final t?) await _setTemplate(channelId, t);
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'renderer',
-      persist: widget.controller.setChannelRenderer,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'icon',
-      persist: widget.controller.setChannelIconMode,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'focus_icon',
-      persist: widget.controller.setChannelFocusIconMode,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'focus',
-      persist: widget.controller.setChannelFocusNotif,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'preserve_small_icon',
-      persist: widget.controller.setChannelPreserveSmallIcon,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'show_island_icon',
-      persist: widget.controller.setChannelShowIslandIcon,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'first_float',
-      persist: widget.controller.setChannelFirstFloat,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'enable_float',
-      persist: widget.controller.setChannelEnableFloat,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'timeout',
-      persist: widget.controller.setChannelTimeout,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'marquee',
-      persist: widget.controller.setChannelMarquee,
-    );
+    if (settings['renderer'] case final v?) await _setRenderer(channelId, v);
+    if (settings['icon'] case final v?) await _setIconMode(channelId, v);
+    if (settings['focus_icon'] case final v?) {
+      await _setFocusIconMode(channelId, v);
+    }
+    if (settings['focus'] case final v?) await _setFocusNotif(channelId, v);
+    if (settings['preserve_small_icon'] case final v?) {
+      await _setPreserveSmallIcon(channelId, v);
+    }
+    if (settings['show_island_icon'] case final v?) {
+      await _setShowIslandIcon(channelId, v);
+    }
+    if (settings['first_float'] case final v?) {
+      await _setFirstFloat(channelId, v);
+    }
+    if (settings['enable_float'] case final v?) {
+      await _setEnableFloat(channelId, v);
+    }
+    if (settings['timeout'] case final v?) {
+      await _setIslandTimeout(channelId, v);
+    }
+    if (settings['marquee'] case final v?) await _setMarquee(channelId, v);
   }
 
   // ── 批量操作 ────────────────────────────────────────────────────────────────
@@ -353,28 +375,27 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
             ),
             actions: [
               if (!_loading && channels.isNotEmpty)
-                AppBarOverflowMenuButton(
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
                   onSelected: (value) {
                     switch (value) {
-                      case _batchAction:
+                      case 'batch':
                         _batchApply();
-                      case _enableAllChannelsAction:
+                      case 'enable_all':
                         _enableAllChannels();
                     }
                   },
                   itemBuilder: (ctx) {
                     final ml = AppLocalizations.of(ctx)!;
                     return [
-                      buildAppPopupMenuItem(
-                        value: _batchAction,
-                        icon: Icons.tune_rounded,
-                        label: ml.batchChannelSettings,
+                      PopupMenuItem(
+                        value: 'batch',
+                        child: Text(ml.batchChannelSettings),
                       ),
-                      const PopupMenuDivider(height: 8),
-                      buildAppPopupMenuItem(
-                        value: _enableAllChannelsAction,
-                        icon: Icons.done_all_rounded,
-                        label: ml.enableAllChannels,
+                      const PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'enable_all',
+                        child: Text(ml.enableAllChannels),
                       ),
                     ];
                   },

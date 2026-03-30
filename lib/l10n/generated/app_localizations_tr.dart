@@ -320,7 +320,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get multiSelect => 'Çoklu Seçim';
 
   @override
-  String get showSystemApps => 'Sistem Uygulamaları';
+  String get showSystemApps => 'Sistem Uygulamalarını Göster';
 
   @override
   String get refreshList => 'Listeyi Yenile';

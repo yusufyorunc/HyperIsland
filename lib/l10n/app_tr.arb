@@ -146,7 +146,7 @@
   "batchEnable": "Toplu Etkinleştir",
   "batchDisable": "Toplu Devre Dışı Bırak",
   "multiSelect": "Çoklu Seçim",
-  "showSystemApps": "Sistem Uygulamaları",
+  "showSystemApps": "Sistem Uygulamalarını Göster",
   "refreshList": "Listeyi Yenile",
   "enableAll": "Tümünü Etkinleştir",
   "disableAll": "Tümünü Devre Dışı Bırak",

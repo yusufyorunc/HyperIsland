@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../controllers/whitelist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/batch_channel_settings_sheet.dart';
-import '../widgets/app_list_widgets.dart';
 import 'app_channels_page.dart';
 import '../services/app_cache_service.dart';
 
@@ -14,10 +13,6 @@ class WhitelistPage extends StatefulWidget {
 }
 
 class _WhitelistPageState extends State<WhitelistPage> {
-  static const String _selectEnabledAction = 'select_enabled';
-  static const String _enableAction = 'enable';
-  static const String _disableAction = 'disable';
-
   late final WhitelistController _ctrl;
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
@@ -89,9 +84,14 @@ class _WhitelistPageState extends State<WhitelistPage> {
     _inSelectionMode = false;
   });
 
-  Future<void> _setSelectedEnabled(bool enabled) async {
+  Future<void> _enableSelected() async {
     if (_selectedPackages.isEmpty) return;
-    await _ctrl.setEnabledBatch(_selectedPackages.toList(), enabled);
+    await _ctrl.setEnabledBatch(_selectedPackages.toList(), true);
+  }
+
+  Future<void> _disableSelected() async {
+    if (_selectedPackages.isEmpty) return;
+    await _ctrl.setEnabledBatch(_selectedPackages.toList(), false);
   }
 
   /// 对已选应用的已启用渠道批量应用配置。
@@ -211,37 +211,35 @@ class _WhitelistPageState extends State<WhitelistPage> {
                               : null,
                         ),
                         // 批量操作菜单
-                        AppBarOverflowMenuButton(
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
                           onSelected: (value) async {
                             switch (value) {
-                              case _selectEnabledAction:
+                              case 'select_enabled':
                                 _selectEnabled();
-                              case _enableAction:
-                                await _setSelectedEnabled(true);
-                              case _disableAction:
-                                await _setSelectedEnabled(false);
+                              case 'enable':
+                                await _enableSelected();
+                              case 'disable':
+                                await _disableSelected();
                             }
                           },
                           itemBuilder: (ctx) {
                             final ml = AppLocalizations.of(ctx)!;
                             return [
-                              buildAppPopupMenuItem(
-                                value: _selectEnabledAction,
-                                icon: Icons.playlist_add_check_circle_rounded,
-                                label: ml.selectEnabledApps,
+                              PopupMenuItem(
+                                value: 'select_enabled',
+                                child: Text(ml.selectEnabledApps),
                               ),
-                              const PopupMenuDivider(height: 8),
-                              buildAppPopupMenuItem(
-                                value: _enableAction,
-                                icon: Icons.done_all_rounded,
-                                label: ml.batchEnable,
+                              const PopupMenuDivider(),
+                              PopupMenuItem(
+                                value: 'enable',
                                 enabled: _selectedPackages.isNotEmpty,
+                                child: Text(ml.batchEnable),
                               ),
-                              buildAppPopupMenuItem(
-                                value: _disableAction,
-                                icon: Icons.block_rounded,
-                                label: ml.batchDisable,
+                              PopupMenuItem(
+                                value: 'disable',
                                 enabled: _selectedPackages.isNotEmpty,
+                                child: Text(ml.batchDisable),
                               ),
                             ];
                           },
@@ -254,29 +252,43 @@ class _WhitelistPageState extends State<WhitelistPage> {
                           tooltip: l10n.multiSelect,
                           onPressed: _ctrl.loading ? null : _enterSelectionMode,
                         ),
-                        AppBarOverflowMenuButton(
-                          onSelected: (value) =>
-                              handleAppListOverflowMenuSelection(
-                                value: value,
-                                onToggleSystemApps: () {
-                                  _ctrl.setShowSystemApps(
-                                    !_ctrl.showSystemApps,
-                                  );
-                                },
-                                onRefresh: _ctrl.refresh,
-                                onEnableAll: _ctrl.enableAll,
-                                onDisableAll: _ctrl.disableAll,
-                              ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) async {
+                            switch (value) {
+                              case 'toggle_system':
+                                _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
+                              case 'refresh':
+                                await _ctrl.refresh();
+                              case 'enable_all':
+                                await _ctrl.enableAll();
+                              case 'disable_all':
+                                await _ctrl.disableAll();
+                            }
+                          },
                           itemBuilder: (ctx) {
                             final ml = AppLocalizations.of(ctx)!;
-                            return buildAppListOverflowMenuItems(
-                              context: ctx,
-                              showSystemApps: _ctrl.showSystemApps,
-                              showSystemAppsLabel: ml.showSystemApps,
-                              refreshLabel: ml.refreshList,
-                              enableAllLabel: ml.enableAll,
-                              disableAllLabel: ml.disableAll,
-                            );
+                            return [
+                              CheckedPopupMenuItem<String>(
+                                value: 'toggle_system',
+                                checked: _ctrl.showSystemApps,
+                                child: Text(ml.showSystemApps),
+                              ),
+                              const PopupMenuDivider(),
+                              PopupMenuItem<String>(
+                                value: 'refresh',
+                                child: Text(ml.refreshList),
+                              ),
+                              const PopupMenuDivider(),
+                              PopupMenuItem<String>(
+                                value: 'enable_all',
+                                child: Text(ml.enableAll),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'disable_all',
+                                child: Text(ml.disableAll),
+                              ),
+                            ];
                           },
                         ),
                       ],
@@ -286,18 +298,40 @@ class _WhitelistPageState extends State<WhitelistPage> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 sliver: SliverToBoxAdapter(
-                  child: AppListSearchHeader(
-                    countText: _ctrl.showSystemApps
-                        ? l10n.enabledAppsCountWithSystem(enabledCount)
-                        : l10n.enabledAppsCount(enabledCount),
-                    searchController: _searchCtrl,
-                    searchFocusNode: _searchFocus,
-                    hintText: l10n.searchApps,
-                    onChanged: _ctrl.setSearch,
-                    onClear: () {
-                      _searchCtrl.clear();
-                      _ctrl.setSearch('');
-                    },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _ctrl.showSystemApps
+                            ? l10n.enabledAppsCountWithSystem(enabledCount)
+                            : l10n.enabledAppsCount(enabledCount),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SearchBar(
+                        controller: _searchCtrl,
+                        focusNode: _searchFocus,
+                        hintText: l10n.searchApps,
+                        leading: const Icon(Icons.search),
+                        trailing: [
+                          if (_searchCtrl.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                _ctrl.setSearch('');
+                              },
+                            ),
+                        ],
+                        onChanged: _ctrl.setSearch,
+                        onSubmitted: (_) => _searchFocus.unfocus(),
+                        padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -392,23 +426,81 @@ class _AppTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return AppListItemFrame(
-      app: app,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      selected: isSelected,
-      trailing: selectionMode
-          ? Checkbox(value: isSelected, onChanged: (_) => onTap())
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Switch(value: enabled, onChanged: onChanged),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 20),
-              ],
+    final radius = BorderRadius.vertical(
+      top: isFirst ? const Radius.circular(16) : Radius.zero,
+      bottom: isLast ? const Radius.circular(16) : Radius.zero,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: isSelected ? cs.primaryContainer : cs.surfaceContainerHighest,
+          borderRadius: radius,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.memory(
+                      app.icon,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          app.appName,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          app.packageName,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (selectionMode)
+                    Checkbox(value: isSelected, onChanged: (_) => onTap())
+                  else ...[
+                    Switch(value: enabled, onChanged: onChanged),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      color: cs.onSurfaceVariant,
+                      size: 20,
+                    ),
+                  ],
+                ],
+              ),
             ),
-      isFirst: isFirst,
-      isLast: isLast,
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 74,
+            color: cs.outlineVariant.withValues(alpha: 0.4),
+          ),
+      ],
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../controllers/blacklist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/app_cache_service.dart';
-import '../widgets/app_list_widgets.dart';
 
 class BlacklistPage extends StatefulWidget {
   const BlacklistPage({super.key});
@@ -74,26 +73,43 @@ class _BlacklistPageState extends State<BlacklistPage> {
                           }
                         },
                 ),
-                AppBarOverflowMenuButton(
-                  onSelected: (value) => handleAppListOverflowMenuSelection(
-                    value: value,
-                    onToggleSystemApps: () {
-                      _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
-                    },
-                    onRefresh: _ctrl.refresh,
-                    onEnableAll: _ctrl.enableAll,
-                    onDisableAll: _ctrl.disableAll,
-                  ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'toggle_system':
+                        _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
+                      case 'refresh':
+                        await _ctrl.refresh();
+                      case 'enable_all':
+                        await _ctrl.enableAll();
+                      case 'disable_all':
+                        await _ctrl.disableAll();
+                    }
+                  },
                   itemBuilder: (ctx) {
                     final ml = AppLocalizations.of(ctx)!;
-                    return buildAppListOverflowMenuItems(
-                      context: ctx,
-                      showSystemApps: _ctrl.showSystemApps,
-                      showSystemAppsLabel: ml.showSystemApps,
-                      refreshLabel: ml.refreshList,
-                      enableAllLabel: ml.enableAll,
-                      disableAllLabel: ml.disableAll,
-                    );
+                    return [
+                      CheckedPopupMenuItem<String>(
+                        value: 'toggle_system',
+                        checked: _ctrl.showSystemApps,
+                        child: Text(ml.showSystemApps),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem<String>(
+                        value: 'refresh',
+                        child: Text(ml.refreshList),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem<String>(
+                        value: 'enable_all',
+                        child: Text(ml.enableAll),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'disable_all',
+                        child: Text(ml.disableAll),
+                      ),
+                    ];
                   },
                 ),
               ],
@@ -103,18 +119,40 @@ class _BlacklistPageState extends State<BlacklistPage> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               sliver: SliverToBoxAdapter(
-                child: AppListSearchHeader(
-                  countText: _ctrl.showSystemApps
-                      ? l10n.blacklistedAppsCountWithSystem(enabledCount)
-                      : l10n.blacklistedAppsCount(enabledCount),
-                  searchController: _searchCtrl,
-                  searchFocusNode: _searchFocus,
-                  hintText: l10n.searchApps,
-                  onChanged: _ctrl.setSearch,
-                  onClear: () {
-                    _searchCtrl.clear();
-                    _ctrl.setSearch('');
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _ctrl.showSystemApps
+                          ? l10n.blacklistedAppsCountWithSystem(enabledCount)
+                          : l10n.blacklistedAppsCount(enabledCount),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SearchBar(
+                      controller: _searchCtrl,
+                      focusNode: _searchFocus,
+                      hintText: l10n.searchApps,
+                      leading: const Icon(Icons.search),
+                      trailing: [
+                        if (_searchCtrl.text.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              _ctrl.setSearch('');
+                            },
+                          ),
+                      ],
+                      onChanged: _ctrl.setSearch,
+                      onSubmitted: (_) => _searchFocus.unfocus(),
+                      padding: const WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -185,12 +223,72 @@ class _AppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppListItemFrame(
-      app: app,
-      onTap: onTap,
-      trailing: Checkbox(value: enabled, onChanged: onChanged),
-      isFirst: isFirst,
-      isLast: isLast,
+    final cs = Theme.of(context).colorScheme;
+
+    final radius = BorderRadius.vertical(
+      top: isFirst ? const Radius.circular(16) : Radius.zero,
+      bottom: isLast ? const Radius.circular(16) : Radius.zero,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: cs.surfaceContainerHighest,
+          borderRadius: radius,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.memory(
+                      app.icon,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          app.appName,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          app.packageName,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Checkbox(value: enabled, onChanged: onChanged),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 74,
+            color: cs.outlineVariant.withValues(alpha: 0.4),
+          ),
+      ],
     );
   }
 }
