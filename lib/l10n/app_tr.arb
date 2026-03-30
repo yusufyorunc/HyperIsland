@@ -332,10 +332,10 @@
   "aiConfigSaved": "AI yapılandırması kaydedildi",
   "aiConfigTips": "AI, bildirimdeki uygulama paket adını, başlığı ve metni alır; solda (kaynak) ve sağda (içerik) kısa metin üretir. OpenAI formatı ile uyumlu API'leri destekler (DeepSeek, Claude vb.). 3 saniye içinde yanıt gelmezse varsayılan mantığa geri döner.",
   "templateAiNotificationIslandName": "AI Bildirim Süper Ada",
-  "aiPromptLabel": "Özel Promt",
-  "aiPromptHint": "Boş bırakırsanız varsayılan promt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun",
+  "aiPromptLabel": "Özel Prompt",
+  "aiPromptHint": "Boş bırakırsanız varsayılan prompt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun",
   "aiPromptDefault": "Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun",
-  "aiPromptInUserTitle": "Promtu kullanıcı mesajına yerleştir",
-  "aiPromptInUserSubtitle": "Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse promt kullanıcı mesajına eklenir",
+  "aiPromptInUserTitle": "Prompt'u kullanıcı mesajına yerleştir",
+  "aiPromptInUserSubtitle": "Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse prompt kullanıcı mesajına eklenir",
   "aiTimeoutLabel": "AI Yanıt Zaman Aşımı"
 }
