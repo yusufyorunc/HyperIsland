@@ -480,16 +480,20 @@ class _SettingsPageState extends State<SettingsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    '${l10n.marqueeChannelTitle}|${l10n.marqueeSpeedTitle}',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
+                                  Expanded(
+                                    child: Text(
+                                      '${l10n.marqueeChannelTitle}|${l10n.marqueeSpeedTitle}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
+                                    ),
                                   ),
+                                  const SizedBox(width: 12),
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
                                         l10n.marqueeSpeedLabel(
@@ -502,22 +506,17 @@ class _SettingsPageState extends State<SettingsPage> {
                                               color: cs.onSurfaceVariant,
                                             ),
                                       ),
-                                      Opacity(
-                                        opacity: _ctrl.marqueeSpeed != 100
-                                            ? 1.0
-                                            : 0.0,
-                                        child: IconButton(
+                                      if (_ctrl.marqueeSpeed != 100)
+                                        IconButton(
                                           icon: const Icon(
                                             Icons.refresh,
                                             size: 16,
                                           ),
                                           padding: EdgeInsets.zero,
                                           visualDensity: VisualDensity.compact,
-                                          onPressed: _ctrl.marqueeSpeed != 100
-                                              ? () => _ctrl.setMarqueeSpeed(100)
-                                              : null,
+                                          onPressed: () =>
+                                              _ctrl.setMarqueeSpeed(100),
                                         ),
-                                      ),
                                     ],
                                   ),
                                 ],
