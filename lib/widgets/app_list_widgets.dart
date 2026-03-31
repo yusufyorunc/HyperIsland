@@ -165,21 +165,9 @@ class AppBarOverflowMenuButton extends StatelessWidget {
     final borderColor = cs.outlineVariant.withValues(alpha: 0.34);
 
     return PopupMenuButton<String>(
-      icon: Container(
+      icon: SizedBox(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
         child: Icon(
           Icons.more_horiz_rounded,
           size: 20,
