@@ -423,7 +423,7 @@ abstract class AppLocalizations {
   /// No description provided for @marqueeSpeedTitle.
   ///
   /// In zh, this message translates to:
-  /// **'滚动速度'**
+  /// **'速度'**
   String get marqueeSpeedTitle;
 
   /// No description provided for @marqueeSpeedLabel.

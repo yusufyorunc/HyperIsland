@@ -474,59 +474,63 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 2,
+                          ),
+                          title: Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${l10n.marqueeChannelTitle}|${l10n.marqueeSpeedTitle}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        l10n.marqueeSpeedLabel(
-                                          _ctrl.marqueeSpeed,
-                                        ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: cs.onSurfaceVariant,
-                                            ),
-                                      ),
-                                      if (_ctrl.marqueeSpeed != 100)
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.refresh,
-                                            size: 16,
-                                          ),
-                                          padding: EdgeInsets.zero,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () =>
-                                              _ctrl.setMarqueeSpeed(100),
-                                        ),
-                                    ],
-                                  ),
-                                ],
+                              Expanded(child: Text(l10n.marqueeChannelTitle)),
+                              Text(
+                                l10n.marqueeSpeedLabel(_ctrl.marqueeSpeed),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant),
                               ),
-                              Slider(
-                                value: _ctrl.marqueeSpeed.toDouble(),
-                                min: 20,
-                                max: 500,
-                                divisions: 48,
-                                onChanged: _onMarqueeSpeedChanged,
+                              if (_ctrl.marqueeSpeed != 100)
+                                SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    padding: EdgeInsets.zero,
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () => _ctrl.setMarqueeSpeed(100),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          subtitle: Row(
+                            children: [
+                              Text(
+                                l10n.marqueeSpeedTitle,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant),
+                              ),
+                              Expanded(
+                                child: SliderTheme(
+                                  data: Theme.of(context).sliderTheme.copyWith(
+                                    trackHeight: 3,
+                                    thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 6,
+                                    ),
+                                    overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 14,
+                                    ),
+                                    activeTrackColor: cs.primary,
+                                    inactiveTrackColor: cs.primary.withValues(
+                                      alpha: 0.24,
+                                    ),
+                                    thumbColor: cs.primary,
+                                  ),
+                                  child: Slider(
+                                    value: _ctrl.marqueeSpeed.toDouble(),
+                                    min: 20,
+                                    max: 500,
+                                    divisions: 48,
+                                    onChanged: _onMarqueeSpeedChanged,
+                                  ),
+                                ),
                               ),
                             ],
                           ),

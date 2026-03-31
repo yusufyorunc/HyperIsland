@@ -177,7 +177,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get marqueeChannelTitle => '消息滚动';
 
   @override
-  String get marqueeSpeedTitle => '滚动速度';
+  String get marqueeSpeedTitle => '速度';
 
   @override
   String marqueeSpeedLabel(int speed) {

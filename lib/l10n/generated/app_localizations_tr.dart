@@ -659,22 +659,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get templateAiNotificationIslandName => 'AI Bildirim Süper Ada';
 
   @override
-  String get aiPromptLabel => 'Özel Promt';
+  String get aiPromptLabel => 'Özel Prompt';
 
   @override
   String get aiPromptHint =>
-      'Boş bırakırsanız varsayılan promt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun';
+      'Boş bırakırsanız varsayılan prompt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun';
 
   @override
   String get aiPromptDefault =>
       'Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun';
 
   @override
-  String get aiPromptInUserTitle => 'Promtu kullanıcı mesajına yerleştir';
+  String get aiPromptInUserTitle => 'Prompt\'u kullanıcı mesajına yerleştir';
 
   @override
   String get aiPromptInUserSubtitle =>
-      'Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse promt kullanıcı mesajına eklenir';
+      'Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse prompt kullanıcı mesajına eklenir';
 
   @override
   String get aiTimeoutLabel => 'AI Yanıt Zaman Aşımı';

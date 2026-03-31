@@ -77,7 +77,7 @@
 "roundIconTitle": "图标圆角",
   "roundIconSubtitle": "为通知图标添加圆角效果",
   "marqueeChannelTitle": "消息滚动",
-  "marqueeSpeedTitle": "滚动速度",
+  "marqueeSpeedTitle": "速度",
   "marqueeSpeedLabel": "{speed} 像素/秒",
   "@marqueeSpeedLabel": {
     "placeholders": {

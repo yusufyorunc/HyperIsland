@@ -62,7 +62,7 @@
 "roundIconTitle": "Round icon corners",
   "roundIconSubtitle": "Add rounded corners to notification icons",
   "marqueeChannelTitle": "Text Scrolling Island",
-  "marqueeSpeedTitle": "Scroll Speed",
+  "marqueeSpeedTitle": "Speed",
   "marqueeSpeedLabel": "{speed} px/s",
   "@marqueeSpeedLabel": {
     "placeholders": {

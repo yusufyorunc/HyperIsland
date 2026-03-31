@@ -187,7 +187,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get marqueeChannelTitle => 'Text Scrolling Island';
 
   @override
-  String get marqueeSpeedTitle => 'Scroll Speed';
+  String get marqueeSpeedTitle => 'Speed';
 
   @override
   String marqueeSpeedLabel(int speed) {
