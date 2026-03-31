@@ -137,7 +137,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutSection => '关于';
 
   @override
-  String get keepFocusNotifTitle => '下载管理器暂停后保留焦点通知';
+  String get keepFocusNotifTitle => '下载管理器暂停后保留通知';
 
   @override
   String get keepFocusNotifSubtitle => '显示一条通知，点击以继续下载，可能导致状态不同步';

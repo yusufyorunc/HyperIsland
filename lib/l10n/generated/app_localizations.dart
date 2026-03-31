@@ -345,7 +345,7 @@ abstract class AppLocalizations {
   /// No description provided for @keepFocusNotifTitle.
   ///
   /// In zh, this message translates to:
-  /// **'下载管理器暂停后保留焦点通知'**
+  /// **'下载管理器暂停后保留通知'**
   String get keepFocusNotifTitle;
 
   /// No description provided for @keepFocusNotifSubtitle.

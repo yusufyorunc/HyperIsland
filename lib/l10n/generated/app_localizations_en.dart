@@ -142,8 +142,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutSection => 'About';
 
   @override
-  String get keepFocusNotifTitle =>
-      'Keep focus notification after download pause';
+  String get keepFocusNotifTitle => 'Keep notification after download pause';
 
   @override
   String get keepFocusNotifSubtitle =>

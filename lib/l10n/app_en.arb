@@ -49,7 +49,7 @@
   "appearanceSection": "Appearance",
   "configSection": "Configuration",
   "aboutSection": "About",
-  "keepFocusNotifTitle": "Keep focus notification after download pause",
+  "keepFocusNotifTitle": "Keep notification after download pause",
   "keepFocusNotifSubtitle": "Show a notification to resume download, may cause state desync",
   "unlockAllFocusTitle": "Remove focus notification whitelist",
   "unlockAllFocusSubtitle": "Allow all apps to send focus notifications without system authorization",
