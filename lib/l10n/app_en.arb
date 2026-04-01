@@ -217,7 +217,7 @@
   "aiTestUrlEmpty": "Please enter an API URL first",
   "aiConfigSaveButton": "Save",
   "aiConfigSaved": "AI configuration saved",
-  "aiConfigTips": "AI receives the app package, title, and content of each notification, and returns short left (source) and right (content) text. Compatible with OpenAI-format APIs (e.g. DeepSeek, Claude). Falls back to default logic if no response within 3 seconds.",
+  "aiConfigTips": "AI receives the app package, title, and content of each notification, and returns short left (source) and right (content) text. Compatible with OpenAI-format APIs (e.g. DeepSeek, Claude). Falls back to default logic if no response.",
   "templateAiNotificationIslandName": "AI Notification Island",
   "aiPromptLabel": "Custom Prompt",
   "aiPromptHint": "Leave empty to use default: Extract key info, left and right each no more than 6 words or 12 characters",
