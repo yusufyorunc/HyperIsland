@@ -1,6 +1,8 @@
 package io.github.hyperisland.xposed
 
+import android.app.KeyguardManager
 import android.app.Notification
+import android.provider.Settings
 import android.service.notification.StatusBarNotification
 import io.github.hyperisland.getAppIcon
 import io.github.hyperisland.xposed.hook.MarqueeHook
@@ -200,6 +202,15 @@ object GenericProgressHook {
             val extras = notif.extras ?: return
 
             if (isMediaNotification(notif, extras)) return
+
+            // Respect lockscreen privacy: when private content is hidden by system setting,
+            // skip HyperIsland focus injection entirely so original notification behavior is kept.
+            if (shouldRedactPrivateContentOnLockscreen(context, notif)) {
+                extras.remove("miui.focus.param")
+                extras.remove("hyperisland_generic_processed")
+                return
+            }
+
             if (extras.containsKey("miui.focus.param")) return
 
             val progressMax   = extras.getInt(Notification.EXTRA_PROGRESS_MAX, 0)
@@ -326,6 +337,33 @@ object GenericProgressHook {
 
         } catch (e: Throwable) {
             module.log("$TAG: handleSbn error: ${e.message}")
+        }
+    }
+
+    private fun shouldRedactPrivateContentOnLockscreen(
+        context: android.content.Context,
+        notif: Notification,
+    ): Boolean {
+        if (!isKeyguardLocked(context)) return false
+        if (notif.visibility == Notification.VISIBILITY_PUBLIC) return false
+        if (notif.visibility == Notification.VISIBILITY_SECRET) return true
+        return !isPrivateContentAllowedOnLockscreen(context)
+    }
+
+    private fun isKeyguardLocked(context: android.content.Context): Boolean {
+        val keyguardManager = context.getSystemService(KeyguardManager::class.java) ?: return false
+        return keyguardManager.isKeyguardLocked
+    }
+
+    private fun isPrivateContentAllowedOnLockscreen(context: android.content.Context): Boolean {
+        return try {
+            Settings.Secure.getInt(
+                context.contentResolver,
+                "lock_screen_allow_private_notifications",
+                1
+            ) == 1
+        } catch (_: Throwable) {
+            true
         }
     }
 
