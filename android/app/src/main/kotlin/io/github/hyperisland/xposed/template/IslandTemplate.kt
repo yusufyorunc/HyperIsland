@@ -52,6 +52,33 @@ fun Icon.toRounded(context: Context, radiusFraction: Float = 0.25f): Icon {
 private fun isRoundIconEnabled(context: Context): Boolean =
     ConfigManager.getBoolean("pref_round_icon", true)
 
+private fun firstIconOrNull(vararg candidates: Icon?): Icon? =
+    candidates.firstOrNull { it != null }
+
+fun resolveIslandIcon(data: NotifData, fallback: Icon, preferSmallWhenAuto: Boolean = false): Icon {
+    return when (data.iconMode) {
+        "notif_small" -> data.notifIcon ?: fallback
+        "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallback
+        "app_icon" -> data.appIconRaw ?: fallback
+        else -> {
+            if (preferSmallWhenAuto) {
+                firstIconOrNull(data.notifIcon, data.largeIcon, data.appIconRaw) ?: fallback
+            } else {
+                firstIconOrNull(data.largeIcon, data.notifIcon, data.appIconRaw) ?: fallback
+            }
+        }
+    }
+}
+
+fun resolveFocusIcon(data: NotifData, fallback: Icon): Icon {
+    return when (data.focusIconMode) {
+        "notif_small" -> data.notifIcon ?: data.appIconRaw ?: fallback
+        "notif_large" -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallback
+        "app_icon" -> data.appIconRaw ?: fallback
+        else -> firstIconOrNull(data.largeIcon, data.appIconRaw, data.notifIcon) ?: fallback
+    }
+}
+
 /**
  * 灵动岛通知模板接口。
  *

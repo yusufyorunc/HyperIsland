@@ -3,25 +3,18 @@ package io.github.hyperisland.xposed.templates
 import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Bundle
-import io.github.d4viddf.hyperisland_kit.HyperAction
-import io.github.d4viddf.hyperisland_kit.HyperIslandNotification
-import io.github.d4viddf.hyperisland_kit.HyperPicture
-import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoLeft
-import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoRight
-import io.github.d4viddf.hyperisland_kit.models.PicInfo
-import io.github.d4viddf.hyperisland_kit.models.TextInfo
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.IslandDispatcher
-import io.github.hyperisland.xposed.log
-import io.github.hyperisland.xposed.logError
-import io.github.hyperisland.xposed.logWarn
 import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
-import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
-import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
+import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.logError
+import io.github.hyperisland.xposed.logWarn
 import io.github.hyperisland.xposed.renderer.resolveRenderer
+import io.github.hyperisland.xposed.resolveFocusIcon
+import io.github.hyperisland.xposed.resolveIslandIcon
 import io.github.hyperisland.xposed.toRounded
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -44,10 +37,14 @@ object AINotificationIslandNotification : IslandTemplate {
 
     override val id = TEMPLATE_ID
 
-    private val executor = Executors.newCachedThreadPool()
+    private val executor by lazy {
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "hyper-ai-worker").apply { isDaemon = true }
+        }
+    }
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
-        val aiConfig = loadAiConfig(context)
+        val aiConfig = loadAiConfig()
         val aiText = if (aiConfig.enabled && aiConfig.url.isNotEmpty()) {
             fetchAiText(aiConfig, data)
         } else null
@@ -89,7 +86,7 @@ object AINotificationIslandNotification : IslandTemplate {
 
     private data class AiIslandText(val left: String, val right: String)
 
-    private fun loadAiConfig(context: Context): AiConfig = AiConfig(
+    private fun loadAiConfig(): AiConfig = AiConfig(
         enabled = ConfigManager.getBoolean("pref_ai_enabled", false),
         url     = ConfigManager.getString("pref_ai_url"),
         apiKey  = ConfigManager.getString("pref_ai_api_key"),
@@ -121,13 +118,14 @@ object AINotificationIslandNotification : IslandTemplate {
 
     private fun callAiApi(config: AiConfig, data: NotifData): AiIslandText? {
         val requestBody = buildRequestBody(config, data)
+        val networkTimeoutMs = (config.timeout * 1000).coerceIn(3000, 15000)
         val conn = (URL(config.url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
             if (config.apiKey.isNotEmpty()) setRequestProperty("Authorization", "Bearer ${config.apiKey}")
-            connectTimeout = 2500
-            readTimeout    = 2500
+            connectTimeout = networkTimeoutMs
+            readTimeout    = networkTimeoutMs
             doOutput       = true
         }
         //log("$TAG: POST ${config.url}")
@@ -212,7 +210,7 @@ $userPrompt
     ) {
         try {
             val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-            val displayIcon  = resolveIcon(data, data.iconMode, fallbackIcon).toRounded(context)
+            val displayIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
             IslandDispatcher.post(
                 context,
                 IslandRequest(
@@ -243,8 +241,8 @@ $userPrompt
         rightText: String = data.subtitle.ifEmpty { data.title },
     ): IslandViewModel {
         val fallbackIcon     = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-        val islandIcon       = resolveIcon(data, data.iconMode,      fallbackIcon).toRounded(context)
-        val focusIcon        = resolveIcon(data, data.focusIconMode,  fallbackIcon).toRounded(context)
+        val islandIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
+        val focusIcon = resolveFocusIcon(data, fallbackIcon).toRounded(context)
         val showNotification = data.focusNotif != "off"
 
         return IslandViewModel(
@@ -269,14 +267,4 @@ $userPrompt
             showIslandIcon    = data.showIslandIcon == "on",
         )
     }
-
-    // ── 图标解析 ──────────────────────────────────────────────────────────────
-
-    private fun resolveIcon(data: NotifData, mode: String?, fallback: Icon): Icon =
-        when (mode) {
-            "notif_small" -> data.notifIcon ?: fallback
-            "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallback
-            "app_icon"    -> data.appIconRaw ?: fallback
-            else          -> data.largeIcon ?: data.notifIcon ?: fallback
-        }
 }

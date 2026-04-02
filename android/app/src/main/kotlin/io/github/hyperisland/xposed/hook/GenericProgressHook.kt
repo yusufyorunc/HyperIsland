@@ -8,6 +8,7 @@ import io.github.hyperisland.xposed.hook.MarqueeHook
 import io.github.hyperisland.xposed.templates.NotificationIslandNotification
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 通用通知 Hook — 在 SystemUI 进程内 Hook MiuiBaseNotifUtil.generateInnerNotifBean()。
@@ -28,13 +29,13 @@ object GenericProgressHook {
     private const val TAG = "HyperIsland[Generic]"
 
     @Volatile private var cachedWhitelist: Map<String, Set<String>>? = null
-    private val cachedTemplates = mutableMapOf<String, String>()
-    private val cachedChannelSettings = mutableMapOf<String, String>()
+    private val cachedTemplates = ConcurrentHashMap<String, String>()
+    private val cachedChannelSettings = ConcurrentHashMap<String, String>()
 
     @Volatile private var observerRegistered = false
 
-    private val lastProgressCache = mutableMapOf<String, Int>()
-    private val trackedForCancel = mutableMapOf<String, Int>()
+    private val lastProgressCache = ConcurrentHashMap<String, Int>()
+    private val trackedForCancel = ConcurrentHashMap<String, Int>()
 
     fun ensureObserver(context: android.content.Context, module: XposedModule) {
         if (observerRegistered) return
@@ -104,7 +105,7 @@ object GenericProgressHook {
                 else channelCsv.split(",").filter { it.isNotBlank() }.toSet()
                 pkg to channels
             }
-        if (map.isNotEmpty()) cachedWhitelist = map
+        cachedWhitelist = map
         module.log("$TAG: whitelist loaded (${map.size} apps): ${map.keys}")
         return map
     }

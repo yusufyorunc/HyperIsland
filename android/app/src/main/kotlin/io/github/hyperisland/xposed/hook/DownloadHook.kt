@@ -6,6 +6,8 @@ import android.os.Bundle
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 /**
@@ -14,11 +16,11 @@ import java.util.regex.Pattern
 object DownloadHook {
 
     private const val TAG = "HyperIsland[DownloadHook]"
+    private val MULTI_FILE_REGEX = Regex("""\d+个文件""")
 
-    var extrasField: Field? = null
+    private var extrasField: Field? = null
 
-    private val processedNotifications = mutableMapOf<String, NotificationInfo>()
-    private val downloadIdMap = mutableMapOf<Long, String>()
+    private val processedNotifications = ConcurrentHashMap<String, NotificationInfo>()
 
     data class NotificationInfo(
         var lastProgress: Int,
@@ -27,7 +29,7 @@ object DownloadHook {
         var downloadId: Long = -1L
     )
 
-    val notifSnapshots = mutableMapOf<String, InProcessController.DownloadNotifSnapshot>()
+    val notifSnapshots = ConcurrentHashMap<String, InProcessController.DownloadNotifSnapshot>()
 
     init {
         try {
@@ -103,7 +105,7 @@ object DownloadHook {
             val progress = extractProgress(title, text, extras)
             val combined = title + text
             val isComplete  = progress >= 100
-            val isMultiFile = Regex("""\d+个文件""").containsMatchIn(combined)
+            val isMultiFile = MULTI_FILE_REGEX.containsMatchIn(combined)
             val isWaiting   = !isComplete &&
                               (combined.contains("等待") || combined.contains("准备中") ||
                                combined.contains("queued", ignoreCase = true) || combined.contains("pending", ignoreCase = true))
@@ -147,11 +149,12 @@ object DownloadHook {
             // 以下快照更新保留去重，避免频繁写入
             val key = "${pkg}_${tag ?: "null"}_$id"
             val now = System.currentTimeMillis()
-            var isNew = false
-            val info = processedNotifications.getOrPut(key) { isNew = true; NotificationInfo(progress, now, appName, downloadId) }
-            if (!isNew && info.lastProgress == progress) return
+            val existing = processedNotifications[key]
+            if (existing != null && existing.lastProgress == progress) return
+            val info = existing ?: NotificationInfo(progress, now, appName, downloadId)
             info.lastProgress = progress; info.lastProcessTime = now; info.appName = appName
-            if (downloadId > 0) { info.downloadId = downloadId; downloadIdMap[downloadId] = pkg }
+            if (downloadId > 0) info.downloadId = downloadId
+            processedNotifications[key] = info
             processedNotifications.entries.removeIf { now - it.value.lastProcessTime > 10000 }
 
             module.log("$TAG: [Notify] $appName | $fileName | $progress% | paused=$isPaused | notifId=$id | tag=$tag | downloadId=$downloadId")
@@ -191,10 +194,10 @@ object DownloadHook {
                 for (method in clazz.declaredMethods) {
                     val name = method.name.lowercase()
                     when {
-                        name.contains("pause") -> hookLogMethod(module, clazz, method.name, "Pause")
-                        name.contains("resume") -> hookLogMethod(module, clazz, method.name, "Resume")
+                        name.contains("pause") -> hookLogMethod(module, method, "Pause")
+                        name.contains("resume") -> hookLogMethod(module, method, "Resume")
                         name.contains("cancel") || name.contains("remove") || name.contains("delete") ->
-                            hookLogMethod(module, clazz, method.name, "Cancel")
+                            hookLogMethod(module, method, "Cancel")
                     }
                 }
             } catch (_: ClassNotFoundException) {
@@ -204,11 +207,10 @@ object DownloadHook {
         }
     }
 
-    private fun hookLogMethod(module: XposedModule, clazz: Class<*>, methodName: String, label: String) {
+    private fun hookLogMethod(module: XposedModule, method: Method, label: String) {
         try {
-            val method = clazz.getDeclaredMethod(methodName)
             module.hook(method).intercept { chain ->
-                module.log("$TAG: [$label] $methodName called")
+                module.log("$TAG: [$label] ${method.declaringClass.simpleName}.${method.name} called")
                 chain.proceed()
             }
         } catch (_: Throwable) {}

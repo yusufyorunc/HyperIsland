@@ -19,16 +19,27 @@ internal object RootShell {
             }
         }
 
-        val stdout = process.inputStream.use { input ->
-            input.readBytes()
-        }
-        val exitCode = process.waitFor()
-        stderrThread.join()
+        return try {
+            val stdout = process.inputStream.use { input ->
+                input.readBytes()
+            }
+            val exitCode = process.waitFor()
+            try {
+                stderrThread.join()
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
 
-        return CommandResult(
-            stdout = stdout,
-            stderr = stderr.toString(),
-            exitCode = exitCode,
-        )
+            CommandResult(
+                stdout = stdout,
+                stderr = stderr.toString(),
+                exitCode = exitCode,
+            )
+        } finally {
+            runCatching { process.inputStream.close() }
+            runCatching { process.errorStream.close() }
+            runCatching { process.outputStream.close() }
+            process.destroy()
+        }
     }
 }

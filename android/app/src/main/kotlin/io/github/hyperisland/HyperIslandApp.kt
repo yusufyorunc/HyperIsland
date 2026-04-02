@@ -24,7 +24,6 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
     }
 
     @Volatile private var xposedService: XposedService? = null
-        set(value) { field = value; serviceReady = value != null }
 
     private val flutterPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         syncKeyToRemote(prefs, key)
@@ -40,6 +39,7 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
     override fun onServiceBind(service: XposedService) {
         xposedService = service
+        serviceReady = true
         apiVersion = service.apiVersion
         Log.d(TAG, "XposedService bound, API version: $apiVersion, syncing all prefs")
         syncAllToRemote(service)
@@ -48,6 +48,8 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
     override fun onServiceDied(service: XposedService) {
         xposedService = null
+        serviceReady = false
+        apiVersion = 0
         Log.d(TAG, "XposedService died")
     }
 
@@ -107,7 +109,8 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
         @Volatile private var serviceReady = false
         @Volatile private var apiVersion: Int = 0
-        private val serviceReadyLock = Object()
+        @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+        private val serviceReadyLock = java.lang.Object()
 
         fun isReady(): Boolean = serviceReady
 

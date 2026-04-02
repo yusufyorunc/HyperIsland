@@ -14,8 +14,13 @@ object BlacklistFilter {
 
     fun applyTo(context: Context, data: NotifData): NotifData? {
         val blacklistStr = ConfigManager.getString("pref_app_blacklist")
+        val blacklist = blacklistStr
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
 
-        if (blacklistStr.isEmpty()) return data
+        if (blacklist.isEmpty()) return data
 
         val foregroundApp = try {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -26,7 +31,7 @@ object BlacklistFilter {
             ""
         }
 
-        val isBlacklisted = foregroundApp.isNotEmpty() && blacklistStr.split(",").contains(foregroundApp)
+        val isBlacklisted = foregroundApp.isNotEmpty() && foregroundApp in blacklist
         Log.d("HyperIsland", "HyperIsland[Blacklist]: foreground=$foregroundApp, isBlacklisted=$isBlacklisted")
 
         if (!isBlacklisted) return data

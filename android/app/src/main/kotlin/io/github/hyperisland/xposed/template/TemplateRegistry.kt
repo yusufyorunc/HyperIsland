@@ -33,10 +33,9 @@ object TemplateRegistry {
         extras: Bundle,
         data: NotifData,
     ) {
-        val template = registry[templateId]
-        if (template == null) {
-            logWarn("$TAG: unknown template '$templateId', skipped")
-            return
+        val template = registry[templateId] ?: run {
+            logWarn("$TAG: unknown template '$templateId', fallback=${GenericDownloadIslandNotification.id}")
+            GenericDownloadIslandNotification
         }
         // 通知进入黑名单处理
         val filteredData = BlacklistFilter.applyTo(context, data) ?: return

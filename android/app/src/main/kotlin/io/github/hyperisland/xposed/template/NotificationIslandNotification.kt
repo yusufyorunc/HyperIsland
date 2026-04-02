@@ -4,15 +4,15 @@ import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Bundle
 import io.github.hyperisland.xposed.IslandDispatcher
-import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
-import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.renderer.resolveRenderer
+import io.github.hyperisland.xposed.resolveFocusIcon
+import io.github.hyperisland.xposed.resolveIslandIcon
 import io.github.hyperisland.xposed.toRounded
 
 /**
@@ -83,19 +83,8 @@ object NotificationIslandNotification : IslandTemplate {
     fun process(context: Context, data: NotifData): IslandViewModel {
         val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
 
-        val islandIcon = when (data.iconMode) {
-            "notif_small" -> data.notifIcon ?: fallbackIcon
-            "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-            "app_icon"    -> data.appIconRaw ?: fallbackIcon
-            else          -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-        }.toRounded(context)
-
-        val focusIcon = when (data.focusIconMode) {
-            "notif_small" -> data.notifIcon ?: data.appIconRaw ?: fallbackIcon
-            "notif_large" -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallbackIcon
-            "app_icon"    -> data.appIconRaw ?: fallbackIcon
-            else          -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallbackIcon
-        }.toRounded(context)
+        val islandIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
+        val focusIcon = resolveFocusIcon(data, fallbackIcon).toRounded(context)
 
         val showNotification   = data.focusNotif != "off"
         val shouldPreserveIcon = showNotification && data.preserveStatusBarSmallIcon != "off"

@@ -42,10 +42,15 @@ object DownloadIslandNotification {
                 else                   -> "暂停"
             }
             val cancelLabel = if (isMultiFile) "全部取消" else "取消"
+            val primaryIconRes = if (isPaused) {
+                android.R.drawable.ic_media_play
+            } else {
+                android.R.drawable.ic_media_pause
+            }
 
             notif.actions = arrayOf(
                 Notification.Action.Builder(
-                    Icon.createWithResource(context, android.R.drawable.ic_media_pause),
+                    Icon.createWithResource(context, primaryIconRes),
                     primaryLabel, primaryIntent
                 ).build(),
                 Notification.Action.Builder(

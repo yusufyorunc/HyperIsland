@@ -12,7 +12,10 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.util.LinkedHashMap
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
     private data class StrictParseResult(
@@ -36,6 +39,7 @@ class MainActivity : FlutterActivity() {
     private val HAPTIC_CHANNEL = "io.github.hyperisland/haptics"
     private val TAG = "HyperIsland"
     private val REQUEST_APP_LIST_PERMISSION = 1002
+    private val backgroundExecutor: ExecutorService = Executors.newCachedThreadPool()
 
     private var pendingAppsResult: MethodChannel.Result? = null
     private var pendingAppsIncludeSystem: Boolean = false
@@ -83,81 +87,97 @@ class MainActivity : FlutterActivity() {
                         pendingAppsIncludeSystem = includeSystem
                         requestAppListPermission()
                     } else {
-                        Thread {
-                            val apps = getInstalledApps(includeSystem)
-                            runOnUiThread { result.success(apps) }
-                        }.start()
+                        runInBackground {
+                            try {
+                                val apps = getInstalledApps(includeSystem)
+                                postResultSuccess(result, apps)
+                            } catch (e: Exception) {
+                                postResultError(result, "ERROR", e.message)
+                            }
+                        }
                     }
                 }
 
                 "getNotificationChannels" -> {
                     val pkg = call.argument<String>("packageName") ?: ""
-                    Thread {
-                        val channels = getNotificationChannelsForPackage(pkg)
-                        runOnUiThread {
+                    runInBackground {
+                        try {
+                            val channels = getNotificationChannelsForPackage(pkg)
                             if (channels == null) {
-                                result.error("ROOT_REQUIRED", "无法读取通知渠道，请检查ROOT权限", null)
+                                postResultError(result, "ROOT_REQUIRED", "无法读取通知渠道，请检查ROOT权限")
                             } else {
-                                result.success(channels)
+                                postResultSuccess(result, channels)
                             }
+                        } catch (e: Exception) {
+                            postResultError(result, "ERROR", e.message)
                         }
-                    }.start()
+                    }
                 }
 
                 "getAppIcon" -> {
                     val pkg = call.argument<String>("packageName") ?: ""
-                    Thread {
+                    runInBackground {
                         try {
                             val pm = packageManager
                             val bmp = pm.getApplicationIcon(pkg).toBitmap(96)
                             val stream = ByteArrayOutputStream()
                             bmp.compress(Bitmap.CompressFormat.PNG, 90, stream)
-                            runOnUiThread { result.success(stream.toByteArray()) }
+                            postResultSuccess(result, stream.toByteArray())
                         } catch (e: Exception) {
-                            runOnUiThread { result.success(null) }
+                            postResultSuccess(result, null)
                         }
-                    }.start()
+                    }
                 }
 
                 "restartProcesses" -> {
                     val commands = call.argument<List<String>>("commands") ?: emptyList()
-                    Thread {
+                    runInBackground {
+                        var process: Process? = null
                         try {
                             // 通过 stdin 写命令，兼容 Magisk / KernelSU / APatch
-                            val process = Runtime.getRuntime().exec("su")
-                            val writer = java.io.DataOutputStream(process.outputStream)
-                            for (cmd in commands) {
-                                writer.writeBytes("$cmd\n")
+                            process = Runtime.getRuntime().exec("su")
+                            DataOutputStream(process.outputStream).use { writer ->
+                                for (cmd in commands) {
+                                    writer.writeBytes("$cmd\n")
+                                }
+                                writer.writeBytes("exit\n")
+                                writer.flush()
                             }
-                            writer.writeBytes("exit\n")
-                            writer.flush()
                             val exitCode = process.waitFor()
                             if (exitCode != 0) {
-                                runOnUiThread {
-                                    result.error("ROOT_REQUIRED", "Root permission denied (exit $exitCode)", null)
-                                }
+                                postResultError(result, "ROOT_REQUIRED", "Root permission denied (exit $exitCode)")
                             } else {
-                                runOnUiThread { result.success(true) }
+                                postResultSuccess(result, true)
                             }
                         } catch (e: Exception) {
-                            runOnUiThread { result.error("ROOT_ERROR", e.message, null) }
+                            postResultError(result, "ROOT_ERROR", e.message)
+                        } finally {
+                            process?.destroy()
                         }
-                    }.start()
+                    }
                 }
 
                 "isModuleActive" -> {
-                    Thread {
-                        val active = HyperIslandApp.awaitReady()
-                        runOnUiThread { result.success(active) }
-                    }.start()
+                    runInBackground {
+                        try {
+                            val active = HyperIslandApp.awaitReady()
+                            postResultSuccess(result, active)
+                        } catch (e: Exception) {
+                            postResultError(result, "ERROR", e.message)
+                        }
+                    }
                 }
 
                 "getLSPosedApiVersion" -> {
-                    Thread {
-                        val ready = HyperIslandApp.awaitReady()
-                        val version = if (ready) HyperIslandApp.getApiVersion() else 0
-                        runOnUiThread { result.success(version) }
-                    }.start()
+                    runInBackground {
+                        try {
+                            val ready = HyperIslandApp.awaitReady()
+                            val version = if (ready) HyperIslandApp.getApiVersion() else 0
+                            postResultSuccess(result, version)
+                        } catch (e: Exception) {
+                            postResultError(result, "ERROR", e.message)
+                        }
+                    }
                 }
 
                 "getFocusProtocolVersion" -> {
@@ -510,34 +530,6 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun findTagEnd(text: String, startIndex: Int): Int {
-        var quote: Char? = null
-        var index = startIndex
-        while (index < text.length) {
-            val ch = text[index]
-            if (quote == null) {
-                if (ch == '\'' || ch == '"') {
-                    quote = ch
-                } else if (ch == '>') {
-                    return index
-                }
-            } else if (ch == quote) {
-                quote = null
-            }
-            index += 1
-        }
-        return -1
-    }
-
-    private fun parseXmlAttributes(tag: String): Map<String, String> {
-        val attrs = linkedMapOf<String, String>()
-        val attrPattern = Regex("""([A-Za-z0-9_:-]+)\s*=\s*(["'])(.*?)\2""")
-        attrPattern.findAll(tag).forEach { match ->
-            attrs[match.groupValues[1]] = match.groupValues[3]
-        }
-        return attrs
-    }
-
     private fun sanitizeInvalidXml(xml: String): String {
         var removedEntityRefs = 0
         val sanitizedEntities = Regex("""&#(x[0-9A-Fa-f]+|\d+);""").replace(xml) { match ->
@@ -672,13 +664,40 @@ class MainActivity : FlutterActivity() {
             val incSys = pendingAppsIncludeSystem
             pendingAppsResult = null
             if (r != null) {
-                Thread {
-                    val apps = getInstalledApps(incSys)
-                    runOnUiThread { r.success(apps) }
-                }.start()
+                runInBackground {
+                    try {
+                        val apps = getInstalledApps(incSys)
+                        postResultSuccess(r, apps)
+                    } catch (e: Exception) {
+                        postResultError(r, "ERROR", e.message)
+                    }
+                }
             }
         }
 
+    }
+
+    override fun onDestroy() {
+        backgroundExecutor.shutdownNow()
+        super.onDestroy()
+    }
+
+    private fun runInBackground(task: () -> Unit) {
+        backgroundExecutor.execute {
+            try {
+                task()
+            } catch (e: Exception) {
+                Log.e(TAG, "background task failed", e)
+            }
+        }
+    }
+
+    private fun postResultSuccess(result: MethodChannel.Result, value: Any?) {
+        runOnUiThread { result.success(value) }
+    }
+
+    private fun postResultError(result: MethodChannel.Result, code: String, message: String?) {
+        runOnUiThread { result.error(code, message ?: code, null) }
     }
 
     private fun handleShowTest(result: MethodChannel.Result) {

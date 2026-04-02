@@ -49,7 +49,7 @@ object ConfigManager {
             initialized = true
         } catch (e: Exception) {
             module.logError("$TAG: init failed: ${e.message}")
-            initialized = true
+            initialized = false
         }
     }
 
