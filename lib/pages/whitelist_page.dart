@@ -139,12 +139,10 @@ class _WhitelistPageState extends State<WhitelistPage> {
     for (var i = 0; i < selected.length; i++) {
       final pkg = selected[i];
       try {
-        final results = await Future.wait<dynamic>([
-          _ctrl.getChannels(pkg),
-          _ctrl.getEnabledChannels(pkg),
-        ]);
-        final channels = results[0] as List<ChannelInfo>;
-        final enabledChannels = results[1] as Set<String>;
+        final channelsFuture = _ctrl.getChannels(pkg);
+        final enabledChannelsFuture = _ctrl.getEnabledChannels(pkg);
+        final channels = await channelsFuture;
+        final enabledChannels = await enabledChannelsFuture;
         final ids = enabledChannels.isEmpty
             ? channels.map((c) => c.id).toList()
             : enabledChannels.toList();
