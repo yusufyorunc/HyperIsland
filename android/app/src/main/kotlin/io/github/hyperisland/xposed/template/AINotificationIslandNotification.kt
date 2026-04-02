@@ -12,6 +12,8 @@ import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.logWarn
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -51,18 +53,23 @@ object AINotificationIslandNotification : IslandTemplate {
 
         val leftText  = aiText?.left  ?: data.title
         val rightText = aiText?.right ?: data.subtitle.ifEmpty { data.title }
+        val displayText = buildDisplayText(
+            left = leftText,
+            right = rightText,
+            fallbackTitle = data.title.ifEmpty { "通知" },
+        )
 
         log(
-            if (aiText != null) "$TAG: AI text — left=$leftText | right=$rightText"
-            else "$TAG: fallback text — left=$leftText | right=$rightText"
+            if (aiText != null) "$TAG: AI text — left=${displayText.title} | right=${displayText.content}"
+            else "$TAG: fallback text — left=${displayText.title} | right=${displayText.content}"
         )
 
         if (data.focusNotif == "off") {
-            injectViaDispatcher(context, data, leftText, rightText)
+            injectViaDispatcher(context, data, displayText)
             return
         }
         try {
-            val vm = process(context, data, leftText, rightText)
+            val vm = process(context, data, displayText)
             resolveRenderer(data.renderer).render(context, extras, vm)
             //ConfigManager.module()?.log("$TAG: injected — title=${data.title} | left=$leftText | right=$rightText | notifId=${data.notifId}")
         } catch (e: Exception) {
@@ -85,6 +92,13 @@ object AINotificationIslandNotification : IslandTemplate {
     )
 
     private data class AiIslandText(val left: String, val right: String)
+    private data class DisplayText(val title: String, val content: String)
+
+    private fun buildDisplayText(left: String, right: String, fallbackTitle: String): DisplayText {
+        val title = formatIslandTitle(left, fallback = fallbackTitle, maxVisualUnits = 30)
+        val content = formatIslandContent(right, fallback = title, maxVisualUnits = 44)
+        return DisplayText(title = title, content = content)
+    }
 
     private fun loadAiConfig(): AiConfig = AiConfig(
         enabled = ConfigManager.getBoolean("pref_ai_enabled", false),
@@ -205,8 +219,7 @@ $userPrompt
     private fun injectViaDispatcher(
         context: Context,
         data: NotifData,
-        leftText: String,
-        rightText: String,
+        displayText: DisplayText,
     ) {
         try {
             val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
@@ -214,8 +227,8 @@ $userPrompt
             IslandDispatcher.post(
                 context,
                 IslandRequest(
-                    title            = leftText,
-                    content          = rightText,
+                    title            = displayText.title,
+                    content          = displayText.content,
                     icon             = displayIcon,
                     timeoutSecs      = data.islandTimeout,
                     firstFloat       = data.firstFloat == "on",
@@ -234,27 +247,32 @@ $userPrompt
 
     // ── 消息处理 ──────────────────────────────────────────────────────────────
 
-    fun process(
+    private fun process(
         context: Context,
         data: NotifData,
-        leftText: String  = data.title,
-        rightText: String = data.subtitle.ifEmpty { data.title },
+        displayText: DisplayText = buildDisplayText(
+            left = data.title,
+            right = data.subtitle,
+            fallbackTitle = data.title.ifEmpty { "通知" },
+        ),
     ): IslandViewModel {
         val fallbackIcon     = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
         val islandIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
         val focusIcon = resolveFocusIcon(data, fallbackIcon).toRounded(context)
         val showNotification = data.focusNotif != "off"
+        val focusTitle = formatIslandTitle(data.title, fallback = displayText.title, maxVisualUnits = 48)
+        val focusContent = formatIslandContent(data.subtitle, fallback = focusTitle, maxVisualUnits = 84)
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,
-            leftTitle         = leftText,
-            rightTitle        = rightText,
-            focusTitle        = data.title,
-            focusContent      = data.subtitle.ifEmpty { data.title },
+            leftTitle         = displayText.title,
+            rightTitle        = displayText.content,
+            focusTitle        = focusTitle,
+            focusContent      = focusContent,
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
             circularProgress  = null,
-            showRightSide     = true,
+            showRightSide     = displayText.content.isNotEmpty(),
             actions           = data.actions,
             updatable         = data.isOngoing,
             showNotification  = showNotification,

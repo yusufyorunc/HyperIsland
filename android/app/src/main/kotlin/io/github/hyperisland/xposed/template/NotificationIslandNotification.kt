@@ -9,6 +9,8 @@ import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -29,13 +31,25 @@ object NotificationIslandNotification : IslandTemplate {
 
     override val id = TEMPLATE_ID
 
+    private data class DisplayText(
+        val title: String,
+        val content: String,
+    )
+
+    private fun buildDisplayText(data: NotifData): DisplayText {
+        val title = formatIslandTitle(data.title, fallback = "通知", maxVisualUnits = 30)
+        val content = formatIslandContent(data.subtitle, fallback = title, maxVisualUnits = 44)
+        return DisplayText(title = title, content = content)
+    }
+
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
+        val displayText = buildDisplayText(data)
         if (data.focusNotif == "off") {
-            injectViaDispatcher(context, data)
+            injectViaDispatcher(context, data, displayText)
             return
         }
         try {
-            val vm = process(context, data)
+            val vm = process(context, data, displayText)
             resolveRenderer(data.renderer).render(context, extras, vm)
             //ConfigManager.module()?.log("$TAG: injected — ${data.title} | left=${vm.leftTitle} | right=${vm.rightTitle} | buttons=${data.actions.size} | isOngoing=${data.isOngoing}")
         } catch (e: Exception) {
@@ -45,7 +59,7 @@ object NotificationIslandNotification : IslandTemplate {
 
     // ── Dispatcher 路径（focusNotif == "off"）────────────────────────────────
 
-    private fun injectViaDispatcher(context: Context, data: NotifData) {
+    private fun injectViaDispatcher(context: Context, data: NotifData, displayText: DisplayText) {
         try {
             val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
             val displayIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
@@ -53,8 +67,8 @@ object NotificationIslandNotification : IslandTemplate {
             IslandDispatcher.post(
                 context,
                 IslandRequest(
-                    title            = data.title,
-                    content          = data.subtitle.ifEmpty { data.title },
+                    title            = displayText.title,
+                    content          = displayText.content,
                     icon             = displayIcon,
                     timeoutSecs      = data.islandTimeout,
                     firstFloat       = data.firstFloat == "on",
@@ -74,7 +88,11 @@ object NotificationIslandNotification : IslandTemplate {
 
     // ── 消息处理 ──────────────────────────────────────────────────────────────
 
-    fun process(context: Context, data: NotifData): IslandViewModel {
+    private fun process(
+        context: Context,
+        data: NotifData,
+        displayText: DisplayText = buildDisplayText(data),
+    ): IslandViewModel {
         val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
 
         val islandIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
@@ -85,14 +103,14 @@ object NotificationIslandNotification : IslandTemplate {
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,
-            leftTitle         = data.title,
-            rightTitle        = data.subtitle.ifEmpty { data.title },
-            focusTitle        = data.title,
-            focusContent      = data.subtitle.ifEmpty { data.title },
+            leftTitle         = displayText.title,
+            rightTitle        = displayText.content,
+            focusTitle        = displayText.title,
+            focusContent      = displayText.content,
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
             circularProgress  = null,
-            showRightSide     = true,
+            showRightSide     = displayText.content.isNotEmpty(),
             actions           = data.actions,
             updatable         = data.isOngoing,
             showNotification  = showNotification,

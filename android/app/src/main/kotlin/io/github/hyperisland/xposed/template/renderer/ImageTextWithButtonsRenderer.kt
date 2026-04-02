@@ -39,18 +39,40 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
     /** 供 [ImageTextWithButtonsWrapRenderer] 和 [ImageTextWithRightTextButtonRenderer] 复用，避免重复布局代码。 */
     internal fun renderWith(context: Context, extras: Bundle, vm: IslandViewModel, applyWrap: Boolean, maxButtons: Int = 2, useActionsButton: Boolean = false) {
         try {
+            val effectiveFocusTitle = formatIslandTitle(
+                vm.focusTitle,
+                fallback = vm.leftTitle.ifBlank { "通知" },
+                maxVisualUnits = 48,
+            )
+            val effectiveFocusContent = formatIslandContent(
+                vm.focusContent,
+                fallback = effectiveFocusTitle,
+                maxVisualUnits = 84,
+            )
+            val effectiveLeftTitle = formatIslandTitle(
+                vm.leftTitle,
+                fallback = effectiveFocusTitle,
+                maxVisualUnits = 28,
+            )
+            val effectiveRightTitle = formatIslandContent(
+                vm.rightTitle,
+                fallback = "",
+                maxVisualUnits = 44,
+            )
+            val shouldShowRightText = vm.showRightSide && effectiveRightTitle.isNotEmpty()
+
             val iconKey      = "key_${vm.templateId}_island"
             val focusIconKey = "key_${vm.templateId}_focus"
 
-            val builder = HyperIslandNotification.Builder(context, vm.templateId, vm.focusTitle)
+            val builder = HyperIslandNotification.Builder(context, vm.templateId, effectiveFocusTitle)
 
             builder.addPicture(HyperPicture(iconKey,      vm.islandIcon))
             builder.addPicture(HyperPicture(focusIconKey, vm.focusIcon))
 
             builder.setIconTextInfo(
                 picKey  = focusIconKey,
-                title   = vm.focusTitle,
-                content = vm.focusContent,
+                title   = effectiveFocusTitle,
+                content = effectiveFocusContent,
             )
 
             builder.setIslandFirstFloat(vm.firstFloat)
@@ -69,13 +91,13 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             val leftSide = if (!vm.showIslandIcon) {
                 ImageTextInfoLeft(
                     type     = 1,
-                    textInfo = TextInfo(title = vm.leftTitle),
+                    textInfo = TextInfo(title = effectiveLeftTitle),
                 )
             } else {
                 ImageTextInfoLeft(
                     type     = 1,
                     picInfo  = PicInfo(type = 1, pic = iconKey),
-                    textInfo = TextInfo(title = vm.leftTitle),
+                    textInfo = TextInfo(title = effectiveLeftTitle),
                 )
             }
             when {
@@ -83,29 +105,45 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
                     left = leftSide,
                     progressText = ProgressTextInfo(
                         progressInfo = CircularProgressInfo(progress = vm.circularProgress),
-                        textInfo     = TextInfo(title = vm.rightTitle, narrowFont = true),
+                        textInfo     = TextInfo(
+                            title = effectiveRightTitle.ifEmpty { "${vm.circularProgress}%" },
+                            narrowFont = true,
+                        ),
                     ),
                 )
-                vm.showRightSide -> builder.setBigIslandInfo(
+                shouldShowRightText -> builder.setBigIslandInfo(
                     left  = leftSide,
                     right = ImageTextInfoRight(
                         type     = 2,
-                        textInfo = TextInfo(title = vm.rightTitle, narrowFont = true),
+                        textInfo = TextInfo(title = effectiveRightTitle, narrowFont = true),
                     ),
                 )
                 else -> builder.setBigIslandInfo(left = leftSide)
             }
 
             // 按钮（showNotification=false 时不添加）
-            val effectiveActions = vm.actions.take(maxButtons)
+            val effectiveActions = vm.actions
+                .asSequence()
+                .mapNotNull { action ->
+                    val pendingIntent = action.actionIntent ?: return@mapNotNull null
+                    val title = formatIslandContent(
+                        action.title?.toString().orEmpty(),
+                        fallback = "",
+                        maxVisualUnits = 20,
+                    )
+                    if (title.isEmpty()) null else pendingIntent to title
+                }
+                .take(maxButtons)
+                .toList()
+
             if (effectiveActions.isNotEmpty() && vm.showNotification) {
                 if (useActionsButton) {
                     // 按钮组件1 type=2：右侧文字按钮，无图标，仅支持 1 个
                     val action = effectiveActions.first()
                     builder.addAction(HyperAction(
                         key              = "action_${vm.templateId}_0",
-                        title            = action.title ?: "",
-                        pendingIntent    = action.actionIntent,
+                        title            = action.second,
+                        pendingIntent    = action.first,
                         actionIntentType = 2,
                     ))
                 } else {
@@ -113,8 +151,8 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
                     val hyperActions = effectiveActions.mapIndexed { index, action ->
                         HyperAction(
                             key              = "action_${vm.templateId}_$index",
-                            title            = action.title ?: "",
-                            pendingIntent    = action.actionIntent,
+                            title            = action.second,
+                            pendingIntent    = action.first,
                             actionIntentType = 2,
                         )
                     }

@@ -9,6 +9,8 @@ import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.moduleContext
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -129,17 +131,33 @@ object GenericDownloadIslandNotification : IslandTemplate {
 
         val islandIcon = resolveIslandIcon(data, fallback, preferSmallWhenAuto = true).toRounded(context)
         val focusIcon = resolveFocusIcon(data, fallback).toRounded(context)
+        val formattedStateLabel = formatIslandTitle(stateLabel, fallback = stateLabel, maxVisualUnits = 24)
+        val formattedRightContent = formatIslandContent(
+            raw = pickContent(data.title, data.subtitle),
+            fallback = data.title,
+            maxVisualUnits = 44,
+        )
+        val formattedFocusTitle = formatIslandTitle(
+            raw = data.title,
+            fallback = formattedStateLabel,
+            maxVisualUnits = 48,
+        )
+        val formattedFocusContent = formatIslandContent(
+            raw = data.subtitle,
+            fallback = formattedFocusTitle,
+            maxVisualUnits = 84,
+        )
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,
-            leftTitle         = stateLabel,
-            rightTitle        = pickContent(data.title, data.subtitle),
-            focusTitle        = data.title,
-            focusContent      = data.subtitle.ifEmpty { data.title },
+            leftTitle         = formattedStateLabel,
+            rightTitle        = formattedRightContent,
+            focusTitle        = formattedFocusTitle,
+            focusContent      = formattedFocusContent,
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
             circularProgress  = if (shouldShowProgress) safeProgress else null,
-            showRightSide     = true,
+            showRightSide     = formattedRightContent.isNotEmpty(),
             actions           = data.actions,
             updatable         = !isComplete && !isPaused,
             showNotification  = data.focusNotif != "off",

@@ -4,9 +4,11 @@
 
 ---
 
-# V1.9.7 (2026-4-2)
+# V1.9.7 (2026-04-02)
 
-- Performance improvements and bug fixes.
+- Refined island text layout with consistent truncation, wrapping, and fallbacks.
+- Improved action button rendering by filtering invalid or empty actions.
+- Hardened notification hook and dispatcher flow for better stability and performance.
 
 # V1.9.6 (2026-4-2)
 

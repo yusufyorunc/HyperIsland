@@ -12,6 +12,8 @@ import android.os.Build
 import io.github.hyperisland.getAppIcon
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.renderer.fixTextButtonJson
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.flattenActionsToExtras
 import io.github.libxposed.api.XposedModule
 import io.github.d4viddf.hyperisland_kit.HyperAction
@@ -136,11 +138,17 @@ object IslandDispatcher {
         try {
             val nm = context.getSystemService(NotificationManager::class.java) ?: return
             createChannel(context)
+            val displayTitle = formatIslandTitle(request.title, fallback = "通知", maxVisualUnits = 30)
+            val displayContent = formatIslandContent(
+                request.content,
+                fallback = displayTitle,
+                maxVisualUnits = 44,
+            )
 
             val appIcon = resolveIcon(request.icon, context)
 
             val islandBuilder = HyperIslandNotification.Builder(
-                context, "hyper_island_dispatch", request.title
+                context, "hyper_island_dispatch", displayTitle
             )
 
             islandBuilder.addPicture(HyperPicture("key_island_icon", appIcon))
@@ -148,8 +156,8 @@ object IslandDispatcher {
 
             islandBuilder.setIconTextInfo(
                 picKey  = "key_focus_icon",
-                title   = request.title,
-                content = request.content,
+                title   = displayTitle,
+                content = displayContent,
             )
             islandBuilder.setIslandFirstFloat(request.firstFloat)
             islandBuilder.setEnableFloat(request.enableFloat)
@@ -164,22 +172,34 @@ object IslandDispatcher {
                 left = ImageTextInfoLeft(
                     type     = 1,
                     picInfo  = PicInfo(type = 1, pic = "key_island_icon"),
-                    textInfo = TextInfo(title = request.title),
+                    textInfo = TextInfo(title = displayTitle),
                 ),
                 right = ImageTextInfoRight(
                     type     = 2,
-                    textInfo = TextInfo(title = request.content, narrowFont = true),
+                    textInfo = TextInfo(title = displayContent, narrowFont = true),
                 ),
             )
 
             // 文字按钮（最多 2 个），与 NotificationIslandNotification.inject() 保持一致
-            val effectiveActions = request.actions.take(2)
+            val effectiveActions = request.actions
+                .asSequence()
+                .mapNotNull { action ->
+                    val pendingIntent = action.actionIntent ?: return@mapNotNull null
+                    val title = formatIslandContent(
+                        action.title?.toString().orEmpty(),
+                        fallback = "",
+                        maxVisualUnits = 20,
+                    )
+                    if (title.isEmpty()) null else pendingIntent to title
+                }
+                .take(2)
+                .toList()
             if (effectiveActions.isNotEmpty()) {
                 val hyperActions = effectiveActions.mapIndexed { index, action ->
                     HyperAction(
                         key              = "action_dispatcher_$index",
-                        title            = action.title?.toString() ?: "",
-                        pendingIntent    = action.actionIntent,
+                        title            = action.second,
+                        pendingIntent    = action.first,
                         actionIntentType = 2,
                     )
                 }
@@ -205,8 +225,8 @@ object IslandDispatcher {
 
             val notif = Notification.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle(request.title)
-                .setContentText(request.content)
+                .setContentTitle(displayTitle)
+                .setContentText(displayContent)
                 .setVisibility(visibility)
                 .setPublicVersion(publicVersion)
                 .setAutoCancel(true)
@@ -232,7 +252,7 @@ object IslandDispatcher {
                 notif.extras.putBoolean("hyperisland_preserve_status_bar_small_icon", true)
                 FocusNotifStatusBarIconHook.markDirectProxyPosted(request.timeoutSecs)
             }
-            module?.log("$TAG: preserve marker=$shouldPreserveStatusBarSmallIcon title=${request.title} | notifId=${request.notifId} | showNotification=${request.showNotification}")
+            module?.log("$TAG: preserve marker=$shouldPreserveStatusBarSmallIcon title=$displayTitle | notifId=${request.notifId} | showNotification=${request.showNotification}")
 
             val isFirstPost = !postedIds.contains(request.notifId)
             if (isFirstPost) {
@@ -245,7 +265,7 @@ object IslandDispatcher {
                 nm.notify(request.notifId, notif)
             }
 
-            module?.log("$TAG: posted(first=$isFirstPost): ${request.title} | ${request.content} | highlight=${request.highlightColor} | dismiss=${request.dismissIsland}")
+            module?.log("$TAG: posted(first=$isFirstPost): $displayTitle | $displayContent | highlight=${request.highlightColor} | dismiss=${request.dismissIsland}")
         } catch (e: Exception) {
             module?.logError("$TAG: post error: ${e.message}")
         }

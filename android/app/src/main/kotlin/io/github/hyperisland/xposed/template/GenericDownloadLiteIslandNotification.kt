@@ -7,6 +7,8 @@ import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.logError
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -63,13 +65,15 @@ object DownloadLiteIslandNotification : IslandTemplate {
 
         val islandIcon = resolveIslandIcon(data, fallback, preferSmallWhenAuto = true).toRounded(context)
         val focusIcon = resolveFocusIcon(data, fallback).toRounded(context)
+        val focusTitle = formatIslandTitle(data.title, fallback = "下载", maxVisualUnits = 48)
+        val focusContent = formatIslandContent(data.subtitle, fallback = focusTitle, maxVisualUnits = 84)
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,
             leftTitle         = "",
             rightTitle        = "",
-            focusTitle        = data.title,
-            focusContent      = data.subtitle.ifEmpty { data.title },
+            focusTitle        = focusTitle,
+            focusContent      = focusContent,
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
             // 下载中：circularProgress=进度，右侧=进度环；完成/暂停：两者为 null/false，仅左侧图标

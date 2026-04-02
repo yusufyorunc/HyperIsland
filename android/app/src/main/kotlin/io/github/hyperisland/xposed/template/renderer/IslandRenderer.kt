@@ -17,6 +17,54 @@ interface IslandRenderer {
     fun render(context: Context, extras: Bundle, vm: IslandViewModel)
 }
 
+private val CONTROL_SPACE_REGEX = Regex("""[\r\n\t]+""")
+private val MULTI_SPACE_REGEX = Regex("""\s{2,}""")
+private val NATURAL_BREAK_CHARS = setOf(' ', '\u3000', ',', '，', '.', '。', ';', '；', ':', '：', '/', '|', '-', '_')
+
+fun normalizeIslandText(text: String): String = text
+    .replace(CONTROL_SPACE_REGEX, " ")
+    .replace(MULTI_SPACE_REGEX, " ")
+    .trim()
+
+private fun charVisualUnits(ch: Char): Int = if (ch.code > 255) 2 else 1
+
+fun ellipsizeIslandText(text: String, maxVisualUnits: Int): String {
+    if (maxVisualUnits <= 0) return ""
+    val normalized = normalizeIslandText(text)
+    if (normalized.isEmpty()) return ""
+
+    var totalUnits = 0
+    for (ch in normalized) totalUnits += charVisualUnits(ch)
+    if (totalUnits <= maxVisualUnits) return normalized
+
+    val ellipsis = "..."
+    var ellipsisUnits = 0
+    for (ch in ellipsis) ellipsisUnits += charVisualUnits(ch)
+    val budget = (maxVisualUnits - ellipsisUnits).coerceAtLeast(1)
+
+    val out = StringBuilder()
+    var used = 0
+    for (ch in normalized) {
+        val unit = charVisualUnits(ch)
+        if (used + unit > budget) break
+        out.append(ch)
+        used += unit
+    }
+
+    if (out.isEmpty()) return ellipsis
+    return out.toString().trimEnd() + ellipsis
+}
+
+fun formatIslandTitle(raw: String, fallback: String = "通知", maxVisualUnits: Int = 28): String {
+    val resolved = normalizeIslandText(raw).ifEmpty { normalizeIslandText(fallback) }
+    return ellipsizeIslandText(resolved, maxVisualUnits)
+}
+
+fun formatIslandContent(raw: String, fallback: String = "", maxVisualUnits: Int = 44): String {
+    val resolved = normalizeIslandText(raw).ifEmpty { normalizeIslandText(fallback) }
+    return if (resolved.isEmpty()) "" else ellipsizeIslandText(resolved, maxVisualUnits)
+}
+
 // ── 共享工具函数 ──────────────────────────────────────────────────────────────
 
 /**
@@ -65,6 +113,7 @@ fun wrapLongTextJson(jsonParam: String): String =
             visualLen += if (content[i].code > 255) 2 else 1
             if (visualLen >= 36 && splitIdx == -1) splitIdx = i + 1
         }
+        if (splitIdx > 0) splitIdx = findNaturalSplitIndex(content, splitIdx)
         if (splitIdx == -1 || splitIdx >= content.length) return jsonParam
 
         val subContent = content.substring(splitIdx)
@@ -82,6 +131,20 @@ fun wrapLongTextJson(jsonParam: String): String =
     } catch (_: Exception) {
         jsonParam
     }
+
+private fun findNaturalSplitIndex(content: String, baseIndex: Int): Int {
+    if (content.isEmpty()) return baseIndex
+    val safeBase = baseIndex.coerceIn(1, content.length - 1)
+    val rightEnd = (safeBase + 8).coerceAtMost(content.length - 1)
+    for (i in safeBase..rightEnd) {
+        if (content[i] in NATURAL_BREAK_CHARS) return (i + 1).coerceAtMost(content.length)
+    }
+    val leftStart = (safeBase - 8).coerceAtLeast(1)
+    for (i in safeBase downTo leftStart) {
+        if (content[i - 1] in NATURAL_BREAK_CHARS) return i
+    }
+    return safeBase
+}
 
 /** 注入 param_v2.updatable 字段。 */
 fun injectUpdatable(jsonParam: String, updatable: Boolean): String =

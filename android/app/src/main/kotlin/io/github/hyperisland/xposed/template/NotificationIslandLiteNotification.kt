@@ -9,6 +9,8 @@ import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
+import io.github.hyperisland.xposed.renderer.formatIslandContent
+import io.github.hyperisland.xposed.renderer.formatIslandTitle
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -30,16 +32,34 @@ object NotificationIslandLiteNotification : IslandTemplate {
 
     override val id = TEMPLATE_ID
 
+    private data class DisplayText(
+        val title: String,
+        val content: String,
+    )
+
+    private fun buildDisplayText(rawTitle: String, rawSubtitle: String): DisplayText {
+        val title = formatIslandTitle(rawTitle, fallback = "通知", maxVisualUnits = 30)
+        val content = formatIslandContent(rawSubtitle, fallback = title, maxVisualUnits = 44)
+        return DisplayText(title = title, content = content)
+    }
+
+    private fun buildDisplayText(data: NotifData): DisplayText {
+        val cleanedTitle = cleanTitle(data.title)
+        val cleanedSubtitle = cleanSubtitle(data.subtitle, cleanedTitle)
+        return buildDisplayText(cleanedTitle, cleanedSubtitle)
+    }
+
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
         val cleanedTitle    = cleanTitle(data.title)
         val cleanedSubtitle = cleanSubtitle(data.subtitle, cleanedTitle)
+        val displayText = buildDisplayText(cleanedTitle, cleanedSubtitle)
 
         if (data.focusNotif == "off") {
-            injectViaDispatcher(context, data, cleanedTitle, cleanedSubtitle)
+            injectViaDispatcher(context, data, displayText)
             return
         }
         try {
-            val vm = process(context, data, cleanedTitle, cleanedSubtitle)
+            val vm = process(context, data, displayText)
             resolveRenderer(data.renderer).render(context, extras, vm)
             //ConfigManager.module()?.log("$TAG: injected — raw=${data.title} | clean=$cleanedTitle | right=${cleanedSubtitle.ifEmpty { cleanedTitle }} | notifId=${data.notifId}")
         } catch (e: Exception) {
@@ -71,8 +91,7 @@ object NotificationIslandLiteNotification : IslandTemplate {
     private fun injectViaDispatcher(
         context: Context,
         data: NotifData,
-        cleanedTitle: String,
-        cleanedSubtitle: String,
+        displayText: DisplayText,
     ) {
         try {
             val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
@@ -81,8 +100,8 @@ object NotificationIslandLiteNotification : IslandTemplate {
             IslandDispatcher.post(
                 context,
                 IslandRequest(
-                    title            = cleanedTitle,
-                    content          = cleanedSubtitle.ifEmpty { cleanedTitle },
+                    title            = displayText.title,
+                    content          = displayText.content,
                     icon             = displayIcon,
                     timeoutSecs      = data.islandTimeout,
                     firstFloat       = data.firstFloat == "on",
@@ -102,11 +121,10 @@ object NotificationIslandLiteNotification : IslandTemplate {
 
     // ── 消息处理 ──────────────────────────────────────────────────────────────
 
-    fun process(
+    private fun process(
         context: Context,
         data: NotifData,
-        cleanedTitle: String = cleanTitle(data.title),
-        cleanedSubtitle: String = cleanSubtitle(data.subtitle, cleanedTitle),
+        displayText: DisplayText = buildDisplayText(data),
     ): IslandViewModel {
         val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
 
@@ -118,14 +136,14 @@ object NotificationIslandLiteNotification : IslandTemplate {
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,
-            leftTitle         = cleanedTitle,
-            rightTitle        = cleanedSubtitle.ifEmpty { cleanedTitle },
-            focusTitle        = cleanedTitle,
-            focusContent      = cleanedSubtitle.ifEmpty { cleanedTitle },
+            leftTitle         = displayText.title,
+            rightTitle        = displayText.content,
+            focusTitle        = displayText.title,
+            focusContent      = displayText.content,
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
             circularProgress  = null,
-            showRightSide     = true,
+            showRightSide     = displayText.content.isNotEmpty(),
             actions           = data.actions,
             updatable         = data.isOngoing,
             showNotification  = showNotification,
