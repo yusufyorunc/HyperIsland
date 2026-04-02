@@ -9,7 +9,6 @@ import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
-import java.util.regex.Pattern
 
 /**
  * Xposed Hook — 拦截下载通知并注入小米超级岛参数
@@ -18,6 +17,15 @@ object DownloadHook {
 
     private const val TAG = "HyperIsland[DownloadHook]"
     private val MULTI_FILE_REGEX = Regex("""\d+个文件""")
+    private val PERCENT_REGEX = Regex("""(\d+)%""")
+    private val TAG_ID_REGEX = Regex("""(\d{3,})""")
+    private val FILE_NAME_REGEX = Regex(
+        """([\u4e00-\u9fa5\w\s\-_.]+(?:\.[a-zA-Z0-9]{2,5})?)""",
+        RegexOption.IGNORE_CASE
+    )
+    private val DOWNLOAD_CHANNEL_HINTS = listOf("download", "下载", "downloader")
+    private val FILE_NAME_PREFIXES = listOf("正在下载", "下载中", "下载", "Downloading", "Download")
+    private val FILE_NAME_SUFFIXES = listOf("下载中...", "下载中", "下载...", "下载", "Downloading", "Download")
 
     private var extrasField: Field? = null
 
@@ -96,7 +104,9 @@ object DownloadHook {
             val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
             val channelId = notif.channelId ?: ""
             module.log("$TAG: [RAW/Notify] ch=$channelId | title=$title | text=$text")
-            if (!isDownloadNotification(title, text, extras) && channelId.isEmpty()) return
+            val isDownloadCandidate =
+                isDownloadNotification(title, text, extras) || isLikelyDownloadChannel(channelId)
+            if (!isDownloadCandidate) return
 
             val appName = pkg.substringAfterLast(".").replaceFirstChar { it.uppercase() }
             val fileName = extractFileName(title, text, extras)
@@ -248,6 +258,11 @@ object DownloadHook {
         text.contains("等待中") ||
         extras.containsKey("progress")
 
+    private fun isLikelyDownloadChannel(channelId: String): Boolean {
+        if (channelId.isBlank()) return false
+        return DOWNLOAD_CHANNEL_HINTS.any { hint -> channelId.contains(hint, ignoreCase = true) }
+    }
+
     private fun extractProgress(title: String, text: String, extras: Bundle): Int {
         val current = extras.getLong("extra_download_current_bytes", -1L)
         val total   = extras.getLong("extra_download_total_bytes",   -1L)
@@ -259,8 +274,8 @@ object DownloadHook {
         extras.getInt("progress", -1).takeIf { it >= 0 }?.let { return it }
         extras.getInt("android.progress", -1).takeIf { it >= 0 }?.let { return it }
         extras.getInt("percent", -1).takeIf { it >= 0 }?.let { return it }
-        val m = Pattern.compile("(\\d+)%").matcher(combined)
-        if (m.find()) return m.group(1)?.toIntOrNull() ?: -1
+        val match = PERCENT_REGEX.find(combined)
+        if (match != null) return match.groupValues[1].toIntOrNull() ?: -1
         return -1
     }
 
@@ -277,8 +292,8 @@ object DownloadHook {
     private fun extractIdFromTag(tag: String?): Long {
         if (tag.isNullOrEmpty()) return -1L
         tag.toLongOrNull()?.takeIf { it > 0 }?.let { return it }
-        val m = Pattern.compile("(\\d{3,})").matcher(tag)
-        if (m.find()) return m.group(1)?.toLongOrNull() ?: -1L
+        val match = TAG_ID_REGEX.find(tag)
+        if (match != null) return match.groupValues[1].toLongOrNull() ?: -1L
         return -1L
     }
 
@@ -293,15 +308,21 @@ object DownloadHook {
     private fun extractFileNameFromText(text: String): String {
         if (text.isEmpty()) return ""
         var s = text
-        for (prefix in listOf("正在下载", "下载中", "下载", "Downloading", "Download")) {
-            if (s.startsWith(prefix)) { s = s.substring(prefix.length).trim(); break }
+        for (prefix in FILE_NAME_PREFIXES) {
+            if (s.startsWith(prefix, ignoreCase = true)) {
+                s = s.substring(prefix.length).trim()
+                break
+            }
         }
-        for (suffix in listOf("下载中...", "下载中", "下载...", "下载", "Downloading", "Download")) {
-            if (s.endsWith(suffix)) { s = s.substring(0, s.length - suffix.length).trim(); break }
+        for (suffix in FILE_NAME_SUFFIXES) {
+            if (s.endsWith(suffix, ignoreCase = true)) {
+                s = s.substring(0, s.length - suffix.length).trim()
+                break
+            }
         }
-        val m = Pattern.compile("([\\u4e00-\\u9fa5\\w\\s\\-_.]+(?:\\.[a-zA-Z0-9]{2,5})?)", Pattern.CASE_INSENSITIVE).matcher(s)
-        if (m.find()) {
-            val name = m.group(1)?.trim() ?: ""
+        val match = FILE_NAME_REGEX.find(s)
+        if (match != null) {
+            val name = match.groupValues[1].trim()
             return if (name.length > 30) name.substring(0, 27) + "..." else name
         }
         return if (s.length > 30) s.substring(0, 27) + "..." else s

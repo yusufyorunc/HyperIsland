@@ -41,7 +41,7 @@ object GenericProgressHook {
         if (observerRegistered) return
         ConfigManager.init(module)
         ConfigManager.addChangeListener {
-            clearAllCaches("prefs_changed", module)
+            clearAllCaches()
         }
         observerRegistered = true
         module.log("$TAG: ConfigManager Observer registered in SystemUI")
@@ -76,11 +76,12 @@ object GenericProgressHook {
             else  -> if (globalDefault) "on" else "off"
         }
 
-    private fun clearAllCaches(reason: String, module: XposedModule) {
+    private fun clearAllCaches() {
         cachedWhitelist = null
         cachedTemplates.clear()
         cachedChannelSettings.clear()
-        //module.log("$TAG: settings changed, cache cleared ($reason)")
+        lastProgressCache.clear()
+        //module.log("$TAG: settings changed, cache cleared")
     }
 
     fun loadChannelTemplate(pkg: String, channelId: String): String {
@@ -142,7 +143,7 @@ object GenericProgressHook {
             )
             module.hook(removeMethod).intercept { chain ->
                 val result = chain.proceed()
-                handleNotificationRemoved(chain.args[0] as? StatusBarNotification, module, classLoader)
+                handleNotificationRemoved(chain.args[0] as? StatusBarNotification, classLoader)
                 result
             }
             cancelHooked = true
@@ -160,7 +161,7 @@ object GenericProgressHook {
                 )
                 module.hook(removeMethod).intercept { chain ->
                     val result = chain.proceed()
-                    handleNotificationRemoved(chain.args[0] as? StatusBarNotification, module, classLoader)
+                    handleNotificationRemoved(chain.args[0] as? StatusBarNotification, classLoader)
                     result
                 }
                 module.log("$TAG: hooked onNotificationRemoved(sbn)")
@@ -172,11 +173,11 @@ object GenericProgressHook {
 
     private fun handleNotificationRemoved(
         sbn: StatusBarNotification?,
-        module: XposedModule,
         classLoader: ClassLoader
     ) {
         sbn ?: return
         val key = "${sbn.packageName}#${sbn.id}"
+        lastProgressCache.remove(key)
         val proxyId = trackedForCancel.remove(key) ?: return
         val context = getContext(classLoader) ?: return
         IslandDispatcher.cancel(context, proxyId)
@@ -232,7 +233,11 @@ object GenericProgressHook {
                 val progressRaw = extras.getInt(Notification.EXTRA_PROGRESS, -1)
                 if (progressRaw < 0) return
                 progressPercent = (progressRaw * 100 / progressMax).coerceIn(0, 100)
-                if (progressPercent in 0..99) lastProgressCache[cacheKey] = progressPercent
+                if (progressPercent in 0..99) {
+                    lastProgressCache[cacheKey] = progressPercent
+                } else {
+                    lastProgressCache.remove(cacheKey)
+                }
             } else {
                 progressPercent = lastProgressCache[cacheKey] ?: -1
             }

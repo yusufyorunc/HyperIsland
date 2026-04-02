@@ -112,7 +112,7 @@ object InProcessController {
 
         val filter = IntentFilter(ACTION)
         if (Build.VERSION.SDK_INT >= 33) {
-            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             appCtx.registerReceiver(receiver, filter)
@@ -160,6 +160,7 @@ object InProcessController {
 
     fun dismissIntent(context: Context, notifId: Int, notifTag: String?): PendingIntent {
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, CMD_DISMISS)
             putExtra(EXTRA_NOTIF_ID, notifId)
             if (notifTag != null) putExtra(EXTRA_NOTIF_TAG, notifTag)
@@ -174,6 +175,7 @@ object InProcessController {
 
     private fun makeIntent(context: Context, cmd: String, downloadId: Long, requestCode: Int): PendingIntent {
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, cmd)
             putExtra(EXTRA_ID, downloadId)
         }

@@ -10,8 +10,9 @@ import android.content.IntentFilter
 import android.graphics.drawable.Icon
 import android.os.Build
 import io.github.hyperisland.getAppIcon
-import android.os.Bundle
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
+import io.github.hyperisland.xposed.renderer.fixTextButtonJson
+import io.github.hyperisland.xposed.renderer.flattenActionsToExtras
 import io.github.libxposed.api.XposedModule
 import io.github.d4viddf.hyperisland_kit.HyperAction
 import io.github.d4viddf.hyperisland_kit.HyperIslandNotification
@@ -317,38 +318,6 @@ object IslandDispatcher {
             pv2.put("param_island", paramIsland)
             json.toString()
         } catch (_: Exception) { jsonParam }
-    }
-
-    /** 修正新库输出的 textButton JSON，将 "actionIntent" 字段替换为协议所需的 "action"。*/
-    private fun fixTextButtonJson(jsonParam: String): String {
-        return try {
-            val json = org.json.JSONObject(jsonParam)
-            val pv2  = json.optJSONObject("param_v2") ?: return jsonParam
-            val btns = pv2.optJSONArray("textButton")
-            if (btns != null) {
-                for (i in 0 until btns.length()) {
-                    val btn = btns.getJSONObject(i)
-                    val key = btn.optString("actionIntent").takeIf { it.isNotEmpty() } ?: continue
-                    btn.put("action", key)
-                    btn.remove("actionIntent")
-                    btn.remove("actionIntentType")
-                }
-            }
-
-            json.toString()
-        } catch (_: Exception) { jsonParam }
-    }
-
-    /** 将 buildResourceBundle() 里嵌套的 "miui.focus.actions" 展开到 extras 顶层。*/
-    private fun flattenActionsToExtras(resourceBundle: Bundle, extras: Bundle) {
-        val nested = resourceBundle.getBundle("miui.focus.actions") ?: return
-        for (key in nested.keySet()) {
-            val action: Notification.Action? = if (Build.VERSION.SDK_INT >= 33)
-                nested.getParcelable(key, Notification.Action::class.java)
-            else
-                @Suppress("DEPRECATION") nested.getParcelable(key)
-            if (action != null) extras.putParcelable(key, action)
-        }
     }
 
     private fun createChannel(context: Context) {

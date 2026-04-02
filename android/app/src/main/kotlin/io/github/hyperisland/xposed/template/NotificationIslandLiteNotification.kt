@@ -9,7 +9,6 @@ import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
-import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.resolveFocusIcon
 import io.github.hyperisland.xposed.resolveIslandIcon
@@ -77,12 +76,7 @@ object NotificationIslandLiteNotification : IslandTemplate {
     ) {
         try {
             val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-            val displayIcon = when (data.iconMode) {
-                "notif_small" -> data.notifIcon ?: fallbackIcon
-                "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-                "app_icon"    -> data.appIconRaw ?: fallbackIcon
-                else          -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-            }.toRounded(context)
+            val displayIcon = resolveIslandIcon(data, fallbackIcon).toRounded(context)
 
             IslandDispatcher.post(
                 context,
