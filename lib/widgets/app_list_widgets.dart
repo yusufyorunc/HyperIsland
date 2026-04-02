@@ -80,6 +80,7 @@ class AppListItemFrame extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     const large = Radius.circular(22);
     const small = Radius.circular(5);
+    final iconSizePx = (44 * MediaQuery.devicePixelRatioOf(context)).round();
     final radius = BorderRadius.only(
       topLeft: isFirst ? large : small,
       topRight: isFirst ? large : small,
@@ -108,6 +109,9 @@ class AppListItemFrame extends StatelessWidget {
                   height: 44,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
+                  cacheWidth: iconSizePx,
+                  cacheHeight: iconSizePx,
+                  filterQuality: FilterQuality.low,
                 ),
               ),
               const SizedBox(width: 14),

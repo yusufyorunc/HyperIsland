@@ -58,6 +58,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     }
 
     final enabled = await widget.controller.getEnabledChannels(pkg);
+    if (!mounted) return;
     final l10nForLabels = AppLocalizations.of(context)!;
     final templateLabels = widget.controller.getTemplates(l10nForLabels);
     final rendererLabels = widget.controller.getRenderers(l10nForLabels);
@@ -134,123 +135,71 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     await widget.controller.setEnabledChannels(widget.app.packageName, newSet);
   }
 
-  Future<void> _setTemplate(String channelId, String template) async {
-    setState(
-      () => _channelTemplates = {..._channelTemplates, channelId: template},
-    );
-    await widget.controller.setChannelTemplate(
-      widget.app.packageName,
-      channelId,
-      template,
-    );
-  }
-
-  void _updateExtra(String channelId, String key, String value) {
-    setState(() {
-      _channelExtras = {
-        ..._channelExtras,
-        channelId: {...?_channelExtras[channelId], key: value},
-      };
-    });
-  }
-
-  Future<void> _setExtraSetting(
-    String channelId, {
-    required String key,
-    required String value,
-    required Future<void> Function(String, String, String) persist,
-  }) async {
-    _updateExtra(channelId, key, value);
-    await persist(widget.app.packageName, channelId, value);
-  }
-
-  Future<void> _applyExtraSettingIfPresent(
-    String channelId,
-    Map<String, String?> settings, {
-    required String settingKey,
-    required Future<void> Function(String, String, String) persist,
-  }) async {
-    final value = settings[settingKey];
-    if (value == null) return;
-    await _setExtraSetting(
-      channelId,
-      key: settingKey,
-      value: value,
-      persist: persist,
-    );
-  }
-
   Future<void> _applyChannelSettings(
     String channelId,
     Map<String, String?> settings,
   ) async {
-    if (settings['template'] case final t?) await _setTemplate(channelId, t);
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'renderer',
-      persist: widget.controller.setChannelRenderer,
+    final pkg = widget.app.packageName;
+    final futures = <Future<void>>[];
+    var templateChanged = false;
+    var extrasChanged = false;
+
+    String? nextTemplate;
+    final nextExtras = Map<String, String>.from(
+      _channelExtras[channelId] ?? {},
     );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'icon',
-      persist: widget.controller.setChannelIconMode,
+
+    if (settings['template'] case final t?) {
+      if (_channelTemplates[channelId] != t) {
+        nextTemplate = t;
+        templateChanged = true;
+        futures.add(widget.controller.setChannelTemplate(pkg, channelId, t));
+      }
+    }
+
+    void queueExtra(
+      String key,
+      Future<void> Function(String, String, String) persist,
+    ) {
+      final value = settings[key];
+      if (value == null || nextExtras[key] == value) return;
+      nextExtras[key] = value;
+      extrasChanged = true;
+      futures.add(persist(pkg, channelId, value));
+    }
+
+    queueExtra('renderer', widget.controller.setChannelRenderer);
+    queueExtra('icon', widget.controller.setChannelIconMode);
+    queueExtra('focus_icon', widget.controller.setChannelFocusIconMode);
+    queueExtra('focus', widget.controller.setChannelFocusNotif);
+    queueExtra(
+      'preserve_small_icon',
+      widget.controller.setChannelPreserveSmallIcon,
     );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'focus_icon',
-      persist: widget.controller.setChannelFocusIconMode,
+    queueExtra('show_island_icon', widget.controller.setChannelShowIslandIcon);
+    queueExtra('first_float', widget.controller.setChannelFirstFloat);
+    queueExtra('enable_float', widget.controller.setChannelEnableFloat);
+    queueExtra('timeout', widget.controller.setChannelTimeout);
+    queueExtra('marquee', widget.controller.setChannelMarquee);
+    queueExtra(
+      'restore_lockscreen',
+      widget.controller.setChannelRestoreLockscreen,
     );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'focus',
-      persist: widget.controller.setChannelFocusNotif,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'preserve_small_icon',
-      persist: widget.controller.setChannelPreserveSmallIcon,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'show_island_icon',
-      persist: widget.controller.setChannelShowIslandIcon,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'first_float',
-      persist: widget.controller.setChannelFirstFloat,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'enable_float',
-      persist: widget.controller.setChannelEnableFloat,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'timeout',
-      persist: widget.controller.setChannelTimeout,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'marquee',
-      persist: widget.controller.setChannelMarquee,
-    );
-    await _applyExtraSettingIfPresent(
-      channelId,
-      settings,
-      settingKey: 'restore_lockscreen',
-      persist: widget.controller.setChannelRestoreLockscreen,
-    );
+
+    if (templateChanged || extrasChanged) {
+      setState(() {
+        if (templateChanged && nextTemplate != null) {
+          _channelTemplates = {..._channelTemplates, channelId: nextTemplate};
+        }
+        if (extrasChanged) {
+          _channelExtras = {..._channelExtras, channelId: nextExtras};
+        }
+      });
+    }
+
+    if (futures.isNotEmpty) {
+      await Future.wait(futures);
+    }
   }
 
   // ── 批量操作 ────────────────────────────────────────────────────────────────
@@ -328,6 +277,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     final l10n = AppLocalizations.of(context)!;
     final channels = _channels ?? [];
     final allEnabled = widget.appEnabled && _enabledChannels.isEmpty;
+    final appIconSizePx = (32 * MediaQuery.devicePixelRatioOf(context)).round();
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -346,6 +296,9 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                     height: 32,
                     fit: BoxFit.cover,
                     gaplessPlayback: true,
+                    cacheWidth: appIconSizePx,
+                    cacheHeight: appIconSizePx,
+                    filterQuality: FilterQuality.low,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -472,44 +425,48 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final ch = channels[index];
-                  final isFirst = index == 0;
-                  final isLast = index == channels.length - 1;
-                  final channelEnabled = _isEnabled(ch.id);
-                  final template =
-                      _channelTemplates[ch.id] ?? kTemplateNotificationIsland;
-                  final extras = _channelExtras[ch.id] ?? {};
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final ch = channels[index];
+                    final isFirst = index == 0;
+                    final isLast = index == channels.length - 1;
+                    final channelEnabled = _isEnabled(ch.id);
+                    final template =
+                        _channelTemplates[ch.id] ?? kTemplateNotificationIsland;
+                    final extras = _channelExtras[ch.id] ?? {};
 
-                  return _ChannelTile(
-                    channel: ch,
-                    channelEnabled: channelEnabled,
-                    appEnabled: widget.appEnabled,
-                    template: template,
-                    templateLabels: _templateLabels,
-                    renderer:
-                        extras['renderer'] ?? kRendererImageTextWithButtons4,
-                    rendererLabels: _rendererLabels,
-                    importanceLabel: _importanceLabel(ch.importance, l10n),
-                    isFirst: isFirst,
-                    isLast: isLast,
-                    iconMode: extras['icon'] ?? kIconModeAuto,
-                    focusIconMode: extras['focus_icon'] ?? kIconModeAuto,
-                    focusNotif: extras['focus'] ?? kTriOptDefault,
-                    preserveSmallIcon:
-                        extras['preserve_small_icon'] ?? kTriOptDefault,
-                    showIslandIcon:
-                        extras['show_island_icon'] ?? kTriOptDefault,
-                    firstFloat: extras['first_float'] ?? kTriOptDefault,
-                    enableFloat: extras['enable_float'] ?? kTriOptDefault,
-                    islandTimeout: extras['timeout'] ?? '5',
-                    marquee: extras['marquee'] ?? kTriOptDefault,
-                    restoreLockscreen:
-                        extras['restore_lockscreen'] ?? kTriOptDefault,
-                    onToggle: (v) => _toggle(ch.id, v),
-                    onSettingsApplied: (s) => _applyChannelSettings(ch.id, s),
-                  );
-                }, childCount: channels.length),
+                    return _ChannelTile(
+                      channel: ch,
+                      channelEnabled: channelEnabled,
+                      appEnabled: widget.appEnabled,
+                      template: template,
+                      templateLabels: _templateLabels,
+                      renderer:
+                          extras['renderer'] ?? kRendererImageTextWithButtons4,
+                      rendererLabels: _rendererLabels,
+                      importanceLabel: _importanceLabel(ch.importance, l10n),
+                      isFirst: isFirst,
+                      isLast: isLast,
+                      iconMode: extras['icon'] ?? kIconModeAuto,
+                      focusIconMode: extras['focus_icon'] ?? kIconModeAuto,
+                      focusNotif: extras['focus'] ?? kTriOptDefault,
+                      preserveSmallIcon:
+                          extras['preserve_small_icon'] ?? kTriOptDefault,
+                      showIslandIcon:
+                          extras['show_island_icon'] ?? kTriOptDefault,
+                      firstFloat: extras['first_float'] ?? kTriOptDefault,
+                      enableFloat: extras['enable_float'] ?? kTriOptDefault,
+                      islandTimeout: extras['timeout'] ?? '5',
+                      marquee: extras['marquee'] ?? kTriOptDefault,
+                      restoreLockscreen:
+                          extras['restore_lockscreen'] ?? kTriOptDefault,
+                      onToggle: (v) => _toggle(ch.id, v),
+                      onSettingsApplied: (s) => _applyChannelSettings(ch.id, s),
+                    );
+                  },
+                  childCount: channels.length,
+                  addAutomaticKeepAlives: false,
+                ),
               ),
             ),
           ],

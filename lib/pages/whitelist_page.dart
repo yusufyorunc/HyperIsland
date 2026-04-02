@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../controllers/whitelist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -21,6 +23,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
   late final WhitelistController _ctrl;
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
+  Timer? _searchDebounce;
   final Set<String> _selectedPackages = {};
   bool _inSelectionMode = false;
 
@@ -41,6 +44,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _ctrl.dispose();
     _searchCtrl.dispose();
     _searchFocus.dispose();
@@ -89,6 +93,13 @@ class _WhitelistPageState extends State<WhitelistPage> {
     _inSelectionMode = false;
   });
 
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 120), () {
+      _ctrl.setSearch(query);
+    });
+  }
+
   Future<void> _setSelectedEnabled(bool enabled) async {
     if (_selectedPackages.isEmpty) return;
     await _ctrl.setEnabledBatch(_selectedPackages.toList(), enabled);
@@ -128,8 +139,12 @@ class _WhitelistPageState extends State<WhitelistPage> {
     for (var i = 0; i < selected.length; i++) {
       final pkg = selected[i];
       try {
-        final channels = await _ctrl.getChannels(pkg);
-        final enabledChannels = await _ctrl.getEnabledChannels(pkg);
+        final results = await Future.wait<dynamic>([
+          _ctrl.getChannels(pkg),
+          _ctrl.getEnabledChannels(pkg),
+        ]);
+        final channels = results[0] as List<ChannelInfo>;
+        final enabledChannels = results[1] as Set<String>;
         final ids = enabledChannels.isEmpty
             ? channels.map((c) => c.id).toList()
             : enabledChannels.toList();
@@ -140,8 +155,8 @@ class _WhitelistPageState extends State<WhitelistPage> {
       doneNotifier.value = i + 1;
     }
 
-    doneNotifier.dispose();
     if (mounted) Navigator.pop(context);
+    doneNotifier.dispose();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -294,8 +309,9 @@ class _WhitelistPageState extends State<WhitelistPage> {
                     searchController: _searchCtrl,
                     searchFocusNode: _searchFocus,
                     hintText: l10n.searchApps,
-                    onChanged: _ctrl.setSearch,
+                    onChanged: _onSearchChanged,
                     onClear: () {
+                      _searchDebounce?.cancel();
                       _searchCtrl.clear();
                       _ctrl.setSearch('');
                     },
@@ -325,6 +341,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   sliver: SliverList.separated(
                     itemCount: apps.length,
+                    addAutomaticKeepAlives: false,
                     separatorBuilder: (_, __) => const SizedBox(height: 2),
                     itemBuilder: (context, index) {
                       final app = apps[index];

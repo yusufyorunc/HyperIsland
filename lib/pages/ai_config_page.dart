@@ -23,9 +23,25 @@ class _AiConfigPageState extends State<AiConfigPage> {
   bool _keyObscured = true;
   bool _testing = false;
   _TestResult? _testResult;
+  late int _aiTimeoutDraft;
+  late bool _aiEnabledValue;
+  late bool _aiPromptInUserValue;
 
   void _onCtrlChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final nextTimeout = _ctrl.aiTimeout;
+    final nextAiEnabled = _ctrl.aiEnabled;
+    final nextPromptInUser = _ctrl.aiPromptInUser;
+    if (nextTimeout == _aiTimeoutDraft &&
+        nextAiEnabled == _aiEnabledValue &&
+        nextPromptInUser == _aiPromptInUserValue) {
+      return;
+    }
+    setState(() {
+      _aiTimeoutDraft = nextTimeout;
+      _aiEnabledValue = nextAiEnabled;
+      _aiPromptInUserValue = nextPromptInUser;
+    });
   }
 
   @override
@@ -36,6 +52,9 @@ class _AiConfigPageState extends State<AiConfigPage> {
     _keyCtrl = TextEditingController(text: _ctrl.aiApiKey);
     _modelCtrl = TextEditingController(text: _ctrl.aiModel);
     _promptCtrl = TextEditingController(text: _ctrl.aiPrompt);
+    _aiTimeoutDraft = _ctrl.aiTimeout;
+    _aiEnabledValue = _ctrl.aiEnabled;
+    _aiPromptInUserValue = _ctrl.aiPromptInUser;
   }
 
   @override
@@ -49,11 +68,18 @@ class _AiConfigPageState extends State<AiConfigPage> {
   }
 
   Future<void> _save() async {
-    await _ctrl.setAiUrl(_urlCtrl.text.trim());
-    await _ctrl.setAiApiKey(_keyCtrl.text.trim());
-    await _ctrl.setAiModel(_modelCtrl.text.trim());
-    await _ctrl.setAiPrompt(_promptCtrl.text.trim());
-    await _ctrl.setAiTimeout(_ctrl.aiTimeout);
+    final nextUrl = _urlCtrl.text.trim();
+    final nextKey = _keyCtrl.text.trim();
+    final nextModel = _modelCtrl.text.trim();
+    final nextPrompt = _promptCtrl.text.trim();
+
+    if (nextUrl != _ctrl.aiUrl) await _ctrl.setAiUrl(nextUrl);
+    if (nextKey != _ctrl.aiApiKey) await _ctrl.setAiApiKey(nextKey);
+    if (nextModel != _ctrl.aiModel) await _ctrl.setAiModel(nextModel);
+    if (nextPrompt != _ctrl.aiPrompt) await _ctrl.setAiPrompt(nextPrompt);
+    if (_aiTimeoutDraft != _ctrl.aiTimeout) {
+      await _ctrl.setAiTimeout(_aiTimeoutDraft);
+    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -62,6 +88,30 @@ class _AiConfigPageState extends State<AiConfigPage> {
         ),
       );
     }
+  }
+
+  void _onTimeoutChanged(double value) {
+    final next = value.round();
+    if (_aiTimeoutDraft == next) return;
+    setState(() => _aiTimeoutDraft = next);
+  }
+
+  Future<void> _persistTimeout(double value) async {
+    final next = value.round();
+    if (_ctrl.aiTimeout == next) return;
+    await _ctrl.setAiTimeout(next);
+  }
+
+  Future<void> _onAiEnabledChanged(bool value) async {
+    if (_aiEnabledValue == value) return;
+    setState(() => _aiEnabledValue = value);
+    await _ctrl.setAiEnabled(value);
+  }
+
+  Future<void> _onAiPromptInUserChanged(bool value) async {
+    if (_aiPromptInUserValue == value) return;
+    setState(() => _aiPromptInUserValue = value);
+    await _ctrl.setAiPromptInUser(value);
   }
 
   Future<void> _test() async {
@@ -166,8 +216,8 @@ class _AiConfigPageState extends State<AiConfigPage> {
                     ),
                     title: Text(l10n.aiEnabledTitle),
                     subtitle: Text(l10n.aiEnabledSubtitle),
-                    value: _ctrl.aiEnabled,
-                    onChanged: _ctrl.setAiEnabled,
+                    value: _aiEnabledValue,
+                    onChanged: _onAiEnabledChanged,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -267,33 +317,47 @@ class _AiConfigPageState extends State<AiConfigPage> {
                           contentPadding: EdgeInsets.zero,
                           title: Text(l10n.aiPromptInUserTitle),
                           subtitle: Text(l10n.aiPromptInUserSubtitle),
-                          value: _ctrl.aiPromptInUser,
-                          onChanged: _ctrl.setAiPromptInUser,
+                          value: _aiPromptInUserValue,
+                          onChanged: _onAiPromptInUserChanged,
                         ),
                         const SizedBox(height: 24),
                         // Timeout slider
                         Row(
                           children: [
-                            Icon(Icons.timer_outlined, size: 20, color: cs.onSurfaceVariant),
+                            Icon(
+                              Icons.timer_outlined,
+                              size: 20,
+                              color: cs.onSurfaceVariant,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(l10n.aiTimeoutLabel, style: Theme.of(context).textTheme.bodyMedium),
-                                  Text('${_ctrl.aiTimeout}s', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                                  Text(
+                                    l10n.aiTimeoutLabel,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                  Text(
+                                    '${_aiTimeoutDraft}s',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: cs.onSurfaceVariant),
+                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
                         Slider(
-                          value: _ctrl.aiTimeout.toDouble(),
+                          value: _aiTimeoutDraft.toDouble(),
                           min: 3,
                           max: 15,
                           divisions: 12,
-                          label: '${_ctrl.aiTimeout}s',
-                          onChanged: (v) => _ctrl.setAiTimeout(v.round()),
+                          label: '${_aiTimeoutDraft}s',
+                          onChanged: _onTimeoutChanged,
+                          onChangeEnd: _persistTimeout,
                         ),
                         const SizedBox(height: 8),
                         // Buttons row

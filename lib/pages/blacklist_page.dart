@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../controllers/blacklist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -15,6 +17,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
   late final BlacklistController _ctrl;
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -33,10 +36,18 @@ class _BlacklistPageState extends State<BlacklistPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _ctrl.dispose();
     _searchCtrl.dispose();
     _searchFocus.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 120), () {
+      _ctrl.setSearch(query);
+    });
   }
 
   @override
@@ -111,8 +122,9 @@ class _BlacklistPageState extends State<BlacklistPage> {
                   searchController: _searchCtrl,
                   searchFocusNode: _searchFocus,
                   hintText: l10n.searchApps,
-                  onChanged: _ctrl.setSearch,
+                  onChanged: _onSearchChanged,
                   onClear: () {
+                    _searchDebounce?.cancel();
                     _searchCtrl.clear();
                     _ctrl.setSearch('');
                   },
@@ -142,6 +154,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                 sliver: SliverList.separated(
                   itemCount: apps.length,
+                  addAutomaticKeepAlives: false,
                   separatorBuilder: (_, __) => const SizedBox(height: 2),
                   itemBuilder: (context, index) {
                     final app = apps[index];

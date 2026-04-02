@@ -31,6 +31,7 @@ const kPrefAiPromptInUser = 'pref_ai_prompt_in_user';
 
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
+  SharedPreferences? _prefs;
 
   SettingsController._() {
     _load();
@@ -63,8 +64,16 @@ class SettingsController extends ChangeNotifier {
   Locale? locale; // null = follow system
   bool loading = true;
 
-  Future<void> _load() async {
+  Future<SharedPreferences> _getPrefs() async {
+    final cached = _prefs;
+    if (cached != null) return cached;
     final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
+    return prefs;
+  }
+
+  Future<void> _load() async {
+    final prefs = await _getPrefs();
     resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
     useHookAppIcon = prefs.getBool(kPrefUseHookAppIcon) ?? true;
     roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
@@ -103,28 +112,32 @@ class SettingsController extends ChangeNotifier {
   }
 
   Future<void> setResumeNotification(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (resumeNotification == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefResumeNotification, value);
     resumeNotification = value;
     notifyListeners();
   }
 
   Future<void> setUseHookAppIcon(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (useHookAppIcon == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefUseHookAppIcon, value);
     useHookAppIcon = value;
     notifyListeners();
   }
 
   Future<void> setRoundIcon(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (roundIcon == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefRoundIcon, value);
     roundIcon = value;
     notifyListeners();
   }
 
   Future<void> setMarqueeFeature(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (marqueeFeature == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefMarqueeFeature, value);
     marqueeFeature = value;
     notifyListeners();
@@ -132,77 +145,88 @@ class SettingsController extends ChangeNotifier {
 
   Future<void> setMarqueeSpeed(int value) async {
     final clamped = value.clamp(20, 500);
-    final prefs = await SharedPreferences.getInstance();
+    if (marqueeSpeed == clamped) return;
+    final prefs = await _getPrefs();
     await prefs.setInt(kPrefMarqueeSpeed, clamped);
     marqueeSpeed = clamped;
     notifyListeners();
   }
 
   Future<void> setUnlockAllFocus(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (unlockAllFocus == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefUnlockAllFocus, value);
     unlockAllFocus = value;
     notifyListeners();
   }
 
   Future<void> setUnlockFocusAuth(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (unlockFocusAuth == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefUnlockFocusAuth, value);
     unlockFocusAuth = value;
     notifyListeners();
   }
 
   Future<void> setCheckUpdateOnLaunch(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (checkUpdateOnLaunch == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefCheckUpdateOnLaunch, value);
     checkUpdateOnLaunch = value;
     notifyListeners();
   }
 
   Future<void> setDefaultFirstFloat(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultFirstFloat == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultFirstFloat, value);
     defaultFirstFloat = value;
     notifyListeners();
   }
 
   Future<void> setDefaultEnableFloat(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultEnableFloat == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultEnableFloat, value);
     defaultEnableFloat = value;
     notifyListeners();
   }
 
   Future<void> setDefaultMarquee(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultMarquee == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultMarquee, value);
     defaultMarquee = value;
     notifyListeners();
   }
 
   Future<void> setDefaultFocusNotif(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultFocusNotif == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultFocusNotif, value);
     defaultFocusNotif = value;
     notifyListeners();
   }
 
   Future<void> setDefaultPreserveSmallIcon(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultPreserveSmallIcon == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultPreserveSmallIcon, value);
     defaultPreserveSmallIcon = value;
     notifyListeners();
   }
 
   Future<void> setDefaultShowIslandIcon(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultShowIslandIcon == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultShowIslandIcon, value);
     defaultShowIslandIcon = value;
     notifyListeners();
   }
 
   Future<void> setHideDesktopIcon(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (hideDesktopIcon == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefHideDesktopIcon, value);
     hideDesktopIcon = value;
     const channel = MethodChannel('io.github.hyperisland/test');
@@ -213,7 +237,8 @@ class SettingsController extends ChangeNotifier {
   }
 
   Future<void> setDefaultRestoreLockscreen(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (defaultRestoreLockscreen == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultRestoreLockscreen, value);
     defaultRestoreLockscreen = value;
     notifyListeners();
@@ -226,7 +251,7 @@ class SettingsController extends ChangeNotifier {
       if (visible != null) {
         final hidden = !visible;
         if (hideDesktopIcon != hidden) {
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = await _getPrefs();
           await prefs.setBool(kPrefHideDesktopIcon, hidden);
           hideDesktopIcon = hidden;
           notifyListeners();
@@ -236,56 +261,65 @@ class SettingsController extends ChangeNotifier {
   }
 
   Future<void> setAiEnabled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiEnabled == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefAiEnabled, value);
     aiEnabled = value;
     notifyListeners();
   }
 
   Future<void> setAiUrl(String value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiUrl == value) return;
+    final prefs = await _getPrefs();
     await prefs.setString(kPrefAiUrl, value);
     aiUrl = value;
     notifyListeners();
   }
 
   Future<void> setAiApiKey(String value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiApiKey == value) return;
+    final prefs = await _getPrefs();
     await prefs.setString(kPrefAiApiKey, value);
     aiApiKey = value;
     notifyListeners();
   }
 
   Future<void> setAiModel(String value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiModel == value) return;
+    final prefs = await _getPrefs();
     await prefs.setString(kPrefAiModel, value);
     aiModel = value;
     notifyListeners();
   }
 
   Future<void> setAiPrompt(String value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiPrompt == value) return;
+    final prefs = await _getPrefs();
     await prefs.setString(kPrefAiPrompt, value);
     aiPrompt = value;
     notifyListeners();
   }
 
   Future<void> setAiTimeout(int value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(kPrefAiTimeout, value.clamp(3, 15));
-    aiTimeout = value.clamp(3, 15);
+    final clamped = value.clamp(3, 15);
+    if (aiTimeout == clamped) return;
+    final prefs = await _getPrefs();
+    await prefs.setInt(kPrefAiTimeout, clamped);
+    aiTimeout = clamped;
     notifyListeners();
   }
 
   Future<void> setAiPromptInUser(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (aiPromptInUser == value) return;
+    final prefs = await _getPrefs();
     await prefs.setBool(kPrefAiPromptInUser, value);
     aiPromptInUser = value;
     notifyListeners();
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (themeMode == mode) return;
+    final prefs = await _getPrefs();
     final str = switch (mode) {
       ThemeMode.light => 'light',
       ThemeMode.dark => 'dark',
@@ -297,7 +331,8 @@ class SettingsController extends ChangeNotifier {
   }
 
   Future<void> setLocale(Locale? loc) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (locale == loc) return;
+    final prefs = await _getPrefs();
     if (loc == null) {
       await prefs.remove(kPrefLocale);
     } else {
