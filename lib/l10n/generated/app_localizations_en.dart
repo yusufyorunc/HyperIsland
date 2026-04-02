@@ -120,11 +120,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get note1 =>
-      '1. This page is only for testing Dynamic Island support, not actual effects'; [cite: 3]
+      '1. This page is only for testing Dynamic Island support, not actual effects';
 
   @override
   String get note2 =>
-      '2. Disable focus notification whitelist for System UI and MIUI Framework in HyperCeiler'; [cite: 3]
+      '2. Disable focus notification whitelist for System UI and MIUI Framework in HyperCeiler';
 
   @override
   String get note3 =>
@@ -503,7 +503,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rendererImageTextWithRightTextButtonName =>
-      'Image+Text+Right Text Button'; [cite: 7, 8]
+      'Image+Text+Right Text Button';
 
   @override
   String get islandIcon => 'Island icon';
