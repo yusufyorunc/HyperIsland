@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="module_description">HyperOS 3 i\u00e7in daha fazla S\u00fcper Ada
+        \u00f6zelli\u011fi</string>
+
+    <!-- Welcome island -->
+    <string name="island_welcome_title">Ho\u015f geldiniz</string>
+
+    <!-- Island state labels (GenericProgress / Download shared) -->
+    <string name="island_state_complete">Tamamland\u0131</string>
+    <string name="island_state_paused">Duraklat\u0131ld\u0131</string>
+    <string name="island_state_waiting">Bekliyor</string>
+    <string name="island_state_downloading">\u0130ndiriliyor</string>
+
+    <!-- Download-specific titles -->
+    <string name="island_download_complete">\u0130ndirme tamamland\u0131</string>
+    <string name="island_download_paused">Duraklat\u0131ld\u0131</string>
+    <string name="island_download_waiting">Bekliyor</string>
+    <string name="island_downloading">\u0130ndiriliyor</string>
+    <string name="island_downloading_progress">\u0130ndiriliyor %d%%</string>
+    <string name="island_aod_paused_progress">Duraklat\u0131ld\u0131 %d%%</string>
+    <string name="island_aod_downloading_progress">\u0130ndiriliyor %d%%</string>
+
+    <!-- Download action buttons -->
+    <string name="island_action_resume_all">T\u00fcm\u00fcn\u00fc devam ettir</string>
+    <string name="island_action_resume">Devam et</string>
+    <string name="island_action_pause_all">T\u00fcm\u00fcn\u00fc duraklat</string>
+    <string name="island_action_pause">Duraklat</string>
+    <string name="island_action_cancel_all">T\u00fcm\u00fcn\u00fc iptal et</string>
+    <string name="island_action_cancel">\u0130ptal et</string>
+</resources>

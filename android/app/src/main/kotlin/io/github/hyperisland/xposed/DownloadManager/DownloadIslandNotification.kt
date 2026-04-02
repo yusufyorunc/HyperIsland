@@ -3,9 +3,11 @@ package io.github.hyperisland.xposed.templates
 import android.app.Notification
 import android.content.Context
 import android.graphics.drawable.Icon
+import io.github.hyperisland.R
 import io.github.hyperisland.xposed.InProcessController
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
+import io.github.hyperisland.xposed.moduleContext
 
 object DownloadIslandNotification {
 
@@ -25,6 +27,7 @@ object DownloadIslandNotification {
                 notif.actions = emptyArray()
                 return
             }
+            val mc = context.moduleContext()
 
             val primaryIntent = when {
                 isPaused && isMultiFile -> InProcessController.resumeAllIntent(context)
@@ -36,12 +39,16 @@ object DownloadIslandNotification {
                                else             InProcessController.cancelIntent(context, downloadId)
 
             val primaryLabel = when {
-                isPaused && isMultiFile -> "全部恢复"
-                isPaused               -> "恢复"
-                isMultiFile            -> "全部暂停"
-                else                   -> "暂停"
+                isPaused && isMultiFile -> mc.getString(R.string.island_action_resume_all)
+                isPaused               -> mc.getString(R.string.island_action_resume)
+                isMultiFile            -> mc.getString(R.string.island_action_pause_all)
+                else                   -> mc.getString(R.string.island_action_pause)
             }
-            val cancelLabel = if (isMultiFile) "全部取消" else "取消"
+            val cancelLabel = if (isMultiFile) {
+                mc.getString(R.string.island_action_cancel_all)
+            } else {
+                mc.getString(R.string.island_action_cancel)
+            }
             val primaryIconRes = if (isPaused) {
                 android.R.drawable.ic_media_play
             } else {

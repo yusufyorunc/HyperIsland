@@ -12,6 +12,7 @@ import android.content.IntentFilter
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
+import io.github.hyperisland.R
 import io.github.libxposed.api.XposedModule
 
 /**
@@ -335,9 +336,16 @@ object InProcessController {
 
     private fun repostAsPaused(context: Context, snapshot: DownloadNotifSnapshot) {
         try {
+            val mc = context.moduleContext()
             val notif = Notification.Builder(context, snapshot.channelId)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(if (snapshot.isMultiFile) "${snapshot.fileName} 已暂停" else "已暂停")
+                .setContentTitle(
+                    if (snapshot.isMultiFile) {
+                        "${snapshot.fileName} ${mc.getString(R.string.island_download_paused)}"
+                    } else {
+                        mc.getString(R.string.island_download_paused)
+                    }
+                )
                 .setContentText(snapshot.fileName)
                 .setOngoing(false)
                 .setAutoCancel(false)
@@ -345,8 +353,16 @@ object InProcessController {
 
             val resumeIntent = if (snapshot.isMultiFile) resumeAllIntent(context) else resumeIntent(context, snapshot.downloadId)
             val cancelIntent = if (snapshot.isMultiFile) cancelAllIntent(context) else cancelIntent(context, snapshot.downloadId)
-            val resumeLabel = if (snapshot.isMultiFile) "全部恢复" else "恢复"
-            val cancelLabel = if (snapshot.isMultiFile) "全部取消" else "取消"
+            val resumeLabel = if (snapshot.isMultiFile) {
+                mc.getString(R.string.island_action_resume_all)
+            } else {
+                mc.getString(R.string.island_action_resume)
+            }
+            val cancelLabel = if (snapshot.isMultiFile) {
+                mc.getString(R.string.island_action_cancel_all)
+            } else {
+                mc.getString(R.string.island_action_cancel)
+            }
 
             notif.actions = arrayOf(
                 Notification.Action.Builder(

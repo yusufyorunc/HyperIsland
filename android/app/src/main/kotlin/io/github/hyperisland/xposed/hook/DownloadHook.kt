@@ -3,6 +3,7 @@ package io.github.hyperisland.xposed
 import android.app.Notification
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import io.github.hyperisland.R
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
@@ -115,6 +116,7 @@ object DownloadHook {
 
             val context = getContext(classLoader) ?: return
             InProcessController.ensureRegistered(context, module)
+            val mc = context.moduleContext()
 
             // 按钮：每次通知都设置，避免因去重跳过导致闪烁
             val primaryIntent = when {
@@ -125,12 +127,16 @@ object DownloadHook {
             }
             val cancelIntent   = if (isMultiFile) InProcessController.cancelAllIntent(context) else InProcessController.cancelIntent(context, downloadId)
             val primaryLabel   = when {
-                isPaused && isMultiFile -> "全部继续"
-                isPaused               -> "继续"
-                isMultiFile            -> "全部暂停"
-                else                   -> "暂停"
+                isPaused && isMultiFile -> mc.getString(R.string.island_action_resume_all)
+                isPaused               -> mc.getString(R.string.island_action_resume)
+                isMultiFile            -> mc.getString(R.string.island_action_pause_all)
+                else                   -> mc.getString(R.string.island_action_pause)
             }
-            val cancelLabel = if (isMultiFile) "全部取消" else "取消"
+            val cancelLabel = if (isMultiFile) {
+                mc.getString(R.string.island_action_cancel_all)
+            } else {
+                mc.getString(R.string.island_action_cancel)
+            }
             notif.actions = when {
                 isComplete || isWaiting -> emptyArray()
                 else -> arrayOf(
