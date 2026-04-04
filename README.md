@@ -15,6 +15,8 @@
 
 **English** | **[简体中文](README.md)** | **[日本語](README_JA.md)** | **[Türkçe](README_TR.md)**
 
+Forked from [`1812z/HyperIsland`](https://github.com/1812z/HyperIsland), and added some interesting changes.
+
 </div>
 
 ---
@@ -26,12 +28,14 @@
 <td width="50%">
 
 ### 📥 Download Manager Extension
+
 Intercepts HyperOS Download Manager notifications and displays them in Dynamic Island style, showing file name and progress with **pause, resume, and cancel** controls.
 
 </td>
 <td width="50%">
 
 ### 🏝️ Dynamic Island + Focus Notification
+
 Intercepts standard Android notifications from any app and renders them in Dynamic Island + Focus Notification style, preserving the original action buttons.
 
 </td>
@@ -40,12 +44,14 @@ Intercepts standard Android notifications from any app and renders them in Dynam
 <td width="50%">
 
 ### 🚫 Notification Blacklist
+
 Apps on the blacklist will not trigger pop-up notifications — only the Dynamic Island indicator is shown (auto-hidden with the status bar in fullscreen).
 
 </td>
 <td width="50%">
 
 ### 🔥 Hot Reload Support
+
 Configuration changes take effect **without restarting**. Only scope restarts are required after installing or updating apps.
 
 </td>
@@ -63,8 +69,8 @@ Configuration changes take effect **without restarting**. Only scope restarts ar
 1. Open **LSPosed Manager** and navigate to the **Modules** tab.
 2. Find **HyperIsland** and enable the toggle.
 3. In the module scope, check the recommended apps:
-    - **Download notifications**: check **Download Manager**
-    - **Universal adapter**: check **System UI**
+   - **Download notifications**: check **Download Manager**
+   - **Universal adapter**: check **System UI**
 4. Save and tap the **restart button** in the top-right corner to restart the affected scope (or reboot your device) to activate the hook.
 
 ---
@@ -82,12 +88,12 @@ Configuration changes take effect **without restarting**. Only scope restarts ar
 
 ## ⚠️ Important Notes
 
-| Item | Details |
-|------|---------|
-| Framework | Requires **LSPosed** and a **rooted** device |
-| Restart Timing | Restart scope after installing/updating apps; config changes generally support hot reload |
+| Item                       | Details                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Framework                  | Requires **LSPosed** and a **rooted** device                                                                    |
+| Restart Timing             | Restart scope after installing/updating apps; config changes generally support hot reload                       |
 | Notification Compatibility | Universal adapter only handles **standard Android notifications**; custom notification styles are not supported |
-| ROM Compatibility | Tested on **HyperOS 3**; other ROMs may have compatibility issues |
+| ROM Compatibility          | Tested on **HyperOS 3**; other ROMs may have compatibility issues                                               |
 
 ---
 

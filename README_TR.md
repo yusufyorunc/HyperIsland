@@ -16,6 +16,8 @@
 
 **[English](README_EN.md)** | **[简体中文](README.md)** | **[日本語](README_JA.md)** | **Türkçe**
 
+Forked from [`1812z/HyperIsland`](https://github.com/1812z/HyperIsland), and added some interesting changes.
+
 </div>
 
 ---
