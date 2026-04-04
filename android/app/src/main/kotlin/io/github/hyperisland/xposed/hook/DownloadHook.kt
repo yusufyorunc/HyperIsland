@@ -3,6 +3,7 @@ package io.github.hyperisland.xposed
 import android.app.Notification
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import io.github.hyperisland.R
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
@@ -94,9 +95,11 @@ object DownloadHook {
             val channelId = notif.channelId ?: ""
             module.log("$TAG: [RAW/Notify] ch=$channelId | title=$title | text=$text")
             if (!isDownloadNotification(title, text, extras) && channelId.isEmpty()) return
+            val context = getContext(classLoader) ?: return
+            val mc = context.moduleContext()
 
             val appName = pkg.substringAfterLast(".").replaceFirstChar { it.uppercase() }
-            val fileName = extractFileName(title, text, extras)
+            val fileName = extractFileName(context, title, text, extras)
             val downloadId = extractDownloadId(extras).takeIf { it > 0 }
                 ?: extractIdFromTag(tag).takeIf { it > 0 }
                 ?: id.toLong()
@@ -111,7 +114,6 @@ object DownloadHook {
                               (combined.contains("暂停") || combined.contains("已暂停") ||
                                combined.contains("paused", ignoreCase = true))
 
-            val context = getContext(classLoader) ?: return
             InProcessController.ensureRegistered(context, module)
 
             // 按钮：每次通知都设置，避免因去重跳过导致闪烁
@@ -123,12 +125,16 @@ object DownloadHook {
             }
             val cancelIntent   = if (isMultiFile) InProcessController.cancelAllIntent(context) else InProcessController.cancelIntent(context, downloadId)
             val primaryLabel   = when {
-                isPaused && isMultiFile -> "全部继续"
-                isPaused               -> "继续"
-                isMultiFile            -> "全部暂停"
-                else                   -> "暂停"
+                isPaused && isMultiFile -> mc.getString(R.string.island_action_resume_all)
+                isPaused               -> mc.getString(R.string.island_action_resume)
+                isMultiFile            -> mc.getString(R.string.island_action_pause_all)
+                else                   -> mc.getString(R.string.island_action_pause)
             }
-            val cancelLabel = if (isMultiFile) "全部取消" else "取消"
+            val cancelLabel = if (isMultiFile) {
+                mc.getString(R.string.island_action_cancel_all)
+            } else {
+                mc.getString(R.string.island_action_cancel)
+            }
             notif.actions = when {
                 isComplete || isWaiting -> emptyArray()
                 else -> arrayOf(
@@ -274,12 +280,12 @@ object DownloadHook {
         return -1L
     }
 
-    private fun extractFileName(title: String, text: String, extras: Bundle): String {
+    private fun extractFileName(context: android.content.Context, title: String, text: String, extras: Bundle): String {
         extractFileNameFromText(title).takeIf { it.isNotEmpty() }?.let { return it }
         extractFileNameFromText(text).takeIf { it.isNotEmpty() }?.let { return it }
         val extraText = extras.getString("android.title") ?: extras.getString("android.text")
         if (extraText != null) extractFileNameFromText(extraText).takeIf { it.isNotEmpty() }?.let { return it }
-        return "下载文件"
+        return context.moduleContext().getString(R.string.island_download_file_fallback)
     }
 
     private fun extractFileNameFromText(text: String): String {
