@@ -1056,6 +1056,12 @@ abstract class AppLocalizations {
   /// **'#RRGGBB 格式，留空使用默认'**
   String get highlightColorHint;
 
+  /// No description provided for @textHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'文本高亮'**
+  String get textHighlightLabel;
+
   /// No description provided for @showLeftHighlightLabel.
   ///
   /// In zh, this message translates to:
@@ -1067,6 +1073,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'右侧文本高亮'**
   String get showRightHighlightLabel;
+
+  /// No description provided for @showLeftHighlightShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'左侧'**
+  String get showLeftHighlightShort;
+
+  /// No description provided for @showRightHighlightShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'右侧'**
+  String get showRightHighlightShort;
+
+  /// No description provided for @colorHue.
+  ///
+  /// In zh, this message translates to:
+  /// **'色相'**
+  String get colorHue;
+
+  /// No description provided for @colorSaturation.
+  ///
+  /// In zh, this message translates to:
+  /// **'饱和度'**
+  String get colorSaturation;
+
+  /// No description provided for @colorBrightness.
+  ///
+  /// In zh, this message translates to:
+  /// **'亮度'**
+  String get colorBrightness;
 
   /// No description provided for @onlyEnabledChannels.
   ///

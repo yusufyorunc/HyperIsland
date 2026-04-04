@@ -531,10 +531,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get highlightColorHint => '#RRGGBB 格式，留空使用默认';
 
   @override
+  String get textHighlightLabel => '文本高亮';
+
+  @override
   String get showLeftHighlightLabel => '左侧文本高亮';
 
   @override
   String get showRightHighlightLabel => '右侧文本高亮';
+
+  @override
+  String get showLeftHighlightShort => '左侧';
+
+  @override
+  String get showRightHighlightShort => '右侧';
+
+  @override
+  String get colorHue => '色相';
+
+  @override
+  String get colorSaturation => '饱和度';
+
+  @override
+  String get colorBrightness => '亮度';
 
   @override
   String get onlyEnabledChannels => '仅应用到已启用渠道';

@@ -556,10 +556,28 @@ class AppLocalizationsTr extends AppLocalizations {
       '#RRGGBB formatı, varsayılan için boş bırakın';
 
   @override
+  String get textHighlightLabel => 'Metin vurgusu';
+
+  @override
   String get showLeftHighlightLabel => 'Sol metin vurgusu';
 
   @override
   String get showRightHighlightLabel => 'Sağ metin vurgusu';
+
+  @override
+  String get showLeftHighlightShort => 'Sol';
+
+  @override
+  String get showRightHighlightShort => 'Sağ';
+
+  @override
+  String get colorHue => 'Ton';
+
+  @override
+  String get colorSaturation => 'Doygunluk';
+
+  @override
+  String get colorBrightness => 'Parlaklık';
 
   @override
   String get onlyEnabledChannels => 'Yalnızca Etkin Kanallara Uygula';

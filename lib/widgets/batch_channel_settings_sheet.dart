@@ -157,8 +157,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   String? _marquee;
   String? _restoreLockscreen;
   String? _highlightColor;
-  String? _showLeftHighlight;
-  String? _showRightHighlight;
+  bool? _showLeftHighlight;
+  bool? _showRightHighlight;
 
   // 仅 BatchChannelMode + SingleAppScope 下使用
   bool _onlyEnabled = false;
@@ -185,8 +185,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _marquee = m.marquee;
       _restoreLockscreen = m.restoreLockscreen;
       _highlightColor = m.highlightColor;
-      _showLeftHighlight = m.showLeftHighlight;
-      _showRightHighlight = m.showRightHighlight;
+      _showLeftHighlight = m.showLeftHighlight == kTriOptOn;
+      _showRightHighlight = m.showRightHighlight == kTriOptOn;
       _timeoutController = TextEditingController(text: m.islandTimeout);
       _highlightColorController = TextEditingController(text: m.highlightColor);
     } else {
@@ -200,6 +200,106 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
     _timeoutController.dispose();
     _highlightColorController.dispose();
     super.dispose();
+  }
+
+  Color? _parseColor(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final cleaned = hex.replaceFirst('#', '');
+    if (cleaned.length != 6) return null;
+    final value = int.tryParse(cleaned, radix: 16);
+    if (value == null) return null;
+    return Color(value).withAlpha(255);
+  }
+
+  Future<Color?> _showColorPicker(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final initialColor =
+        _parseColor(_highlightColor) ?? Theme.of(context).colorScheme.primary;
+    final hsv = HSVColor.fromColor(initialColor);
+
+    HSVColor selectedColor = hsv;
+
+    return showDialog<Color>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.highlightColorLabel),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: selectedColor.toColor(),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(ctx).colorScheme.outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _ColorSlider(
+                label: l10n.colorHue,
+                value: selectedColor.hue,
+                max: 360,
+                onChanged: (v) => setDialogState(
+                  () => selectedColor = selectedColor.withHue(v),
+                ),
+                gradientColors: List.generate(
+                  7,
+                  (i) => HSVColor.fromAHSV(1, i * 60, 1, 1).toColor(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _ColorSlider(
+                label: l10n.colorSaturation,
+                value: selectedColor.saturation * 100,
+                max: 100,
+                onChanged: (v) => setDialogState(
+                  () => selectedColor = selectedColor.withSaturation(v / 100),
+                ),
+                gradientColors: [
+                  HSVColor.fromAHSV(1, selectedColor.hue, 0, 1).toColor(),
+                  HSVColor.fromAHSV(1, selectedColor.hue, 1, 1).toColor(),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _ColorSlider(
+                label: l10n.colorBrightness,
+                value: selectedColor.value * 100,
+                max: 100,
+                onChanged: (v) => setDialogState(
+                  () => selectedColor = selectedColor.withValue(v / 100),
+                ),
+                gradientColors: [
+                  HSVColor.fromAHSV(
+                    1,
+                    selectedColor.hue,
+                    selectedColor.saturation,
+                    0,
+                  ).toColor(),
+                  HSVColor.fromAHSV(
+                    1,
+                    selectedColor.hue,
+                    selectedColor.saturation,
+                    1,
+                  ).toColor(),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, selectedColor.toColor()),
+              child: Text(l10n.apply),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   bool get _hasAnyChange =>
@@ -256,8 +356,12 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
           'marquee': _marquee,
           'restore_lockscreen': _restoreLockscreen,
           'highlight_color': _highlightColor,
-          'show_left_highlight': _showLeftHighlight,
-          'show_right_highlight': _showRightHighlight,
+          'show_left_highlight': _showLeftHighlight == null
+              ? null
+              : (_showLeftHighlight! ? kTriOptOn : kTriOptOff),
+          'show_right_highlight': _showRightHighlight == null
+              ? null
+              : (_showRightHighlight! ? kTriOptOn : kTriOptOff),
         },
         onlyEnabled: switch (widget.mode) {
           BatchChannelMode(scope: SingleAppScope()) => _onlyEnabled,
@@ -543,64 +647,85 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                   // 高亮颜色
                   _SettingField(
                     label: l10n.highlightColorLabel,
-                    child: TextFormField(
-                      controller: _highlightColorController,
-                      textInputAction: TextInputAction.done,
-                      scrollPadding: EdgeInsets.zero,
-                      onTapOutside: (_) {
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      },
-                      decoration: _fieldDecoration(
-                        context,
-                        hintText: _isSingle
-                            ? l10n.highlightColorHint
-                            : l10n.noChange,
-                      ),
-                      onChanged: (v) {
-                        final trimmed = v.trim();
-                        setState(() {
-                          if (trimmed.isNotEmpty) {
-                            _highlightColor = trimmed;
-                          } else if (!_isSingle) {
-                            _highlightColor = null;
-                          }
-                        });
-                      },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _highlightColorController,
+                            textInputAction: TextInputAction.done,
+                            scrollPadding: EdgeInsets.zero,
+                            onTapOutside: (_) {
+                              FocusManager.instance.primaryFocus?.unfocus();
+                            },
+                            decoration: _fieldDecoration(
+                              context,
+                              hintText: _isSingle
+                                  ? l10n.highlightColorHint
+                                  : l10n.noChange,
+                            ),
+                            onChanged: (v) {
+                              final trimmed = v.trim();
+                              setState(() {
+                                if (trimmed.isNotEmpty) {
+                                  _highlightColor = trimmed;
+                                } else if (!_isSingle) {
+                                  _highlightColor = null;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () async {
+                            final color = await _showColorPicker(context);
+                            if (color != null) {
+                              final hex =
+                                  '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+                              _highlightColorController.text = hex;
+                              setState(() => _highlightColor = hex);
+                            }
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: _parseColor(_highlightColor) ?? cs.primary,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: cs.outline),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: rowGap),
-                  _BatchSettingRow(
-                    label: l10n.showLeftHighlightLabel,
-                    value: _showLeftHighlight,
-                    showNotChange: !_isSingle,
-                    items: [
-                      DropdownMenuItem(
-                        value: kTriOptOn,
-                        child: Text(l10n.optOn),
-                      ),
-                      DropdownMenuItem(
-                        value: kTriOptOff,
-                        child: Text(l10n.optOff),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _showLeftHighlight = v),
-                  ),
-                  SizedBox(height: rowGap),
-                  _BatchSettingRow(
-                    label: l10n.showRightHighlightLabel,
-                    value: _showRightHighlight,
-                    showNotChange: !_isSingle,
-                    items: [
-                      DropdownMenuItem(
-                        value: kTriOptOn,
-                        child: Text(l10n.optOn),
-                      ),
-                      DropdownMenuItem(
-                        value: kTriOptOff,
-                        child: Text(l10n.optOff),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _showRightHighlight = v),
+                  // 文本高亮
+                  _SettingField(
+                    label: l10n.textHighlightLabel,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _HighlightSwitch(
+                            label: l10n.showLeftHighlightShort,
+                            value: _showLeftHighlight,
+                            showNotChange: !_isSingle,
+                            onChanged: (v) =>
+                                setState(() => _showLeftHighlight = v),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _HighlightSwitch(
+                            label: l10n.showRightHighlightShort,
+                            value: _showRightHighlight,
+                            showNotChange: !_isSingle,
+                            onChanged: (v) =>
+                                setState(() => _showRightHighlight = v),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: blockGap),
 
@@ -946,4 +1071,104 @@ InputDecoration _fieldDecoration(
     filled: true,
     fillColor: cs.surfaceContainerHighest,
   );
+}
+
+class _ColorSlider extends StatelessWidget {
+  const _ColorSlider({
+    required this.label,
+    required this.value,
+    required this.max,
+    required this.onChanged,
+    required this.gradientColors,
+  });
+
+  final String label;
+  final double value;
+  final double max;
+  final ValueChanged<double> onChanged;
+  final List<Color> gradientColors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        const SizedBox(height: 4),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              height: 24,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(colors: gradientColors),
+              ),
+            ),
+            SliderTheme(
+              data: SliderThemeData(
+                trackHeight: 24,
+                thumbColor: Colors.white,
+                overlayColor: Colors.white.withValues(alpha: 0.12),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
+                activeTrackColor: Colors.transparent,
+                inactiveTrackColor: Colors.transparent,
+              ),
+              child: Slider(value: value, max: max, onChanged: onChanged),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HighlightSwitch extends StatelessWidget {
+  const _HighlightSwitch({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.showNotChange = true,
+  });
+
+  final String label;
+  final bool? value;
+  final ValueChanged<bool?>? onChanged;
+  final bool showNotChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Material(
+      color: cs.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onChanged == null
+            ? null
+            : () {
+                if (showNotChange && value == null) {
+                  onChanged!(true);
+                } else {
+                  onChanged!(!value!);
+                }
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(width: 8),
+              Switch(
+                value: value ?? false,
+                onChanged: onChanged == null ? null : (v) => onChanged!(v),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
