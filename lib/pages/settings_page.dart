@@ -870,12 +870,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             leading: const Icon(Icons.code),
                             title: Text('GitHub', style: titleStyle),
-                            subtitle: const Text('1812z/HyperIsland'),
+                            subtitle: const Text('etzel/HyperIsland'),
                             trailing: const Icon(Icons.open_in_new, size: 18),
                             onTap: () async {
                               await launchUrl(
                                 Uri.parse(
-                                  'https://github.com/1812z/HyperIsland',
+                                  'https://github.com/yusufyorunc/HyperIsland',
                                 ),
                                 mode: LaunchMode.externalApplication,
                               );

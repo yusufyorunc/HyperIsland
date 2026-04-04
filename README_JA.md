@@ -6,8 +6,8 @@
 
 **LSPosed と HyperOS 3 の環境で Dynamic Island スタイルの進捗通知を表示します**
 
-[![GitHub Release](https://img.shields.io/github/v/release/1812z/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/1812z/HyperIsland/releases)
-[![License](https://img.shields.io/github/license/1812z/HyperIsland?style=flat-square&color=orange)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/yusufyorunc/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/yusufyorunc/HyperIsland/releases)
+[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=flat-square&logo=android)](https://android.com)
 [![LSPosed](https://img.shields.io/badge/Framework-LSPosed-blueviolet?style=flat-square)](https://github.com/LSPosed/LSPosed)
 [![HyperOS](https://img.shields.io/badge/ROM-HyperOS3-orange?style=flat-square)](https://hyperos.mi.com)
@@ -103,9 +103,9 @@ flutter build apk --target-platform=android-arm64
 
 <a href="https://www.star-history.com/?repos=1812z%2FHyperIsland&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&legend=top-left" />
  </picture>
 </a>
 
@@ -119,6 +119,6 @@ flutter build apk --target-platform=android-arm64
 
 Made with ❤️ for HyperOS users
 
-[![Star History](https://img.shields.io/github/stars/1812z/HyperIsland?style=social)](https://github.com/1812z/HyperIsland)
+[![Star History](https://img.shields.io/github/stars/yusufyorunc/HyperIsland?style=social)](https://github.com/yusufyorunc/HyperIsland)
 
 </div>
