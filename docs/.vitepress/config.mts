@@ -8,17 +8,17 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/png', href: 'https://github.com/user-attachments/assets/dc034ec0-90cf-4371-9ab0-132ca2527b32' }]
   ],
 
-  // /en/ 路径重写到根目录文件（中文内容），实现一套文件供中英文使用
+  // /en/ 路径重写到 en/ 目录下的英文文件
   rewrites: {
-    'en/getting-started.md': 'getting-started.md',
-    'en/features.md': 'features.md',
-    'en/build.md': 'build.md',
-    'en/contribute.md': 'contribute.md',
-    'en/index.md': 'index.md'
+    'en/getting-started.md': 'en/getting-started.md',
+    'en/features.md': 'en/features.md',
+    'en/build.md': 'en/build.md',
+    'en/contribute.md': 'en/contribute.md',
+    'en/index.md': 'en/index.md'
   },
 
   locales: {
-    zh: {
+    root: {
       label: '简体中文',
       lang: 'zh-CN',
       themeConfig: {
@@ -60,12 +60,26 @@ function nav(lang: string) {
   if (lang === 'zh') {
     return [
       { text: '快速上手', link: '/getting-started', activeMatch: '/getting-started' },
-      { text: '功能介绍', link: '/features', activeMatch: '/features' }
+      { text: '功能介绍', link: '/features', activeMatch: '/features' },
+      {
+        text: '更多',
+        items: [
+          { text: '构建指南', link: '/build' },
+          { text: '贡献指南', link: '/contribute' }
+        ]
+      }
     ]
   }
   return [
     { text: 'Quick Start', link: '/en/getting-started', activeMatch: '/en/getting-started' },
-    { text: 'Features', link: '/en/features', activeMatch: '/en/features' }
+    { text: 'Features', link: '/en/features', activeMatch: '/en/features' },
+    {
+      text: 'More',
+      items: [
+        { text: 'Build Guide', link: '/en/build' },
+        { text: 'Contributing', link: '/en/contribute' }
+      ]
+    }
   ]
 }
 

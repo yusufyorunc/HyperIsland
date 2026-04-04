@@ -1,11 +1,11 @@
 # Quick Start
 
-:::: warning Prerequisites
+::: warning Prerequisites
 - Device must have **Root** access
 - **LSPosed** framework installed with **API version >= 101**
 - System running **HyperOS 3**
 - **HyperCeiler** installed
-::::
+:::
 
 ::: tip Resources & Discussion
 - QQ Group: **1045114341**
@@ -70,6 +70,7 @@ Please confirm:
 2. Scope has been restarted
 3. Focus Notification whitelist bypass is enabled in HyperCeiler
 4. System is HyperOS 3 with LSPosed API 101
+5. Tap the test button on the app's main page — if no notification appears, LSPosed module is not working; if a standard Android notification appears, Focus Notification bypass is not working
 :::
 
 ::: details Notifications not showing in Super Island style?
