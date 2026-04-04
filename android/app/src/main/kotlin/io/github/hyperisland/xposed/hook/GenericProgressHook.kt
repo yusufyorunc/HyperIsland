@@ -291,6 +291,15 @@ object GenericProgressHook {
             val renderer = loadChannelStringSetting(
                 "renderer:$pkg/$channelId", "pref_channel_renderer_${pkg}_$channelId", "image_text_with_buttons_4"
             )
+            val highlightColor = loadChannelStringSetting(
+                "highlight_color:$pkg/$channelId", "pref_channel_highlight_color_${pkg}_$channelId", ""
+            ).takeIf { it.isNotBlank() }
+            val showLeftHighlight = loadChannelStringSetting(
+                "show_left_highlight:$pkg/$channelId", "pref_channel_show_left_highlight_${pkg}_$channelId", "off"
+            ) == "on"
+            val showRightHighlight = loadChannelStringSetting(
+                "show_right_highlight:$pkg/$channelId", "pref_channel_show_right_highlight_${pkg}_$channelId", "off"
+            ) == "on"
 
             module.log(
                 "$TAG: $pkg/$channelId | $title |  template=$template"
@@ -325,6 +334,9 @@ object GenericProgressHook {
                     isOngoing       = isOngoing,
                     contentIntent   = notif.contentIntent,
                     renderer        = renderer,
+                    highlightColor  = highlightColor,
+                    showLeftHighlightColor = showLeftHighlight,
+                    showRightHighlightColor = showRightHighlight,
                 ),
             )
 

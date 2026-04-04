@@ -1044,6 +1044,30 @@ abstract class AppLocalizations {
   /// **'秒'**
   String get seconds;
 
+  /// No description provided for @highlightColorLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'高亮颜色'**
+  String get highlightColorLabel;
+
+  /// No description provided for @highlightColorHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'#RRGGBB 格式，留空使用默认'**
+  String get highlightColorHint;
+
+  /// No description provided for @showLeftHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'左侧文本高亮'**
+  String get showLeftHighlightLabel;
+
+  /// No description provided for @showRightHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'右侧文本高亮'**
+  String get showRightHighlightLabel;
+
   /// No description provided for @onlyEnabledChannels.
   ///
   /// In zh, this message translates to:

@@ -27,6 +27,9 @@ class SingleChannelMode extends ChannelSettingsMode {
     required this.islandTimeout,
     required this.marquee,
     required this.restoreLockscreen,
+    required this.highlightColor,
+    required this.showLeftHighlight,
+    required this.showRightHighlight,
   });
 
   final String channelName;
@@ -42,6 +45,9 @@ class SingleChannelMode extends ChannelSettingsMode {
   final String islandTimeout;
   final String marquee;
   final String restoreLockscreen;
+  final String highlightColor;
+  final String showLeftHighlight;
+  final String showRightHighlight;
 }
 
 /// 批量模式：对多个渠道批量操作，字段默认"不更改"。
@@ -150,11 +156,15 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   String? _islandTimeout;
   String? _marquee;
   String? _restoreLockscreen;
+  String? _highlightColor;
+  String? _showLeftHighlight;
+  String? _showRightHighlight;
 
   // 仅 BatchChannelMode + SingleAppScope 下使用
   bool _onlyEnabled = false;
 
   late final TextEditingController _timeoutController;
+  late final TextEditingController _highlightColorController;
 
   bool get _isSingle => widget.mode is SingleChannelMode;
 
@@ -174,15 +184,21 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _islandTimeout = m.islandTimeout;
       _marquee = m.marquee;
       _restoreLockscreen = m.restoreLockscreen;
+      _highlightColor = m.highlightColor;
+      _showLeftHighlight = m.showLeftHighlight;
+      _showRightHighlight = m.showRightHighlight;
       _timeoutController = TextEditingController(text: m.islandTimeout);
+      _highlightColorController = TextEditingController(text: m.highlightColor);
     } else {
       _timeoutController = TextEditingController();
+      _highlightColorController = TextEditingController();
     }
   }
 
   @override
   void dispose() {
     _timeoutController.dispose();
+    _highlightColorController.dispose();
     super.dispose();
   }
 
@@ -199,7 +215,10 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _enableFloat != null ||
       _islandTimeout != null ||
       _marquee != null ||
-      _restoreLockscreen != null;
+      _restoreLockscreen != null ||
+      _highlightColor != null ||
+      _showLeftHighlight != null ||
+      _showRightHighlight != null;
 
   String _title(AppLocalizations l10n) => switch (widget.mode) {
     SingleChannelMode m => m.channelName,
@@ -236,6 +255,9 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
           'timeout': _islandTimeout,
           'marquee': _marquee,
           'restore_lockscreen': _restoreLockscreen,
+          'highlight_color': _highlightColor,
+          'show_left_highlight': _showLeftHighlight,
+          'show_right_highlight': _showRightHighlight,
         },
         onlyEnabled: switch (widget.mode) {
           BatchChannelMode(scope: SingleAppScope()) => _onlyEnabled,
@@ -508,7 +530,6 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                         final n = int.tryParse(trimmed);
                         final valid = trimmed.isNotEmpty && n != null && n >= 1;
                         setState(() {
-                          // 单渠道模式：无效输入时保留上一个合法值
                           if (valid) {
                             _islandTimeout = trimmed;
                           } else if (!_isSingle) {
@@ -517,6 +538,69 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                         });
                       },
                     ),
+                  ),
+                  SizedBox(height: rowGap),
+                  // 高亮颜色
+                  _SettingField(
+                    label: l10n.highlightColorLabel,
+                    child: TextFormField(
+                      controller: _highlightColorController,
+                      textInputAction: TextInputAction.done,
+                      scrollPadding: EdgeInsets.zero,
+                      onTapOutside: (_) {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                      },
+                      decoration: _fieldDecoration(
+                        context,
+                        hintText: _isSingle
+                            ? l10n.highlightColorHint
+                            : l10n.noChange,
+                      ),
+                      onChanged: (v) {
+                        final trimmed = v.trim();
+                        setState(() {
+                          if (trimmed.isNotEmpty) {
+                            _highlightColor = trimmed;
+                          } else if (!_isSingle) {
+                            _highlightColor = null;
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(height: rowGap),
+                  _BatchSettingRow(
+                    label: l10n.showLeftHighlightLabel,
+                    value: _showLeftHighlight,
+                    showNotChange: !_isSingle,
+                    items: [
+                      DropdownMenuItem(
+                        value: kTriOptOn,
+                        child: Text(l10n.optOn),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOff,
+                        child: Text(l10n.optOff),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _showLeftHighlight = v),
+                  ),
+                  SizedBox(height: rowGap),
+                  _BatchSettingRow(
+                    label: l10n.showRightHighlightLabel,
+                    value: _showRightHighlight,
+                    showNotChange: !_isSingle,
+                    items: [
+                      DropdownMenuItem(
+                        value: kTriOptOn,
+                        child: Text(l10n.optOn),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOff,
+                        child: Text(l10n.optOff),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _showRightHighlight = v),
                   ),
                   SizedBox(height: blockGap),
 

@@ -69,13 +69,13 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             val leftSide = if (!vm.showIslandIcon) {
                 ImageTextInfoLeft(
                     type     = 1,
-                    textInfo = TextInfo(title = vm.leftTitle),
+                    textInfo = TextInfo(title = vm.leftTitle, showHighlightColor = vm.showLeftHighlightColor),
                 )
             } else {
                 ImageTextInfoLeft(
                     type     = 1,
                     picInfo  = PicInfo(type = 1, pic = iconKey),
-                    textInfo = TextInfo(title = vm.leftTitle),
+                    textInfo = TextInfo(title = vm.leftTitle, showHighlightColor = vm.showLeftHighlightColor),
                 )
             }
             when {
@@ -83,14 +83,14 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
                     left = leftSide,
                     progressText = ProgressTextInfo(
                         progressInfo = CircularProgressInfo(progress = vm.circularProgress),
-                        textInfo     = TextInfo(title = vm.rightTitle, narrowFont = true),
+                        textInfo     = TextInfo(title = vm.rightTitle, narrowFont = true, showHighlightColor = vm.showRightHighlightColor),
                     ),
                 )
                 vm.showRightSide -> builder.setBigIslandInfo(
                     left  = leftSide,
                     right = ImageTextInfoRight(
                         type     = 2,
-                        textInfo = TextInfo(title = vm.rightTitle, narrowFont = true),
+                        textInfo = TextInfo(title = vm.rightTitle, narrowFont = true, showHighlightColor = vm.showRightHighlightColor),
                     ),
                 )
                 else -> builder.setBigIslandInfo(left = leftSide)
@@ -130,6 +130,7 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             var jsonParam = fixTextButtonJson(builder.buildJsonParam())
             if (applyWrap) jsonParam = wrapLongTextJson(jsonParam)
             jsonParam = injectUpdatable(jsonParam, vm.updatable)
+            jsonParam = injectHighlightColor(jsonParam, vm.highlightColor)
             extras.putString("miui.focus.param", jsonParam)
 
             if (vm.setFocusProxy && vm.showNotification) {

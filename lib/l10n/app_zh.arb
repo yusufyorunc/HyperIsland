@@ -328,6 +328,10 @@
   "updateFloatLabel": "更新展开",
   "autoDisappear": "自动消失",
   "seconds": "秒",
+  "highlightColorLabel": "高亮颜色",
+  "highlightColorHint": "#RRGGBB 格式，留空使用默认",
+  "showLeftHighlightLabel": "左侧文本高亮",
+  "showRightHighlightLabel": "右侧文本高亮",
   "onlyEnabledChannels": "仅应用到已启用渠道",
   "enabledChannelsCount": "已启用 {enabled} / {total} 个渠道",
   "@enabledChannelsCount": {

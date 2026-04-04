@@ -549,6 +549,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get seconds => 'sn';
 
   @override
+  String get highlightColorLabel => 'Vurgu Rengi';
+
+  @override
+  String get highlightColorHint =>
+      '#RRGGBB formatı, varsayılan için boş bırakın';
+
+  @override
+  String get showLeftHighlightLabel => 'Sol metin vurgusu';
+
+  @override
+  String get showRightHighlightLabel => 'Sağ metin vurgusu';
+
+  @override
   String get onlyEnabledChannels => 'Yalnızca Etkin Kanallara Uygula';
 
   @override

@@ -532,6 +532,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get seconds => '秒';
 
   @override
+  String get highlightColorLabel => 'ハイライト色';
+
+  @override
+  String get highlightColorHint => '#RRGGBB 形式、空白でデフォルト';
+
+  @override
+  String get showLeftHighlightLabel => '左テキストハイライト';
+
+  @override
+  String get showRightHighlightLabel => '右テキストハイライト';
+
+  @override
   String get onlyEnabledChannels => '有効なチャンネルにのみ適用されます';
 
   @override

@@ -525,6 +525,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seconds => '秒';
 
   @override
+  String get highlightColorLabel => '高亮颜色';
+
+  @override
+  String get highlightColorHint => '#RRGGBB 格式，留空使用默认';
+
+  @override
+  String get showLeftHighlightLabel => '左侧文本高亮';
+
+  @override
+  String get showRightHighlightLabel => '右侧文本高亮';
+
+  @override
   String get onlyEnabledChannels => '仅应用到已启用渠道';
 
   @override

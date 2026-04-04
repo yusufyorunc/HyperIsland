@@ -547,6 +547,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seconds => 's';
 
   @override
+  String get highlightColorLabel => 'Highlight color';
+
+  @override
+  String get highlightColorHint => '#RRGGBB format, leave empty for default';
+
+  @override
+  String get showLeftHighlightLabel => 'Left text highlight';
+
+  @override
+  String get showRightHighlightLabel => 'Right text highlight';
+
+  @override
   String get onlyEnabledChannels => 'Only apply to enabled channels';
 
   @override

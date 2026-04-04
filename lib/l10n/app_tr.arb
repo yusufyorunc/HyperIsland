@@ -260,6 +260,10 @@
   "updateFloatLabel": "Güncellemede Yeniden Genişlet",
   "autoDisappear": "Otomatik Kapanma",
   "seconds": "sn",
+  "highlightColorLabel": "Vurgu Rengi",
+  "highlightColorHint": "#RRGGBB formatı, varsayılan için boş bırakın",
+  "showLeftHighlightLabel": "Sol metin vurgusu",
+  "showRightHighlightLabel": "Sağ metin vurgusu",
   "onlyEnabledChannels": "Yalnızca Etkin Kanallara Uygula",
   "enabledChannelsCount": "{enabled} / {total} kanal etkin",
   "@enabledChannelsCount": {
