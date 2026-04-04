@@ -76,8 +76,6 @@
   "checkUpdateOnLaunchSubtitle": "Automatically check for new versions when the app starts",
   "showWelcomeTitle": "Show welcome message on launch",
   "showWelcomeSubtitle": "Display welcome information on Island when the app starts",
-  "interactionHapticsTitle": "Interaction Haptics",
-  "interactionHapticsSubtitle": "Enable Hyper custom haptic feedback for switches, sliders, and buttons",
   "checkUpdate": "Check for updates",
   "alreadyLatest": "Already on the latest version",
   "useAppIconTitle": "Use App Icon",

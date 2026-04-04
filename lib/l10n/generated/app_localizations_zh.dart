@@ -176,12 +176,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showWelcomeSubtitle => '应用启动时在超级岛显示欢迎信息';
 
   @override
-  String get interactionHapticsTitle => '交互触感';
-
-  @override
-  String get interactionHapticsSubtitle => '为开关、滑块和按钮启用 Hyper 定制震感反馈';
-
-  @override
   String get checkUpdate => '检查更新';
 
   @override

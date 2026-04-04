@@ -186,13 +186,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Display welcome information on Island when the app starts';
 
   @override
-  String get interactionHapticsTitle => 'Interaction Haptics';
-
-  @override
-  String get interactionHapticsSubtitle =>
-      'Enable Hyper custom haptic feedback for switches, sliders, and buttons';
-
-  @override
   String get checkUpdate => 'Check for updates';
 
   @override

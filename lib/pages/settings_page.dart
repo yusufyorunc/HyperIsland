@@ -6,7 +6,6 @@ import '../controllers/config_io_controller.dart';
 import '../controllers/settings_controller.dart';
 import '../controllers/update_controller.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../services/interaction_haptics.dart';
 import '../widgets/section_label.dart';
 import '../widgets/modern_slider.dart';
 import 'ai_config_page.dart';
@@ -44,7 +43,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _ctrl.marqueeSpeed,
     _ctrl.themeMode,
     _ctrl.locale,
-    _ctrl.interactionHaptics,
     _ctrl.showWelcome,
     _ctrl.useHookAppIcon,
   ]);
@@ -75,7 +73,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onResumeNotificationChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setResumeNotification(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,7 +85,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onUseHookAppIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setUseHookAppIcon(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,12 +97,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onRoundIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setRoundIcon(value);
   }
 
   Future<void> _onHideDesktopIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setHideDesktopIcon(value);
   }
 
@@ -117,7 +111,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _persistMarqueeSpeed(double value) async {
-    await InteractionHaptics.sliderTick();
     final next = value.round();
     if (_ctrl.marqueeSpeed == next) return;
     await _ctrl.setMarqueeSpeed(next);
@@ -142,7 +135,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _exportToFile() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final path = await ConfigIOController.exportToFile();
       _showSnack(l10n.exportedTo(path));
@@ -155,7 +147,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _exportToClipboard() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       await ConfigIOController.exportToClipboard();
       _showSnack(l10n.configCopied);
@@ -168,7 +159,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _importFromFile() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final count = await ConfigIOController.importFromFile();
       _showSnack(l10n.importSuccess(count));
@@ -181,7 +171,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _importFromClipboard() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final count = await ConfigIOController.importFromClipboard();
       _showSnack(l10n.importSuccess(count));
@@ -193,7 +182,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _doCheckUpdate() async {
-    await InteractionHaptics.button();
     setState(() => _checkingUpdate = true);
     try {
       final info = await PackageInfo.fromPlatform();
@@ -227,7 +215,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showThemeModeDialog(AppLocalizations l10n) async {
-    await InteractionHaptics.button();
     if (!mounted) return;
     final result = await showDialog<ThemeMode>(
       context: context,
@@ -250,14 +237,12 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     if (result != null) {
-      await InteractionHaptics.button();
       if (!mounted) return;
       _ctrl.setThemeMode(result);
     }
   }
 
   Future<void> _showLanguageDialog(AppLocalizations l10n) async {
-    await InteractionHaptics.button();
     if (!mounted) return;
     final result = await showDialog<Locale?>(
       context: context,
@@ -282,7 +267,6 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     if (result != _ctrl.locale) {
-      await InteractionHaptics.button();
       if (!mounted) return;
       _ctrl.setLocale(result);
     }
@@ -404,34 +388,17 @@ class _SettingsPageState extends State<SettingsPage> {
                               vertical: 4,
                             ),
                             title: Text(
-                              l10n.interactionHapticsTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.interactionHapticsSubtitle),
-                            value: _ctrl.interactionHaptics,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle(force: true);
-                              await _ctrl.setInteractionHaptics(value);
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
                               l10n.keepFocusNotifTitle,
                               style: titleStyle,
                             ),
                             subtitle: Text(l10n.keepFocusNotifSubtitle),
                             value: _ctrl.resumeNotification,
                             onChanged: _onResumeNotificationChanged,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -446,7 +413,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.unlockAllFocusSubtitle),
                             value: _ctrl.unlockAllFocus,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setUnlockAllFocus(value);
                             },
                           ),
@@ -463,7 +429,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.unlockFocusAuthSubtitle),
                             value: _ctrl.unlockFocusAuth,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setUnlockFocusAuth(value);
                             },
                           ),
@@ -480,7 +445,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.showWelcomeSubtitle),
                             value: _ctrl.showWelcome,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setShowWelcome(value);
                             },
                           ),
@@ -511,7 +475,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
                             value: _ctrl.checkUpdateOnLaunch,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setCheckUpdateOnLaunch(value);
                             },
                             shape: RoundedRectangleBorder(
@@ -549,7 +512,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.firstFloatLabelSubtitle),
                             value: _ctrl.defaultFirstFloat,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultFirstFloat(value);
                             },
                             shape: const RoundedRectangleBorder(
@@ -571,7 +533,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.updateFloatLabelSubtitle),
                             value: _ctrl.defaultEnableFloat,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultEnableFloat(value);
                             },
                           ),
@@ -588,7 +549,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.marqueeChannelTitleSubtitle),
                             value: _ctrl.defaultMarquee,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultMarquee(value);
                             },
                           ),
@@ -605,7 +565,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.focusNotificationLabelSubtitle),
                             value: _ctrl.defaultFocusNotif,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultFocusNotif(value);
                             },
                           ),
@@ -622,7 +581,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.restoreLockscreenSubtitle),
                             value: _ctrl.defaultRestoreLockscreen,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultRestoreLockscreen(value);
                             },
                           ),
@@ -639,7 +597,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: Text(l10n.islandIconLabelSubtitle),
                             value: _ctrl.defaultShowIslandIcon,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultShowIslandIcon(value);
                             },
                           ),
@@ -658,7 +615,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             value: _ctrl.defaultPreserveSmallIcon,
                             onChanged: (value) async {
-                              await InteractionHaptics.toggle();
                               await _ctrl.setDefaultPreserveSmallIcon(value);
                             },
                             shape: const RoundedRectangleBorder(
@@ -739,7 +695,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                       padding: EdgeInsets.zero,
                                       visualDensity: VisualDensity.compact,
                                       onPressed: () async {
-                                        await InteractionHaptics.button();
                                         setState(
                                           () => _marqueeSpeedDraft = 100,
                                         );
@@ -764,7 +719,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                       min: 20,
                                       max: 500,
                                       divisions: 48,
-                                      onChanged: _onMarqueeSpeedChanged,
+                                      onChanged: (v) {
+                                        _onMarqueeSpeedChanged(v);
+                                      },
                                       onChangeEnd: _persistMarqueeSpeed,
                                     ),
                                   ),
@@ -916,7 +873,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: const Text('1812z/HyperIsland'),
                             trailing: const Icon(Icons.open_in_new, size: 18),
                             onTap: () async {
-                              await InteractionHaptics.button();
                               await launchUrl(
                                 Uri.parse(
                                   'https://github.com/1812z/HyperIsland',
@@ -937,7 +893,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             subtitle: const Text('1045114341'),
                             trailing: const Icon(Icons.copy, size: 18),
                             onTap: () async {
-                              await InteractionHaptics.button();
                               Clipboard.setData(
                                 const ClipboardData(text: '1045114341'),
                               );

@@ -33,7 +33,6 @@ class MainActivity : FlutterActivity() {
     )
 
     private val CHANNEL = "io.github.hyperisland/test"
-    private val HAPTIC_CHANNEL = "io.github.hyperisland/haptics"
     private val TAG = "HyperIsland"
     private val REQUEST_APP_LIST_PERMISSION = 1002
 
@@ -211,15 +210,6 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, HAPTIC_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "button" -> result.success(InteractionHaptics.performButton(this))
-                    "toggle" -> result.success(InteractionHaptics.performToggle(this))
-                    "sliderTick" -> result.success(InteractionHaptics.performSliderTick(this))
-                    else -> result.notImplemented()
-                }
-            }
     }
 
     fun isModuleActive(): Boolean = HyperIslandApp.isReady()

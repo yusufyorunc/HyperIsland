@@ -81,8 +81,6 @@
   "checkUpdateOnLaunchSubtitle": "Uygulama açılırken yeni sürümleri otomatik denetler.",
   "showWelcomeTitle": "Açılışta karşılama mesajını göster",
   "showWelcomeSubtitle": "Uygulama başladığında Ada üzerinde karşılama bilgisini göster",
-  "interactionHapticsTitle": "Etkileşim haptikleri",
-  "interactionHapticsSubtitle": "Anahtarlar, kaydırıcılar ve düğmeler için Hyper özel dokunsal geri bildirimi etkinleştir",
   "checkUpdate": "Güncellemeleri Denetle",
   "alreadyLatest": "Zaten en güncel sürümdesiniz",
   "useAppIconTitle": "Uygulama simgesini kullan",

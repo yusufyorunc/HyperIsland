@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 const kPrefShowWelcome = 'pref_show_welcome';
 const kPrefResumeNotification = 'pref_resume_notification';
 const kPrefUseHookAppIcon = 'pref_use_hook_app_icon';
-const kPrefInteractionHaptics = 'pref_interaction_haptics';
 const kPrefRoundIcon = 'pref_round_icon';
 const kPrefMarqueeFeature = 'pref_marquee_feature';
 const kPrefMarqueeSpeed = 'pref_marquee_speed';
@@ -98,7 +97,6 @@ class SettingsController extends ChangeNotifier {
   bool showWelcome = true;
   bool resumeNotification = true;
   bool useHookAppIcon = true;
-  bool interactionHaptics = true;
   bool roundIcon = true;
   bool marqueeFeature = false;
   int marqueeSpeed = 100;
@@ -140,7 +138,6 @@ class SettingsController extends ChangeNotifier {
     showWelcome = prefs.getBool(kPrefShowWelcome) ?? true;
     resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
     useHookAppIcon = prefs.getBool(kPrefUseHookAppIcon) ?? true;
-    interactionHaptics = prefs.getBool(kPrefInteractionHaptics) ?? true;
     roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
     marqueeFeature = prefs.getBool(kPrefMarqueeFeature) ?? false;
     marqueeSpeed = (prefs.getInt(kPrefMarqueeSpeed) ?? 100).clamp(20, 500);
@@ -199,13 +196,6 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefUseHookAppIcon, value);
     useHookAppIcon = value;
-    notifyListeners();
-  }
-
-  Future<void> setInteractionHaptics(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kPrefInteractionHaptics, value);
-    interactionHaptics = value;
     notifyListeners();
   }
 

@@ -91,8 +91,6 @@
   "checkUpdateOnLaunchSubtitle": "启动应用时自动检查是否有新版本",
   "showWelcomeTitle": "显示启动欢迎语",
   "showWelcomeSubtitle": "应用启动时在超级岛显示欢迎信息",
-  "interactionHapticsTitle": "交互触感",
-  "interactionHapticsSubtitle": "为开关、滑块和按钮启用 Hyper 定制震感反馈",
   "checkUpdate": "检查更新",
   "alreadyLatest": "已是最新版本",
   "useAppIconTitle": "使用应用图标",

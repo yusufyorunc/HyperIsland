@@ -186,13 +186,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulama başladığında Ada üzerinde karşılama bilgisini göster';
 
   @override
-  String get interactionHapticsTitle => 'Etkileşim haptikleri';
-
-  @override
-  String get interactionHapticsSubtitle =>
-      'Anahtarlar, kaydırıcılar ve düğmeler için Hyper özel dokunsal geri bildirimi etkinleştir';
-
-  @override
   String get checkUpdate => 'Güncellemeleri Denetle';
 
   @override

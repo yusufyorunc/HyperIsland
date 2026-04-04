@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/settings_controller.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../services/interaction_haptics.dart';
 import '../widgets/section_label.dart';
 import '../widgets/modern_slider.dart';
 
@@ -17,7 +16,8 @@ class AiConfigPage extends StatefulWidget {
 
 class _AiConfigPageState extends State<AiConfigPage> {
   final _ctrl = SettingsController.instance;
-  static const _defaultAiPrompt = '根据通知信息，提取关键信息，左右分别不超过6汉字12字符';
+  static const _defaultAiPrompt =
+      'Extract key details from the notification and keep both sides concise.';
 
   late final TextEditingController _urlCtrl;
   late final TextEditingController _keyCtrl;
@@ -84,7 +84,6 @@ class _AiConfigPageState extends State<AiConfigPage> {
   }
 
   Future<void> _save() async {
-    await InteractionHaptics.button();
     final nextUrl = _urlCtrl.text.trim();
     final nextKey = _keyCtrl.text.trim();
     final nextModel = _modelCtrl.text.trim();
@@ -146,20 +145,17 @@ class _AiConfigPageState extends State<AiConfigPage> {
 
   Future<void> _onAiEnabledChanged(bool value) async {
     if (_aiEnabledValue == value) return;
-    await InteractionHaptics.toggle();
     setState(() => _aiEnabledValue = value);
     await _ctrl.setAiEnabled(value);
   }
 
   Future<void> _onAiPromptInUserChanged(bool value) async {
     if (_aiPromptInUserValue == value) return;
-    await InteractionHaptics.toggle();
     setState(() => _aiPromptInUserValue = value);
     await _ctrl.setAiPromptInUser(value);
   }
 
   Future<void> _test() async {
-    await InteractionHaptics.button();
     final url = _urlCtrl.text.trim();
     final key = _keyCtrl.text.trim();
     final model = _modelCtrl.text.trim();
@@ -183,7 +179,7 @@ class _AiConfigPageState extends State<AiConfigPage> {
     try {
       final promptText = _promptCtrl.text.trim();
       const sampleUserContent =
-          '应用包名：com.example.app\n标题：测试通知\n正文：这是一条用于测试 AI 提取效果的示例消息';
+          'Package: com.example.app\nTitle: Test notification\nBody: This is a sample message for testing AI extraction.';
       requestBody = jsonEncode({
         'model': model.isEmpty ? 'gpt-4o-mini' : model,
         'messages': [
@@ -359,7 +355,6 @@ class _AiConfigPageState extends State<AiConfigPage> {
                               size: 16,
                             ),
                             onPressed: () async {
-                              await InteractionHaptics.button();
                               setState(() => _keyObscured = !_keyObscured);
                             },
                           ),
@@ -421,7 +416,6 @@ class _AiConfigPageState extends State<AiConfigPage> {
                             divisions: 13,
                             label: '${_aiTimeoutDraft}s',
                             onChanged: (v) async {
-                              await InteractionHaptics.sliderTick();
                               _onTimeoutChanged(v);
                             },
                             onChangeEnd: _persistTimeout,
@@ -471,7 +465,6 @@ class _AiConfigPageState extends State<AiConfigPage> {
                             divisions: 10,
                             label: _aiTemperatureDraft.toStringAsFixed(1),
                             onChanged: (v) async {
-                              await InteractionHaptics.sliderTick();
                               _onTemperatureChanged(v);
                             },
                             onChangeEnd: _persistTemperature,
@@ -518,7 +511,6 @@ class _AiConfigPageState extends State<AiConfigPage> {
                             divisions: 80,
                             label: '$_aiMaxTokensDraft',
                             onChanged: (v) async {
-                              await InteractionHaptics.sliderTick();
                               _onMaxTokensChanged(v);
                             },
                             onChangeEnd: _persistMaxTokens,

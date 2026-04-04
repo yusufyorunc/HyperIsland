@@ -414,18 +414,6 @@ abstract class AppLocalizations {
   /// **'应用启动时在超级岛显示欢迎信息'**
   String get showWelcomeSubtitle;
 
-  /// No description provided for @interactionHapticsTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'交互触感'**
-  String get interactionHapticsTitle;
-
-  /// No description provided for @interactionHapticsSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'为开关、滑块和按钮启用 Hyper 定制震感反馈'**
-  String get interactionHapticsSubtitle;
-
   /// No description provided for @checkUpdate.
   ///
   /// In zh, this message translates to:
