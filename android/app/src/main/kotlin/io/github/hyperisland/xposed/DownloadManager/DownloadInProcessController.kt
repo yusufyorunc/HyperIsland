@@ -183,15 +183,38 @@ object InProcessController {
         )
     }
 
+    private fun pausedByAppValues(): ContentValues = ContentValues().apply {
+        put("status", STATUS_PAUSED_BY_APP)
+        put("control", CONTROL_PAUSED)
+    }
+
+    private fun runningValues(): ContentValues = ContentValues().apply {
+        put("status", STATUS_RUNNING)
+        put("control", CONTROL_RUN)
+    }
+
+    private fun queryIdsByStatus(context: Context, statusMask: Int, errorOp: String): List<Long> {
+        return try {
+            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            val cursor = dm?.query(DownloadManager.Query().setFilterByStatus(statusMask))
+            val ids = mutableListOf<Long>()
+            cursor?.use {
+                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
+                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
+            }
+            ids
+        } catch (e: Exception) {
+            module?.logError("$TAG: $errorOp err=${e.message}")
+            emptyList()
+        }
+    }
+
     // ── 控制逻辑 ──────────────────────────────────────────────────────────────
 
     private fun pause(context: Context, downloadId: Long) {
         val realIds = queryActiveIds(context)
         val idsToTry = (listOf(downloadId) + realIds).distinct()
-        val values = ContentValues().apply {
-            put("status",  STATUS_PAUSED_BY_APP)
-            put("control", CONTROL_PAUSED)
-        }
+        val values = pausedByAppValues()
         for (id in idsToTry) {
             for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
                 try {
@@ -208,10 +231,7 @@ object InProcessController {
     private fun resume(context: Context, downloadId: Long) {
         val realIds = queryPausedIds(context)
         val idsToTry = (listOf(downloadId) + realIds).distinct()
-        val values = ContentValues().apply {
-            put("status",  STATUS_RUNNING)
-            put("control", CONTROL_RUN)
-        }
+        val values = runningValues()
         for (id in idsToTry) {
             for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
                 try {
@@ -226,39 +246,15 @@ object InProcessController {
     }
 
     private fun queryActiveIds(context: Context): List<Long> {
-        return try {
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val cursor = dm?.query(
-                DownloadManager.Query().setFilterByStatus(
-                    DownloadManager.STATUS_RUNNING or DownloadManager.STATUS_PENDING
-                )
-            )
-            val ids = mutableListOf<Long>()
-            cursor?.use {
-                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
-                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
-            }
-            ids
-        } catch (e: Exception) {
-            module?.logError("$TAG: queryActiveIds err=${e.message}")
-            emptyList()
-        }
+        return queryIdsByStatus(
+            context,
+            DownloadManager.STATUS_RUNNING or DownloadManager.STATUS_PENDING,
+            "queryActiveIds"
+        )
     }
 
     private fun queryPausedIds(context: Context): List<Long> {
-        return try {
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val cursor = dm?.query(DownloadManager.Query().setFilterByStatus(DownloadManager.STATUS_PAUSED))
-            val ids = mutableListOf<Long>()
-            cursor?.use {
-                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
-                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
-            }
-            ids
-        } catch (e: Exception) {
-            module?.logError("$TAG: queryPausedIds err=${e.message}")
-            emptyList()
-        }
+        return queryIdsByStatus(context, DownloadManager.STATUS_PAUSED, "queryPausedIds")
     }
 
     private fun cancel(context: Context, downloadId: Long) {
@@ -273,10 +269,7 @@ object InProcessController {
     }
 
     private fun pauseAll(context: Context) {
-        val values = ContentValues().apply {
-            put("status",  STATUS_PAUSED_BY_APP)
-            put("control", CONTROL_PAUSED)
-        }
+        val values = pausedByAppValues()
         for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
             try {
                 val rows = context.contentResolver.update(
@@ -293,10 +286,7 @@ object InProcessController {
 
     private fun resumeAll(context: Context) {
         try {
-            val values = ContentValues().apply {
-                put("status",  STATUS_RUNNING)
-                put("control", CONTROL_RUN)
-            }
+            val values = runningValues()
             context.contentResolver.update(
                 DOWNLOADS_URI, values, "status = ?", arrayOf(STATUS_PAUSED_BY_APP.toString())
             )
@@ -382,20 +372,6 @@ object InProcessController {
             context.getSystemService(NotificationManager::class.java)?.cancel(PAUSED_OVERLAY_ID)
         } catch (e: Exception) {
             module?.logError("$TAG: cancelPausedOverlay failed: ${e.message}")
-        }
-    }
-
-    @Suppress("unused")
-    private fun callDmMethod(context: Context, methodName: String, downloadId: Long): Boolean {
-        return try {
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) ?: return false
-            val method = dm.javaClass.getMethod(methodName, LongArray::class.java)
-            method.isAccessible = true
-            method.invoke(dm, longArrayOf(downloadId))
-            true
-        } catch (e: Exception) {
-            module?.logError("$TAG: $methodName reflection failed: ${e.message}")
-            false
         }
     }
 }

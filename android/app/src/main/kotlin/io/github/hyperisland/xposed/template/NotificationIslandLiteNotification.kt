@@ -9,6 +9,9 @@ import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
+import io.github.hyperisland.xposed.defaultDialogIcon
+import io.github.hyperisland.xposed.resolveModeIconAutoLarge
+import io.github.hyperisland.xposed.resolveModeIconWithAppFallback
 import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.toRounded
@@ -74,13 +77,8 @@ object NotificationIslandLiteNotification : IslandTemplate {
         cleanedSubtitle: String,
     ) {
         try {
-            val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-            val displayIcon = when (data.iconMode) {
-                "notif_small" -> data.notifIcon ?: fallbackIcon
-                "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-                "app_icon"    -> data.appIconRaw ?: fallbackIcon
-                else          -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-            }.toRounded(context)
+            val fallbackIcon = context.defaultDialogIcon()
+            val displayIcon = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
 
             IslandDispatcher.post(
                 context,
@@ -112,21 +110,11 @@ object NotificationIslandLiteNotification : IslandTemplate {
         cleanedTitle: String = cleanTitle(data.title),
         cleanedSubtitle: String = cleanSubtitle(data.subtitle, cleanedTitle),
     ): IslandViewModel {
-        val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
+        val fallbackIcon = context.defaultDialogIcon()
 
-        val islandIcon = when (data.iconMode) {
-            "notif_small" -> data.notifIcon ?: fallbackIcon
-            "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-            "app_icon"    -> data.appIconRaw ?: fallbackIcon
-            else          -> data.largeIcon ?: data.notifIcon ?: fallbackIcon
-        }.toRounded(context)
+        val islandIcon = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
 
-        val focusIcon = when (data.focusIconMode) {
-            "notif_small" -> data.notifIcon ?: data.appIconRaw ?: fallbackIcon
-            "notif_large" -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallbackIcon
-            "app_icon"    -> data.appIconRaw ?: fallbackIcon
-            else          -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallbackIcon
-        }.toRounded(context)
+        val focusIcon = data.resolveModeIconWithAppFallback(data.focusIconMode, fallbackIcon).toRounded(context)
 
         val showNotification   = data.focusNotif != "off"
         val shouldPreserveIcon = showNotification && data.preserveStatusBarSmallIcon != "off"

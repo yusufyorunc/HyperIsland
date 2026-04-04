@@ -19,6 +19,8 @@ import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
 import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
+import io.github.hyperisland.xposed.defaultDialogIcon
+import io.github.hyperisland.xposed.resolveModeIconAutoLarge
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.renderer.resolveRenderer
@@ -211,8 +213,8 @@ $userPrompt
         rightText: String,
     ) {
         try {
-            val fallbackIcon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-            val displayIcon  = resolveIcon(data, data.iconMode, fallbackIcon).toRounded(context)
+            val fallbackIcon = context.defaultDialogIcon()
+            val displayIcon  = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
             IslandDispatcher.post(
                 context,
                 IslandRequest(
@@ -242,9 +244,9 @@ $userPrompt
         leftText: String  = data.title,
         rightText: String = data.subtitle.ifEmpty { data.title },
     ): IslandViewModel {
-        val fallbackIcon     = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-        val islandIcon       = resolveIcon(data, data.iconMode,      fallbackIcon).toRounded(context)
-        val focusIcon        = resolveIcon(data, data.focusIconMode,  fallbackIcon).toRounded(context)
+        val fallbackIcon     = context.defaultDialogIcon()
+        val islandIcon       = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
+        val focusIcon        = data.resolveModeIconAutoLarge(data.focusIconMode, fallbackIcon).toRounded(context)
         val showNotification = data.focusNotif != "off"
 
         return IslandViewModel(
@@ -272,14 +274,4 @@ $userPrompt
             showRightHighlightColor = data.showRightHighlightColor,
         )
     }
-
-    // ── 图标解析 ──────────────────────────────────────────────────────────────
-
-    private fun resolveIcon(data: NotifData, mode: String?, fallback: Icon): Icon =
-        when (mode) {
-            "notif_small" -> data.notifIcon ?: fallback
-            "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallback
-            "app_icon"    -> data.appIconRaw ?: fallback
-            else          -> data.largeIcon ?: data.notifIcon ?: fallback
-        }
 }

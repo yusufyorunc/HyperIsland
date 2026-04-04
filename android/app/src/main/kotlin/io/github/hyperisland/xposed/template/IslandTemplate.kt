@@ -67,6 +67,10 @@ interface IslandTemplate {
     fun inject(context: Context, extras: Bundle, data: NotifData)
 }
 
+/** 常用默认图标（dialog info）统一工厂。 */
+fun Context.defaultDialogIcon(): Icon =
+    Icon.createWithResource(this, android.R.drawable.ic_dialog_info)
+
 /**
  * GenericProgressHook 从通知提取的结构化数据，供各模板统一接收。
  */
@@ -114,3 +118,41 @@ data class NotifData(
     /** 大岛右侧文本是否显示高亮颜色。 */
     val showRightHighlightColor: Boolean = false,
 )
+
+private fun firstNonNullIcon(fallback: Icon, vararg candidates: Icon?): Icon =
+    candidates.firstOrNull { it != null } ?: fallback
+
+/**
+ * 图标解析策略：auto 默认优先 large -> notif。
+ * 适用于普通通知模板和 AI 模板当前逻辑。
+ */
+fun NotifData.resolveModeIconAutoLarge(mode: String, fallback: Icon): Icon =
+    when (mode) {
+        "notif_small" -> firstNonNullIcon(fallback, notifIcon)
+        "notif_large" -> firstNonNullIcon(fallback, largeIcon, notifIcon)
+        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
+        else          -> firstNonNullIcon(fallback, largeIcon, notifIcon)
+    }
+
+/**
+ * 图标解析策略：auto 默认优先 notif -> large。
+ * 适用于下载模板当前逻辑。
+ */
+fun NotifData.resolveModeIconAutoNotif(mode: String, fallback: Icon): Icon =
+    when (mode) {
+        "notif_small" -> firstNonNullIcon(fallback, notifIcon)
+        "notif_large" -> firstNonNullIcon(fallback, largeIcon, notifIcon)
+        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
+        else          -> firstNonNullIcon(fallback, notifIcon, largeIcon)
+    }
+
+/**
+ * 焦点图标解析策略：auto/notif_large 均允许 appIcon 作为中间兜底。
+ */
+fun NotifData.resolveModeIconWithAppFallback(mode: String, fallback: Icon): Icon =
+    when (mode) {
+        "notif_small" -> firstNonNullIcon(fallback, notifIcon, appIconRaw)
+        "notif_large" -> firstNonNullIcon(fallback, largeIcon, appIconRaw, notifIcon)
+        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
+        else          -> firstNonNullIcon(fallback, largeIcon, appIconRaw, notifIcon)
+    }

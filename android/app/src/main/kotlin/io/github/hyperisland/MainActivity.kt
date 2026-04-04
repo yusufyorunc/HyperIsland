@@ -500,34 +500,6 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun findTagEnd(text: String, startIndex: Int): Int {
-        var quote: Char? = null
-        var index = startIndex
-        while (index < text.length) {
-            val ch = text[index]
-            if (quote == null) {
-                if (ch == '\'' || ch == '"') {
-                    quote = ch
-                } else if (ch == '>') {
-                    return index
-                }
-            } else if (ch == quote) {
-                quote = null
-            }
-            index += 1
-        }
-        return -1
-    }
-
-    private fun parseXmlAttributes(tag: String): Map<String, String> {
-        val attrs = linkedMapOf<String, String>()
-        val attrPattern = Regex("""([A-Za-z0-9_:-]+)\s*=\s*(["'])(.*?)\2""")
-        attrPattern.findAll(tag).forEach { match ->
-            attrs[match.groupValues[1]] = match.groupValues[3]
-        }
-        return attrs
-    }
-
     private fun sanitizeInvalidXml(xml: String): String {
         var removedEntityRefs = 0
         val sanitizedEntities = Regex("""&#(x[0-9A-Fa-f]+|\d+);""").replace(xml) { match ->

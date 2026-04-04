@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.hyperisland">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!--
         超级岛广播权限（signature 级）。
         仅与 HyperIsland 使用相同签名的应用可获得此权限，
@@ -23,7 +22,6 @@
         android:label="HyperIsland"
         android:name=".HyperIslandApp"
         android:description="@string/module_description"
-        android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

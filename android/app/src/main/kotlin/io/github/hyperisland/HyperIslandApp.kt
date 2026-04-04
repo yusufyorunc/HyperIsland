@@ -6,6 +6,9 @@ import android.content.SharedPreferences
 import android.util.Log
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * 自定义 Application，负责将 Flutter 端写入的 SharedPreferences
@@ -43,7 +46,9 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
         apiVersion = service.apiVersion
         Log.d(TAG, "XposedService bound, API version: $apiVersion, syncing all prefs")
         syncAllToRemote(service)
-        synchronized(serviceReadyLock) { serviceReadyLock.notifyAll() }
+        serviceReadyLock.withLock {
+            serviceReadyCondition.signalAll()
+        }
     }
 
     override fun onServiceDied(service: XposedService) {
@@ -107,7 +112,8 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
         @Volatile private var serviceReady = false
         @Volatile private var apiVersion: Int = 0
-        private val serviceReadyLock = Object()
+        private val serviceReadyLock = ReentrantLock()
+        private val serviceReadyCondition = serviceReadyLock.newCondition()
 
         fun isReady(): Boolean = serviceReady
 
@@ -115,10 +121,13 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
         fun awaitReady(timeoutMs: Long = 1500): Boolean {
             if (isReady()) return true
-            synchronized(serviceReadyLock) {
+            serviceReadyLock.withLock {
                 if (!isReady()) {
-                    try { serviceReadyLock.wait(timeoutMs) }
-                    catch (_: InterruptedException) { }
+                    try {
+                        serviceReadyCondition.await(timeoutMs, TimeUnit.MILLISECONDS)
+                    } catch (_: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                    }
                 }
             }
             return isReady()

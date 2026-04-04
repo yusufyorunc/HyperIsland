@@ -17,6 +17,18 @@ interface IslandRenderer {
     fun render(context: Context, extras: Bundle, vm: IslandViewModel)
 }
 
+private inline fun mutateParamV2(
+    jsonParam: String,
+    mutation: (pv2: org.json.JSONObject) -> Unit,
+): String = try {
+    val json = org.json.JSONObject(jsonParam)
+    val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutation(pv2)
+    json.toString()
+} catch (_: Exception) {
+    jsonParam
+}
+
 // ── 共享工具函数 ──────────────────────────────────────────────────────────────
 
 /**
@@ -26,9 +38,7 @@ interface IslandRenderer {
  * 注意：仅处理按钮字段，不包含任何布局变换逻辑。
  */
 fun fixTextButtonJson(jsonParam: String): String =
-    try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutateParamV2(jsonParam) { pv2 ->
         val btns = pv2.optJSONArray("textButton")
         if (btns != null) {
             for (i in 0 until btns.length()) {
@@ -39,9 +49,6 @@ fun fixTextButtonJson(jsonParam: String): String =
                 btn.remove("actionIntentType")
             }
         }
-        json.toString()
-    } catch (_: Exception) {
-        jsonParam
     }
 
 /**
@@ -85,27 +92,28 @@ fun wrapLongTextJson(jsonParam: String): String =
 
 /** 注入 param_v2.updatable 字段。 */
 fun injectUpdatable(jsonParam: String, updatable: Boolean): String =
-    try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutateParamV2(jsonParam) { pv2 ->
         pv2.put("updatable", updatable)
-        json.toString()
-    } catch (_: Exception) {
-        jsonParam
     }
 
-/** 将 highlightColor 注入到 param_v2.param_island 子对象。 */
-fun injectHighlightColor(jsonParam: String, highlightColor: String?): String {
-    if (highlightColor == null) return jsonParam
-    return try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+/** 将 highlightColor / dismissIsland 注入到 param_v2.param_island 子对象。 */
+fun injectIslandAppearance(
+    jsonParam: String,
+    highlightColor: String?,
+    dismissIsland: Boolean = false,
+): String {
+    if (highlightColor == null && !dismissIsland) return jsonParam
+    return mutateParamV2(jsonParam) { pv2 ->
         val paramIsland = pv2.optJSONObject("param_island") ?: org.json.JSONObject()
-        paramIsland.put("highlightColor", highlightColor)
+        highlightColor?.let { paramIsland.put("highlightColor", it) }
+        if (dismissIsland) paramIsland.put("dismissIsland", true)
         pv2.put("param_island", paramIsland)
-        json.toString()
-    } catch (_: Exception) { jsonParam }
+    }
 }
+
+/** 兼容旧调用：仅注入 highlightColor。 */
+fun injectHighlightColor(jsonParam: String, highlightColor: String?): String =
+    injectIslandAppearance(jsonParam, highlightColor, dismissIsland = false)
 
 /**
  * 根据渲染器 ID 返回对应的 [IslandRenderer] 实例，未匹配时回退到默认渲染器。

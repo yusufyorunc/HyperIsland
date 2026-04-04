@@ -10,6 +10,8 @@ import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.moduleContext
+import io.github.hyperisland.xposed.resolveModeIconAutoNotif
+import io.github.hyperisland.xposed.resolveModeIconWithAppFallback
 import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.renderer.resolveRenderer
 import io.github.hyperisland.xposed.toRounded
@@ -127,19 +129,9 @@ object GenericDownloadIslandNotification : IslandTemplate {
                        else            android.R.drawable.stat_sys_download
         val fallback = Icon.createWithResource(context, iconRes).apply { setTint(tintColor) }
 
-        val islandIcon = when (data.iconMode) {
-            "notif_small" -> data.notifIcon ?: fallback
-            "notif_large" -> data.largeIcon ?: data.notifIcon ?: fallback
-            "app_icon"    -> data.appIconRaw ?: fallback
-            else          -> data.notifIcon ?: data.largeIcon ?: fallback
-        }.toRounded(context)
+        val islandIcon = data.resolveModeIconAutoNotif(data.iconMode, fallback).toRounded(context)
 
-        val focusIcon = when (data.focusIconMode) {
-            "notif_small" -> data.notifIcon ?: data.appIconRaw ?: fallback
-            "notif_large" -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallback
-            "app_icon"    -> data.appIconRaw ?: fallback
-            else          -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallback
-        }.toRounded(context)
+        val focusIcon = data.resolveModeIconWithAppFallback(data.focusIconMode, fallback).toRounded(context)
 
         return IslandViewModel(
             templateId        = TEMPLATE_ID,

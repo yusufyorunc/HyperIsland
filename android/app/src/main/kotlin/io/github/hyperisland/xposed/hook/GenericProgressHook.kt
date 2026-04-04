@@ -60,14 +60,6 @@ object GenericProgressHook {
         return value
     }
 
-    private fun resolveTriStateBoolean(global: Boolean, channelValue: String): Boolean {
-        return when (channelValue) {
-            "on" -> true
-            "off" -> false
-            else -> global
-        }
-    }
-
     private fun resolveTriOpt(channelValue: String, globalDefault: Boolean): String =
         when (channelValue) {
             "on"  -> "on"
