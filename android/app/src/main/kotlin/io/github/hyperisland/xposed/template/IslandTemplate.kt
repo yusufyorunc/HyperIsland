@@ -89,11 +89,11 @@ data class NotifData(
     val iconMode: String = "auto",
     /** 焦点图标来源（iconTextInfo）："auto" / "notif_small" / "notif_large" / "app_icon" */
     val focusIconMode: String = "auto",
-    /** 焦点通知（island 块）：“default” / “off” */
+    /** 焦点通知（island 块）："default" / "off" */
     val focusNotif: String = "default",
     /** 是否保留状态栏左上角小图标："default" / "on" / "off" */
     val preserveStatusBarSmallIcon: String = "default",
-    /** 初次自动展开 islandFirstFloat：“default” / “on” / “off” */
+    /** 初次自动展开 islandFirstFloat："default" / "on" / "off" */
     val firstFloat: String = "default",
     /** 更新时自动展开 enableFloat："default" / "on" / "off" */
     val enableFloatMode: String = "default",
@@ -107,4 +107,10 @@ data class NotifData(
     val contentIntent: android.app.PendingIntent? = null,
     /** 渲染器（样式）标识符，对应 ImageTextWithButtonsRenderer.RENDERER_ID 等。 */
     val renderer: String = "image_text_with_buttons_4",
+    /** 岛边框高亮颜色，十六进制字符串如 "#E040FB"，null 表示不设置（使用默认颜色）。 */
+    val highlightColor: String? = null,
+    /** 大岛左侧文本是否显示高亮颜色。 */
+    val showLeftHighlightColor: Boolean = false,
+    /** 大岛右侧文本是否显示高亮颜色。 */
+    val showRightHighlightColor: Boolean = false,
 )

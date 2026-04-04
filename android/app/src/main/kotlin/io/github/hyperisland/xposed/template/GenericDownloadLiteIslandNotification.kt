@@ -76,7 +76,7 @@ object DownloadLiteIslandNotification : IslandTemplate {
             else          -> data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallback
         }.toRounded(context)
 
-        return IslandViewModel(
+return IslandViewModel(
             templateId        = TEMPLATE_ID,
             leftTitle         = "",
             rightTitle        = "",
@@ -84,7 +84,6 @@ object DownloadLiteIslandNotification : IslandTemplate {
             focusContent      = data.subtitle.ifEmpty { data.title },
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
-            // 下载中：circularProgress=进度，右侧=进度环；完成/暂停：两者为 null/false，仅左侧图标
             circularProgress  = if (shouldShowProgress) safeProgress else null,
             showRightSide     = shouldShowProgress,
             actions           = data.actions,
@@ -97,6 +96,9 @@ object DownloadLiteIslandNotification : IslandTemplate {
             timeoutSecs       = data.islandTimeout,
             isOngoing         = data.isOngoing,
             showIslandIcon    = data.showIslandIcon == "on",
+            highlightColor    = data.highlightColor,
+            showLeftHighlightColor = data.showLeftHighlightColor,
+            showRightHighlightColor = data.showRightHighlightColor,
         )
     }
 }

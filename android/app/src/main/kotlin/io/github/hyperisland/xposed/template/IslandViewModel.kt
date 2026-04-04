@@ -50,4 +50,10 @@ data class IslandViewModel(
     val timeoutSecs: Int = 5,
     val isOngoing: Boolean = false,
     val showIslandIcon: Boolean = true,
+    /** 岛边框高亮颜色，十六进制字符串如 "#E040FB"，null 表示不设置。 */
+    val highlightColor: String? = null,
+    /** 大岛左侧文本是否显示高亮颜色。 */
+    val showLeftHighlightColor: Boolean = false,
+    /** 大岛右侧文本是否显示高亮颜色。 */
+    val showRightHighlightColor: Boolean = false,
 )

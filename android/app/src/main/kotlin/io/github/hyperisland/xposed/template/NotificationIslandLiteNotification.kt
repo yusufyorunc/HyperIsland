@@ -151,6 +151,9 @@ object NotificationIslandLiteNotification : IslandTemplate {
             timeoutSecs       = data.islandTimeout,
             isOngoing         = data.isOngoing,
             showIslandIcon    = data.showIslandIcon == "on",
+            highlightColor    = data.highlightColor,
+            showLeftHighlightColor = data.showLeftHighlightColor,
+            showRightHighlightColor = data.showRightHighlightColor,
         )
     }
 }

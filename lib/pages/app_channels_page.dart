@@ -204,6 +204,15 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
       'restore_lockscreen',
       widget.controller.setChannelRestoreLockscreen,
     );
+    queueExtra('highlight_color', widget.controller.setChannelHighlightColor);
+    queueExtra(
+      'show_left_highlight',
+      widget.controller.setChannelShowLeftHighlight,
+    );
+    queueExtra(
+      'show_right_highlight',
+      widget.controller.setChannelShowRightHighlight,
+    );
 
     if (templateChanged || extrasChanged) {
       setState(() {
@@ -475,6 +484,11 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                       marquee: extras['marquee'] ?? kTriOptDefault,
                       restoreLockscreen:
                           extras['restore_lockscreen'] ?? kTriOptDefault,
+                      highlightColor: extras['highlight_color'] ?? '',
+                      showLeftHighlight:
+                          extras['show_left_highlight'] ?? kTriOptOff,
+                      showRightHighlight:
+                          extras['show_right_highlight'] ?? kTriOptOff,
                       onToggle: (v) => _toggle(ch.id, v),
                       onSettingsApplied: (s) => _applyChannelSettings(ch.id, s),
                     );
@@ -583,6 +597,9 @@ class _ChannelTile extends StatelessWidget {
     required this.islandTimeout,
     required this.marquee,
     required this.restoreLockscreen,
+    required this.highlightColor,
+    required this.showLeftHighlight,
+    required this.showRightHighlight,
     required this.onToggle,
     required this.onSettingsApplied,
   });
@@ -607,6 +624,9 @@ class _ChannelTile extends StatelessWidget {
   final String islandTimeout;
   final String marquee;
   final String restoreLockscreen;
+  final String highlightColor;
+  final String showLeftHighlight;
+  final String showRightHighlight;
   final ValueChanged<bool> onToggle;
   final ValueChanged<Map<String, String?>> onSettingsApplied;
 
@@ -627,6 +647,9 @@ class _ChannelTile extends StatelessWidget {
         islandTimeout: islandTimeout,
         marquee: marquee,
         restoreLockscreen: restoreLockscreen,
+        highlightColor: highlightColor,
+        showLeftHighlight: showLeftHighlight,
+        showRightHighlight: showRightHighlight,
       ),
       templateLabels: templateLabels,
       rendererLabels: rendererLabels,

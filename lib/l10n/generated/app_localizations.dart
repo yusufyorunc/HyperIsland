@@ -1044,6 +1044,66 @@ abstract class AppLocalizations {
   /// **'秒'**
   String get seconds;
 
+  /// No description provided for @highlightColorLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'高亮颜色'**
+  String get highlightColorLabel;
+
+  /// No description provided for @highlightColorHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'#RRGGBB 格式，留空使用默认'**
+  String get highlightColorHint;
+
+  /// No description provided for @textHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'文本高亮'**
+  String get textHighlightLabel;
+
+  /// No description provided for @showLeftHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'左侧文本高亮'**
+  String get showLeftHighlightLabel;
+
+  /// No description provided for @showRightHighlightLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'右侧文本高亮'**
+  String get showRightHighlightLabel;
+
+  /// No description provided for @showLeftHighlightShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'左侧'**
+  String get showLeftHighlightShort;
+
+  /// No description provided for @showRightHighlightShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'右侧'**
+  String get showRightHighlightShort;
+
+  /// No description provided for @colorHue.
+  ///
+  /// In zh, this message translates to:
+  /// **'色相'**
+  String get colorHue;
+
+  /// No description provided for @colorSaturation.
+  ///
+  /// In zh, this message translates to:
+  /// **'饱和度'**
+  String get colorSaturation;
+
+  /// No description provided for @colorBrightness.
+  ///
+  /// In zh, this message translates to:
+  /// **'亮度'**
+  String get colorBrightness;
+
   /// No description provided for @onlyEnabledChannels.
   ///
   /// In zh, this message translates to:

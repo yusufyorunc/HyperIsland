@@ -94,6 +94,19 @@ fun injectUpdatable(jsonParam: String, updatable: Boolean): String =
         jsonParam
     }
 
+/** 将 highlightColor 注入到 param_v2.param_island 子对象。 */
+fun injectHighlightColor(jsonParam: String, highlightColor: String?): String {
+    if (highlightColor == null) return jsonParam
+    return try {
+        val json = org.json.JSONObject(jsonParam)
+        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+        val paramIsland = pv2.optJSONObject("param_island") ?: org.json.JSONObject()
+        paramIsland.put("highlightColor", highlightColor)
+        pv2.put("param_island", paramIsland)
+        json.toString()
+    } catch (_: Exception) { jsonParam }
+}
+
 /**
  * 根据渲染器 ID 返回对应的 [IslandRenderer] 实例，未匹配时回退到默认渲染器。
  * 新增渲染器只需在此处注册，所有模板无需修改。
