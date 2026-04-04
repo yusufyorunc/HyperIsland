@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/whitelist_controller.dart';
@@ -292,7 +290,6 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     final l10n = AppLocalizations.of(context)!;
     final channels = _channels ?? [];
     final allEnabled = _appEnabled && _enabledChannels.isEmpty;
-    final appIconSizePx = (32 * MediaQuery.devicePixelRatioOf(context)).round();
 
     return Scaffold(
       backgroundColor: cs.surface,
