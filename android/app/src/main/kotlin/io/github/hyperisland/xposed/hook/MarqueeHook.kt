@@ -17,13 +17,33 @@ object MarqueeHook {
 
     private const val TAG = "HyperIsland[MarqueeHook]"
 
-    private val hookedFactories = mutableSetOf<String>()
+    private fun normalizeText(text: String): String {
+        return text
+            .replace(Regex("[\\n\\r\\t\\u00A0\\u200B\\uFEFF]+"), "")
+            .replace(Regex(" +"), " ")
+            .trim()
+    }
+
     private val scrollerMap = WeakHashMap<TextView, MarqueeController>()
     private val observedViews = WeakHashMap<TextView, Boolean>()
+    private val islandMarqueeState = WeakHashMap<ViewGroup, Boolean>()
 
-    @Volatile var pendingMarqueeEnabled: Boolean = false
     @Volatile private var cachedSpeed: Int? = null
     @Volatile private var observerRegistered = false
+
+    private fun findBigIslandView(view: View): ViewGroup? {
+        var p = view.parent
+        while (p is ViewGroup) {
+            if (islandMarqueeState.containsKey(p)) return p
+            p = p.parent
+        }
+        return null
+    }
+
+    private fun isMarqueeEnabledFor(textView: TextView): Boolean {
+        val island = findBigIslandView(textView)
+        return island?.let { islandMarqueeState[it] } ?: false
+    }
 
     fun ensureObserver(context: android.content.Context, module: XposedModule) {
         if (observerRegistered) return
@@ -50,11 +70,12 @@ object MarqueeHook {
 
     fun startMarquee(textView: TextView) {
         val fullText = textView.text?.toString() ?: ""
-        if (fullText.isEmpty()) {
+        val cleanText = normalizeText(fullText)
+        if (cleanText.isEmpty()) {
             stopMarquee(textView)
             return
         }
-        val measuredW = textView.paint.measureText(fullText.replace(Regex("[\\n\\r\\t]+"), "").trim())
+        val measuredW = textView.paint.measureText(cleanText)
         val visibleW = resolveVisibleWidth(textView)
         val availableW = visibleW - textView.paddingLeft - textView.paddingRight
         val needMarquee = measuredW > availableW
@@ -71,7 +92,6 @@ object MarqueeHook {
 
     fun stopMarquee(textView: TextView) {
         scrollerMap.remove(textView)?.stop()
-        textView.scrollTo(0, 0)
     }
 
     private fun resolveVisibleWidth(view: View): Int {
@@ -84,51 +104,123 @@ object MarqueeHook {
         return if (visibleW == Int.MAX_VALUE) 0 else visibleW
     }
 
-    fun traverseAndApplyMarquee(view: View) {
+    fun traverseAndApplyMarquee(bigIslandView: ViewGroup, enabled: Boolean) {
+        islandMarqueeState[bigIslandView] = enabled
+        traverseInternal(bigIslandView, enabled)
+    }
+
+    private fun traverseInternal(view: View, enabled: Boolean) {
         if (view is TextView) {
-            if (observedViews.containsKey(view)) return
+            if (observedViews.containsKey(view)) {
+                if (enabled) startMarquee(view)
+                else stopMarquee(view)
+                return
+            }
             observedViews[view] = true
 
             view.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
-                startMarquee(v as TextView)
+                val tv = v as TextView
+                if (isMarqueeEnabledFor(tv)) startMarquee(tv)
+                else stopMarquee(tv)
             }
             view.addTextChangedListener(object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: android.text.Editable?) { startMarquee(view) }
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    if (isMarqueeEnabledFor(view)) startMarquee(view)
+                    else stopMarquee(view)
+                }
             })
-            startMarquee(view)
+            if (enabled) startMarquee(view)
+            else stopMarquee(view)
         } else if (view is ViewGroup) {
             view.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
                 override fun onChildViewAdded(parent: View?, child: View?) {
-                    child?.let { traverseAndApplyMarquee(it) }
+                    if (child is TextView) {
+                        traverseInternal(child, isMarqueeEnabledFor(child))
+                    } else if (child is ViewGroup) {
+                        traverseInternal(child, false)
+                    }
                 }
                 override fun onChildViewRemoved(parent: View?, child: View?) {
                     if (child is TextView) stopMarquee(child)
                 }
             })
             for (i in 0 until view.childCount) {
-                traverseAndApplyMarquee(view.getChildAt(i))
+                traverseInternal(view.getChildAt(i), enabled)
             }
         }
     }
 
     // ─── IXposedHookLoadPackage → init ────────────────────────────────────────
 
+    private var hookedContentView = false
+    private val targetPkg = java.util.Collections.synchronizedMap(java.util.WeakHashMap<View, String>())
+
     fun init(module: XposedModule, param: PackageLoadedParam) {
         module.log("$TAG: initializing for ${param.packageName}")
-        try {
-            val factoryClass = param.defaultClassLoader
-                .loadClass("miui.systemui.dynamicisland.template.IslandTemplateFactory")
-            doHookFactory(module, factoryClass)
-        } catch (_: ClassNotFoundException) {
-            hookDynamicClassLoaders(module, param)
-        } catch (e: Exception) {
-            module.log("$TAG: failed to inject: ${e.message}")
+        hookContentViewClasses(module, param.defaultClassLoader)
+        hookDynamicClassLoaders(module)
+    }
+
+    private fun hookContentViewClasses(module: XposedModule, classLoader: ClassLoader) {
+        if (hookedContentView) return
+        val classNames = arrayOf(
+            "miui.systemui.dynamicisland.window.content.DynamicIslandContentView",
+            "miui.systemui.dynamicisland.window.content.DynamicIslandContentFakeView"
+        )
+        for (className in classNames) {
+            try {
+                val clazz = classLoader.loadClass(className)
+                val updateMethod = clazz.declaredMethods.firstOrNull { it.name == "updateBigIslandView" }
+                if (updateMethod != null) {
+                    module.hook(updateMethod).intercept { chain ->
+                        val result = chain.proceed()
+                        val islandView = chain.thisObject as? ViewGroup
+                        val islandData = chain.args.getOrNull(0)
+                        var pkgName = ""
+                        try {
+                            if (islandData != null) {
+                                val getExtrasMethod = islandData.javaClass.getMethod("getExtras")
+                                val extras = getExtrasMethod.invoke(islandData) as? android.os.Bundle
+                                pkgName = extras?.getString("miui.pkg.name") ?: ""
+                            }
+                        } catch (_: Exception) {}
+                        if (pkgName.isNotEmpty()) {
+                            targetPkg[islandView!!] = pkgName
+                        } else if (islandView != null) {
+                            pkgName = targetPkg[islandView] ?: ""
+                        }
+                        if (pkgName.isNotEmpty() && islandView != null) {
+                            try {
+                                ensureObserver(islandView.context, module)
+                                val isOngoing = try {
+                                    islandData?.javaClass?.getMethod("isOngoing")?.invoke(islandData) as? Boolean ?: false
+                                } catch (_: Exception) { false }
+                                val enabled = if (isOngoing) {
+                                    false
+                                } else {
+                                    val marqueeRaw = ConfigManager.getString("pref_channel_marquee_$pkgName", "default")
+                                    val defaultMarquee = ConfigManager.getBoolean("pref_default_marquee", false)
+                                    when (marqueeRaw) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> defaultMarquee
+                                    }
+                                }
+                                traverseAndApplyMarquee(islandView, enabled)
+                            } catch (_: Exception) {}
+                        }
+                        result
+                    }
+                    hookedContentView = true
+                    module.log("$TAG: hooked updateBigIslandView on $className")
+                }
+            } catch (_: Exception) {}
         }
     }
 
-    private fun hookDynamicClassLoaders(module: XposedModule, param: PackageLoadedParam) {
+    private fun hookDynamicClassLoaders(module: XposedModule) {
         val classLoaders = arrayOf(
             "dalvik.system.BaseDexClassLoader",
             "dalvik.system.PathClassLoader",
@@ -143,50 +235,14 @@ object MarqueeHook {
                         module.hook(ctor).intercept { chain ->
                             val result = chain.proceed()
                             val cl = chain.thisObject as? ClassLoader
-                            if (cl != null) {
-                                try {
-                                    val factoryClass = cl.loadClass(
-                                        "miui.systemui.dynamicisland.template.IslandTemplateFactory"
-                                    )
-                                    doHookFactory(module, factoryClass)
-                                } catch (_: ClassNotFoundException) {
-                                } catch (_: Exception) {}
+                            if (cl != null && !hookedContentView) {
+                                hookContentViewClasses(module, cl)
                             }
                             result
                         }
                     } catch (_: Exception) {}
                 }
             } catch (_: Exception) {}
-        }
-    }
-
-    @Synchronized
-    private fun doHookFactory(module: XposedModule, factoryClass: Class<*>) {
-        try {
-            val key = "${factoryClass.name}@${System.identityHashCode(factoryClass.classLoader)}"
-            if (!hookedFactories.add(key)) return
-
-            val targetMethod = factoryClass.declaredMethods
-                .firstOrNull { it.name == "createBigIslandTemplateView" }
-
-            if (targetMethod != null) {
-                module.hook(targetMethod).intercept { chain ->
-                    val result = chain.proceed()
-                    val bigIslandView = result as? ViewGroup
-                    if (bigIslandView != null) {
-                        ensureObserver(bigIslandView.context, module)
-                        if (pendingMarqueeEnabled) {
-                            traverseAndApplyMarquee(bigIslandView)
-                        }
-                    }
-                    result
-                }
-                module.log("$TAG: hooked ${targetMethod.name} on ${factoryClass.name}")
-            } else {
-                module.log("$TAG: createBigIslandTemplateView not found in ${factoryClass.name}")
-            }
-        } catch (e: Exception) {
-            module.log("$TAG: doHookFactory error: ${e.message}")
         }
     }
 
@@ -211,7 +267,7 @@ object MarqueeHook {
         private var currentText = ""
 
         fun start() {
-            val textNow = view.text.toString()
+            val textNow = normalizeText(view.text.toString())
             if (isRunning && currentText == textNow) return
             currentText = textNow
             isRunning = true
@@ -223,14 +279,13 @@ object MarqueeHook {
         }
 
         fun stop() {
-            if (!isRunning) return
             isRunning = false
             choreographer.removeFrameCallback(this)
             view.scrollTo(0, 0)
         }
 
         private fun getRealMaxScroll(): Float {
-            val textWidth = view.paint.measureText(currentText.replace(Regex("[\\n\\r\\t]+"), "").trim())
+            val textWidth = view.paint.measureText(currentText)
             var visibleW = if (view.width > 0) view.width else Int.MAX_VALUE
             var p = view.parent
             while (p is ViewGroup) {

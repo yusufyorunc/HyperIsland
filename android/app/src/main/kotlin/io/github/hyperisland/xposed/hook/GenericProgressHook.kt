@@ -188,8 +188,6 @@ object GenericProgressHook {
             if (pkg == "com.android.systemui" &&
                 sbn.notification?.channelId == IslandDispatcher.CHANNEL_ID) return
 
-            MarqueeHook.pendingMarqueeEnabled = false
-
             val context = getContext(classLoader) ?: return
             ensureObserver(context, module)
 
@@ -290,11 +288,6 @@ object GenericProgressHook {
                 "focus_icon:$pkg/$channelId", "pref_channel_focus_icon_${pkg}_$channelId", "auto"
             )
             val isOngoing = (notif.flags and Notification.FLAG_ONGOING_EVENT) != 0
-            val marqueeEnabled = !isOngoing && resolveTriStateBoolean(
-                defaultMarquee,
-                loadChannelStringSetting("marquee:$pkg/$channelId", "pref_channel_marquee_${pkg}_$channelId", "default")
-            )
-            MarqueeHook.pendingMarqueeEnabled = marqueeEnabled
             val renderer = loadChannelStringSetting(
                 "renderer:$pkg/$channelId", "pref_channel_renderer_${pkg}_$channelId", "image_text_with_buttons_4"
             )
