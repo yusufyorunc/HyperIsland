@@ -47,3 +47,4 @@ app.*.map.json
 release.jks
 /example/
 opencode.json
+/.workbuddy
