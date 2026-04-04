@@ -388,6 +388,11 @@
   "aiPromptInUserSubtitle": "Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse prompt kullanıcı mesajına eklenir",
   "aiTimeoutTitle": "AI Yanıt Zaman Aşımı",
   "aiTimeoutLabel": "AI Yanıt Zaman Aşımı",
+  "@aiTimeoutLabel": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "aiTemperatureTitle": "Örnekleme Sıcaklığı",
   "aiTemperatureSubtitle": "Yanıtların rastgeleliğini kontrol eder. 0 daha kesin, 1 daha yaratıcıdır",
   "aiMaxTokensTitle": "Maksimum Token",
