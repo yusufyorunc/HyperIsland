@@ -34,13 +34,16 @@ object NotificationIslandNotification : IslandTemplate {
     override val id = TEMPLATE_ID
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
+        extras.remove("hyperisland_dispatched_proxy")
         if (data.focusNotif == "off") {
             injectViaDispatcher(context, data)
+            extras.putBoolean("hyperisland_dispatched_proxy", true)
             return
         }
         try {
             val vm = process(context, data)
             resolveRenderer(data.renderer).render(context, extras, vm)
+            extras.putBoolean("hyperisland_dispatched_proxy", false)
             //ConfigManager.module()?.log("$TAG: injected — ${data.title} | left=${vm.leftTitle} | right=${vm.rightTitle} | buttons=${data.actions.size} | isOngoing=${data.isOngoing}")
         } catch (e: Exception) {
             logError("$TAG: injection error: ${e.message}")

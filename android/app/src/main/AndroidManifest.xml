@@ -71,7 +71,7 @@
         <receiver
             android:name=".xposed.DownloadControlReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="io.github.hyperisland.DOWNLOAD_CONTROL" />
             </intent-filter>

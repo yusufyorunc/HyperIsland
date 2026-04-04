@@ -94,7 +94,7 @@ object DownloadHook {
             val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
             val channelId = notif.channelId ?: ""
             module.log("$TAG: [RAW/Notify] ch=$channelId | title=$title | text=$text")
-            if (!isDownloadNotification(title, text, extras) && channelId.isEmpty()) return
+            if (!isDownloadNotification(title, text, extras)) return
             val context = getContext(classLoader) ?: return
             val mc = context.moduleContext()
 

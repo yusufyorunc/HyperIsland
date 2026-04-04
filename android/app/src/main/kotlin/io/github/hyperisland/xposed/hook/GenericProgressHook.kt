@@ -35,6 +35,7 @@ object GenericProgressHook {
 
     private val lastProgressCache = mutableMapOf<String, Int>()
     private val trackedForCancel = mutableMapOf<String, Int>()
+    @Volatile private var activeDispatcherSourceKey: String? = null
 
     fun ensureObserver(context: android.content.Context, module: XposedModule) {
         if (observerRegistered) return
@@ -168,7 +169,16 @@ object GenericProgressHook {
     ) {
         sbn ?: return
         val key = "${sbn.packageName}#${sbn.id}"
-        val proxyId = trackedForCancel.remove(key) ?: return
+        lastProgressCache.remove(key)
+
+        val wasActive = activeDispatcherSourceKey == key
+        val proxyId = trackedForCancel.remove(key)
+        if (!wasActive || proxyId == null) {
+            if (wasActive) activeDispatcherSourceKey = null
+            return
+        }
+
+        activeDispatcherSourceKey = null
         val context = getContext(classLoader) ?: return
         IslandDispatcher.cancel(context, proxyId)
     }
@@ -221,7 +231,11 @@ object GenericProgressHook {
                 val progressRaw = extras.getInt(Notification.EXTRA_PROGRESS, -1)
                 if (progressRaw < 0) return
                 progressPercent = (progressRaw * 100 / progressMax).coerceIn(0, 100)
-                if (progressPercent in 0..99) lastProgressCache[cacheKey] = progressPercent
+                if (progressPercent in 0..99) {
+                    lastProgressCache[cacheKey] = progressPercent
+                } else {
+                    lastProgressCache.remove(cacheKey)
+                }
             } else {
                 progressPercent = lastProgressCache[cacheKey] ?: -1
             }
@@ -333,7 +347,18 @@ object GenericProgressHook {
             )
 
             extras.putBoolean("hyperisland_generic_processed", true)
-            trackedForCancel["$pkg#${sbn.id}"] = IslandDispatcher.NOTIF_ID
+
+            val sourceKey = "$pkg#${sbn.id}"
+            val dispatchedProxy = extras.getBoolean("hyperisland_dispatched_proxy", false)
+            if (dispatchedProxy) {
+                trackedForCancel[sourceKey] = IslandDispatcher.NOTIF_ID
+                activeDispatcherSourceKey = sourceKey
+            } else {
+                trackedForCancel.remove(sourceKey)
+                if (activeDispatcherSourceKey == sourceKey) {
+                    activeDispatcherSourceKey = null
+                }
+            }
 
         } catch (e: Throwable) {
             module.log("$TAG: handleSbn error: ${e.message}")

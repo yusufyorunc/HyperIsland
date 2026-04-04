@@ -49,6 +49,7 @@ object AINotificationIslandNotification : IslandTemplate {
     private val executor = Executors.newCachedThreadPool()
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
+        extras.remove("hyperisland_dispatched_proxy")
         val aiConfig = loadAiConfig(context)
         val aiText = if (aiConfig.enabled && aiConfig.url.isNotEmpty()) {
             fetchAiText(aiConfig, data)
@@ -64,11 +65,13 @@ object AINotificationIslandNotification : IslandTemplate {
 
         if (data.focusNotif == "off") {
             injectViaDispatcher(context, data, leftText, rightText)
+            extras.putBoolean("hyperisland_dispatched_proxy", true)
             return
         }
         try {
             val vm = process(context, data, leftText, rightText)
             resolveRenderer(data.renderer).render(context, extras, vm)
+            extras.putBoolean("hyperisland_dispatched_proxy", false)
             //ConfigManager.module()?.log("$TAG: injected — title=${data.title} | left=$leftText | right=$rightText | notifId=${data.notifId}")
         } catch (e: Exception) {
             logError("$TAG: injection error: ${e.message}")

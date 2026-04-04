@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import io.github.hyperisland.R
 import io.github.libxposed.api.XposedModule
+import java.util.UUID
 
 /**
  * 进程内下载控制器。
@@ -27,6 +28,7 @@ object InProcessController {
     private const val ACTION          = "io.github.hyperisland.INTERNAL_CTRL"
     private const val EXTRA_CMD       = "cmd"
     private const val EXTRA_ID        = "dlId"
+    private const val EXTRA_TOKEN     = "token"
     private const val EXTRA_NOTIF_ID  = "notifId"
     private const val EXTRA_NOTIF_TAG = "notifTag"
 
@@ -48,6 +50,7 @@ object InProcessController {
     @Volatile private var resumeNotificationEnabled = true
     @Volatile var useHookAppIconEnabled = true
     @Volatile private var module: XposedModule? = null
+    @Volatile private var commandToken: String = ""
 
     data class DownloadNotifSnapshot(
         val notifId: Int,
@@ -73,6 +76,7 @@ object InProcessController {
         if (registered) return
         val appCtx = context.applicationContext ?: context
         module = xposedModule
+        ensureCommandToken()
 
         ConfigManager.init(xposedModule)
         loadSettings()
@@ -80,6 +84,10 @@ object InProcessController {
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
+                if (!isTrustedControlIntent(intent)) {
+                    module?.logWarn("$TAG: ignored unauthorized control broadcast")
+                    return
+                }
                 val id = intent.getLongExtra(EXTRA_ID, -1L)
                 val cmd = intent.getStringExtra(EXTRA_CMD)
                 when (cmd) {
@@ -112,7 +120,7 @@ object InProcessController {
 
         val filter = IntentFilter(ACTION)
         if (Build.VERSION.SDK_INT >= 33) {
-            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             appCtx.registerReceiver(receiver, filter)
@@ -159,10 +167,13 @@ object InProcessController {
     fun resumeAllIntent(context: Context) = makeIntent(context, CMD_RESUME, -1L, 9000003)
 
     fun dismissIntent(context: Context, notifId: Int, notifTag: String?): PendingIntent {
+        val token = ensureCommandToken()
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, CMD_DISMISS)
             putExtra(EXTRA_NOTIF_ID, notifId)
             if (notifTag != null) putExtra(EXTRA_NOTIF_TAG, notifTag)
+            putExtra(EXTRA_TOKEN, token)
         }
         return PendingIntent.getBroadcast(
             context, notifId + 100000, intent,
@@ -173,14 +184,29 @@ object InProcessController {
     private fun reqCode(id: Long, offset: Int) = ((id and 0xFFFFF) * 3 + offset).toInt()
 
     private fun makeIntent(context: Context, cmd: String, downloadId: Long, requestCode: Int): PendingIntent {
+        val token = ensureCommandToken()
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, cmd)
             putExtra(EXTRA_ID, downloadId)
+            putExtra(EXTRA_TOKEN, token)
         }
         return PendingIntent.getBroadcast(
             context, requestCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    private fun ensureCommandToken(): String {
+        if (commandToken.isBlank()) {
+            commandToken = UUID.randomUUID().toString()
+        }
+        return commandToken
+    }
+
+    private fun isTrustedControlIntent(intent: Intent): Boolean {
+        val token = intent.getStringExtra(EXTRA_TOKEN)
+        return token != null && token.isNotBlank() && token == commandToken
     }
 
     private fun pausedByAppValues(): ContentValues = ContentValues().apply {
@@ -211,38 +237,56 @@ object InProcessController {
 
     // ── 控制逻辑 ──────────────────────────────────────────────────────────────
 
-    private fun pause(context: Context, downloadId: Long) {
-        val realIds = queryActiveIds(context)
-        val idsToTry = (listOf(downloadId) + realIds).distinct()
-        val values = pausedByAppValues()
-        for (id in idsToTry) {
-            for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
-                try {
-                    val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
-                    if (rows > 0) return
-                } catch (e: Exception) {
-                    module?.logError("$TAG: pause id=$id uri=$uri err=${e.message}")
-                }
+    private fun updateDownloadById(context: Context, id: Long, values: ContentValues): Boolean {
+        for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
+            try {
+                val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
+                if (rows > 0) return true
+            } catch (e: Exception) {
+                module?.logError("$TAG: update id=$id uri=$uri err=${e.message}")
             }
         }
-        pauseAll(context)
+        return false
+    }
+
+    private fun pause(context: Context, downloadId: Long) {
+        if (downloadId <= 0L) {
+            pauseAll(context)
+            return
+        }
+        val values = pausedByAppValues()
+        if (updateDownloadById(context, downloadId, values)) return
+
+        val fallbackIds = queryActiveIds(context).filter { it != downloadId }
+        if (fallbackIds.size == 1) {
+            val remappedId = fallbackIds.first()
+            if (updateDownloadById(context, remappedId, values)) {
+                module?.logWarn("$TAG: pause remapped id=$downloadId -> $remappedId")
+                return
+            }
+        }
+
+        module?.logWarn("$TAG: pause target not found id=$downloadId")
     }
 
     private fun resume(context: Context, downloadId: Long) {
-        val realIds = queryPausedIds(context)
-        val idsToTry = (listOf(downloadId) + realIds).distinct()
+        if (downloadId <= 0L) {
+            resumeAll(context)
+            return
+        }
         val values = runningValues()
-        for (id in idsToTry) {
-            for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
-                try {
-                    val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
-                    if (rows > 0) return
-                } catch (e: Exception) {
-                    module?.logError("$TAG: resume id=$id uri=$uri err=${e.message}")
-                }
+        if (updateDownloadById(context, downloadId, values)) return
+
+        val fallbackIds = queryPausedIds(context).filter { it != downloadId }
+        if (fallbackIds.size == 1) {
+            val remappedId = fallbackIds.first()
+            if (updateDownloadById(context, remappedId, values)) {
+                module?.logWarn("$TAG: resume remapped id=$downloadId -> $remappedId")
+                return
             }
         }
-        resumeAll(context)
+
+        module?.logWarn("$TAG: resume target not found id=$downloadId")
     }
 
     private fun queryActiveIds(context: Context): List<Long> {
