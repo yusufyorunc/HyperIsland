@@ -58,6 +58,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sponsorAuthor => '赞助作者';
 
   @override
+  String get documentation => '文档';
+
+  @override
   String get restartScope => '重启作用域';
 
   @override

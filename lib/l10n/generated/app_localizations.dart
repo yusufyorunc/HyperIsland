@@ -192,6 +192,12 @@ abstract class AppLocalizations {
   /// **'赞助作者'**
   String get sponsorAuthor;
 
+  /// No description provided for @documentation.
+  ///
+  /// In zh, this message translates to:
+  /// **'文档'**
+  String get documentation;
+
   /// No description provided for @restartScope.
   ///
   /// In zh, this message translates to:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/settings_controller.dart';
 import '../controllers/update_controller.dart';
@@ -199,6 +200,12 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: cs.surface,
             centerTitle: false,
             actions: [
+              IconButton(
+                tooltip: l10n.documentation,
+                icon: const Icon(Icons.menu_book_outlined),
+                onPressed: () =>
+                    launchUrl(Uri.parse('https://hyperisland.1812z.top/')),
+              ),
               IconButton(
                 tooltip: l10n.sponsorAuthor,
                 icon: const Icon(Icons.favorite_border),

@@ -58,6 +58,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sponsorAuthor => 'スポンサー';
 
   @override
+  String get documentation => '文档';
+
+  @override
   String get restartScope => 'スコープを再起動';
 
   @override

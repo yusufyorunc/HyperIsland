@@ -58,6 +58,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sponsorAuthor => 'Sponsor Ol';
 
   @override
+  String get documentation => '文档';
+
+  @override
   String get restartScope => 'Etki Alanını Yeniden Başlat';
 
   @override
