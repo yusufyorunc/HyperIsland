@@ -93,22 +93,14 @@
       "speed": { "type": "int" }
     }
   },
-  "bigIslandMinWidthTitle": "Super Island Min Width",
-  "bigIslandMinWidthLabel": "{width} dp",
-  "@bigIslandMinWidthLabel": {
-    "placeholders": {
-      "width": { "type": "int" }
-    }
-  },
-  "bigIslandMinWidthSubtitle": "Minimum width for super island display",
-  "bigIslandMaxWidthTitle": "Super Island Max Width",
+  "bigIslandMaxWidthTitle": "Modify Super Island Max Width",
   "bigIslandMaxWidthLabel": "{width} dp",
   "@bigIslandMaxWidthLabel": {
     "placeholders": {
       "width": { "type": "int" }
     }
   },
-  "bigIslandMaxWidthSubtitle": "Maximum width for super island display",
+  "bigIslandMaxWidthSubtitle": "Enable to modify the maximum width of super island",
   "themeModeTitle": "Color mode",
   "themeModeSystem": "Follow system",
   "themeModeLight": "Light",

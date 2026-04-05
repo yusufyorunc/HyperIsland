@@ -110,17 +110,7 @@
       }
     }
   },
-  "bigIslandMinWidthTitle": "超级岛最小宽度",
-  "bigIslandMinWidthLabel": "{width} dp",
-  "@bigIslandMinWidthLabel": {
-    "placeholders": {
-      "width": {
-        "type": "int"
-      }
-    }
-  },
-  "bigIslandMinWidthSubtitle": "超级岛显示的最小宽度",
-  "bigIslandMaxWidthTitle": "超级岛最大宽度",
+  "bigIslandMaxWidthTitle": "修改超级岛最大宽度",
   "bigIslandMaxWidthLabel": "{width} dp",
   "@bigIslandMaxWidthLabel": {
     "placeholders": {
@@ -129,7 +119,7 @@
       }
     }
   },
-  "bigIslandMaxWidthSubtitle": "超级岛显示的最大宽度",
+  "bigIslandMaxWidthSubtitle": "开启后修改超级岛的最大宽度",
   "themeModeTitle": "颜色模式",
   "themeModeSystem": "跟随系统",
   "themeModeLight": "浅色",

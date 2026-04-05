@@ -1,9 +1,6 @@
 {
   "ja": [
     "documentation",
-    "bigIslandMinWidthTitle",
-    "bigIslandMinWidthLabel",
-    "bigIslandMinWidthSubtitle",
     "bigIslandMaxWidthTitle",
     "bigIslandMaxWidthLabel",
     "bigIslandMaxWidthSubtitle"
@@ -11,9 +8,6 @@
 
   "tr": [
     "documentation",
-    "bigIslandMinWidthTitle",
-    "bigIslandMinWidthLabel",
-    "bigIslandMinWidthSubtitle",
     "bigIslandMaxWidthTitle",
     "bigIslandMaxWidthLabel",
     "bigIslandMaxWidthSubtitle"

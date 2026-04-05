@@ -227,18 +227,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bigIslandMinWidthTitle => '超级岛最小宽度';
-
-  @override
-  String bigIslandMinWidthLabel(int width) {
-    return '$width dp';
-  }
-
-  @override
-  String get bigIslandMinWidthSubtitle => '超级岛显示的最小宽度';
-
-  @override
-  String get bigIslandMaxWidthTitle => '超级岛最大宽度';
+  String get bigIslandMaxWidthTitle => '修改超级岛最大宽度';
 
   @override
   String bigIslandMaxWidthLabel(int width) {
@@ -246,7 +235,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bigIslandMaxWidthSubtitle => '超级岛显示的最大宽度';
+  String get bigIslandMaxWidthSubtitle => '开启后修改超级岛的最大宽度';
 
   @override
   String get themeModeTitle => 'Tema';

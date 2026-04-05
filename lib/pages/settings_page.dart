@@ -23,7 +23,6 @@ class _SettingsPageState extends State<SettingsPage> {
   final _ctrl = SettingsController.instance;
   bool _checkingUpdate = false;
   late int _marqueeSpeedDraft;
-  late int _bigIslandMinWidthDraft;
   late int _bigIslandMaxWidthDraft;
   late int _uiStateHash;
 
@@ -44,7 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _ctrl.defaultShowIslandIcon,
     _ctrl.roundIcon,
     _ctrl.marqueeSpeed,
-    _ctrl.bigIslandMinWidth,
+    _ctrl.bigIslandMaxWidthEnabled,
     _ctrl.bigIslandMaxWidth,
     _ctrl.themeMode,
     _ctrl.locale,
@@ -57,17 +56,14 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     final nextHash = _buildUiStateHash();
     final nextMarquee = _ctrl.marqueeSpeed;
-    final nextMinWidth = _ctrl.bigIslandMinWidth;
     final nextMaxWidth = _ctrl.bigIslandMaxWidth;
     if (nextHash == _uiStateHash &&
         nextMarquee == _marqueeSpeedDraft &&
-        nextMinWidth == _bigIslandMinWidthDraft &&
         nextMaxWidth == _bigIslandMaxWidthDraft)
       return;
     setState(() {
       _uiStateHash = nextHash;
       _marqueeSpeedDraft = nextMarquee;
-      _bigIslandMinWidthDraft = nextMinWidth;
       _bigIslandMaxWidthDraft = nextMaxWidth;
     });
   }
@@ -76,7 +72,6 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _marqueeSpeedDraft = _ctrl.marqueeSpeed;
-    _bigIslandMinWidthDraft = _ctrl.bigIslandMinWidth;
     _bigIslandMaxWidthDraft = _ctrl.bigIslandMaxWidth;
     _uiStateHash = _buildUiStateHash();
     _ctrl.addListener(_onChanged);
@@ -130,12 +125,6 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _marqueeSpeedDraft = next);
   }
 
-  void _onBigIslandMinWidthChanged(double value) {
-    final next = value.round();
-    if (_bigIslandMinWidthDraft == next) return;
-    setState(() => _bigIslandMinWidthDraft = next);
-  }
-
   void _onBigIslandMaxWidthChanged(double value) {
     final next = value.round();
     if (_bigIslandMaxWidthDraft == next) return;
@@ -147,13 +136,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final next = value.round();
     if (_ctrl.marqueeSpeed == next) return;
     await _ctrl.setMarqueeSpeed(next);
-  }
-
-  Future<void> _persistBigIslandMinWidth(double value) async {
-    await InteractionHaptics.sliderTick();
-    final next = value.round();
-    if (_ctrl.bigIslandMinWidth == next) return;
-    await _ctrl.setBigIslandMinWidth(next);
   }
 
   Future<void> _persistBigIslandMaxWidth(double value) async {
@@ -813,131 +795,77 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
+                          SwitchListTile(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 2,
                             ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l10n.bigIslandMinWidthTitle,
-                                    style: titleStyle,
-                                  ),
-                                ),
-                                Text(
-                                  l10n.bigIslandMinWidthLabel(
-                                    _bigIslandMinWidthDraft,
-                                  ),
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                if (_bigIslandMinWidthDraft != 120)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.refresh, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () async {
-                                        await InteractionHaptics.button();
-                                        setState(
-                                          () => _bigIslandMinWidthDraft = 120,
-                                        );
-                                        _ctrl.setBigIslandMinWidth(120);
-                                      },
-                                    ),
-                                  ),
-                              ],
+                            title: Text(
+                              l10n.bigIslandMaxWidthTitle,
+                              style: titleStyle,
                             ),
-                            subtitle: Row(
-                              children: [
-                                Text(
-                                  l10n.bigIslandMinWidthSubtitle,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                Expanded(
-                                  child: SliderTheme(
-                                    data: ModernSliderTheme.theme(context),
-                                    child: Slider(
-                                      value: _bigIslandMinWidthDraft.toDouble(),
-                                      min: 60,
-                                      max: 300,
-                                      divisions: 24,
-                                      onChanged: _onBigIslandMinWidthChanged,
-                                      onChangeEnd: _persistBigIslandMinWidth,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            subtitle: Text(
+                              l10n.bigIslandMaxWidthSubtitle,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                             ),
+                            value: _ctrl.bigIslandMaxWidthEnabled,
+                            onChanged: (value) async {
+                              await InteractionHaptics.toggle();
+                              await _ctrl.setBigIslandMaxWidthEnabled(value);
+                            },
                           ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 2,
-                            ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l10n.bigIslandMaxWidthTitle,
-                                    style: titleStyle,
+                          if (_ctrl.bigIslandMaxWidthEnabled)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    l10n.bigIslandMaxWidthLabel(
+                                      _bigIslandMaxWidthDraft,
+                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: cs.onSurfaceVariant),
                                   ),
-                                ),
-                                Text(
-                                  l10n.bigIslandMaxWidthLabel(
-                                    _bigIslandMaxWidthDraft,
-                                  ),
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                if (_bigIslandMaxWidthDraft != 400)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.refresh, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () async {
-                                        await InteractionHaptics.button();
-                                        setState(
-                                          () => _bigIslandMaxWidthDraft = 400,
-                                        );
-                                        _ctrl.setBigIslandMaxWidth(400);
-                                      },
+                                  if (_bigIslandMaxWidthDraft != 600)
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.refresh,
+                                          size: 18,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () async {
+                                          await InteractionHaptics.button();
+                                          setState(
+                                            () => _bigIslandMaxWidthDraft = 600,
+                                          );
+                                          _ctrl.setBigIslandMaxWidth(600);
+                                        },
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: SliderTheme(
+                                      data: ModernSliderTheme.theme(context),
+                                      child: Slider(
+                                        value: _bigIslandMaxWidthDraft
+                                            .toDouble(),
+                                        min: 500,
+                                        max: 1000,
+                                        divisions: 54,
+                                        onChanged: _onBigIslandMaxWidthChanged,
+                                        onChangeEnd: _persistBigIslandMaxWidth,
+                                      ),
                                     ),
                                   ),
-                              ],
+                                ],
+                              ),
                             ),
-                            subtitle: Row(
-                              children: [
-                                Text(
-                                  l10n.bigIslandMaxWidthSubtitle,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                Expanded(
-                                  child: SliderTheme(
-                                    data: ModernSliderTheme.theme(context),
-                                    child: Slider(
-                                      value: _bigIslandMaxWidthDraft.toDouble(),
-                                      min: 60,
-                                      max: 600,
-                                      divisions: 54,
-                                      onChanged: _onBigIslandMaxWidthChanged,
-                                      onChangeEnd: _persistBigIslandMaxWidth,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(
