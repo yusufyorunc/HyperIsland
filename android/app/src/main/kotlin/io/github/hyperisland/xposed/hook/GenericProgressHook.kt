@@ -296,7 +296,7 @@ object GenericProgressHook {
                 extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
             ).firstNotNullOfOrNull { it?.toString()?.takeIf { s -> s.isNotEmpty() } } ?: ""
 
-            val actions: List<Notification.Action> = notif.actions?.take(2) ?: emptyList()
+            val actions: List<Notification.Action> = notif.actions?.toList() ?: emptyList()
 
             val template = loadChannelTemplate(pkg, channelId)
 
