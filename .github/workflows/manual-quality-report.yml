@@ -42,7 +42,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4.1.0
         with:
-          gradle-version: wrapper
+          gradle-version: current
 
       - name: Prepare report directories
         run: |
@@ -59,16 +59,17 @@ jobs:
           VARIANT="${{ inputs.android_lint_variant }}"
           TASK=":app:lint${VARIANT^}"
           echo "Running $TASK"
+          echo "Using android.enableJetifier=false for CI lint to avoid Jetifier class-version transform failures"
 
           if [ -f "android/gradlew" ]; then
             chmod +x android/gradlew
             (
               cd android
-              ./gradlew "$TASK" --stacktrace
+              ./gradlew "$TASK" --stacktrace --no-daemon -Pandroid.enableJetifier=false
             ) | tee ci-report/raw/gradle-lint.log
           else
             echo "android/gradlew not found, falling back to system gradle"
-            gradle -p android "$TASK" --stacktrace | tee ci-report/raw/gradle-lint.log
+            gradle -p android "$TASK" --stacktrace --no-daemon -Pandroid.enableJetifier=false | tee ci-report/raw/gradle-lint.log
           fi
 
       - name: Collect Android lint reports
@@ -84,7 +85,7 @@ jobs:
         run: |
           cat > qodana.yaml << 'EOF'
           version: "1.0"
-          linter: qodana-android
+          linter: qodana-jvm-community
           EOF
 
       - name: Run Qodana scan
