@@ -65,20 +65,31 @@ jobs:
             chmod +x android/gradlew
             (
               cd android
-              ./gradlew "$TASK" --stacktrace --no-daemon -Pandroid.enableJetifier=false
+              ./gradlew "$TASK" --stacktrace --no-daemon -Dorg.gradle.vfs.watch=false -Pandroid.enableJetifier=false
             ) | tee ci-report/raw/gradle-lint.log
           else
             echo "android/gradlew not found, falling back to system gradle"
-            gradle -p android "$TASK" --stacktrace --no-daemon -Pandroid.enableJetifier=false | tee ci-report/raw/gradle-lint.log
+            gradle -p android "$TASK" --stacktrace --no-daemon -Dorg.gradle.vfs.watch=false -Pandroid.enableJetifier=false | tee ci-report/raw/gradle-lint.log
           fi
 
       - name: Collect Android lint reports
         if: always()
         run: |
           mkdir -p ci-report/raw/android-lint-reports
-          if [ -d "android/app/build/reports" ]; then
-            cp -R android/app/build/reports/. ci-report/raw/android-lint-reports/
-          fi
+          mkdir -p ci-report/raw/android-lint-text
+
+          # Flutter/Gradle output paths differ by plugin/tooling version.
+          for report_dir in "android/app/build/reports" "build/app/reports"; do
+            if [ -d "$report_dir" ]; then
+              cp -R "$report_dir"/. ci-report/raw/android-lint-reports/
+            fi
+          done
+
+          for text_dir in "android/app/build/intermediates/lint_intermediate_text_report" "build/app/intermediates/lint_intermediate_text_report"; do
+            if [ -d "$text_dir" ]; then
+              cp -R "$text_dir"/. ci-report/raw/android-lint-text/
+            fi
+          done
 
       - name: Prepare Qodana config
         if: ${{ inputs.run_qodana }}
@@ -113,6 +124,7 @@ jobs:
           import json
           import os
           import pathlib
+          import re
           import xml.etree.ElementTree as ET
 
           root = pathlib.Path(".")
@@ -139,6 +151,12 @@ jobs:
           md.append("## Android Lint")
           md.append("")
           lint_xml_candidates = sorted((raw_dir / "android-lint-reports").rglob("lint-results-*.xml"))
+          lint_html_candidates = sorted((raw_dir / "android-lint-reports").rglob("lint-results-*.html"))
+          lint_txt_candidates = sorted((raw_dir / "android-lint-text").rglob("lint-results-*.txt"))
+          if not lint_txt_candidates:
+              lint_txt_candidates = sorted((raw_dir / "android-lint-reports").rglob("lint-results-*.txt"))
+
+          parsed_from_log = False
           if lint_xml_candidates:
               lint_xml = lint_xml_candidates[0]
               try:
@@ -159,7 +177,34 @@ jobs:
               except Exception as ex:
                   md.append(f"- Lint XML parse failed: {ex}")
           else:
-              md.append("- No lint XML report found.")
+              md.append("- No lint XML report found; using log/text fallback.")
+
+          if lint_html_candidates:
+              md.append(f"- HTML report: `{lint_html_candidates[0].as_posix()}`")
+
+          if lint_txt_candidates:
+              md.append(f"- Text report: `{lint_txt_candidates[0].as_posix()}`")
+
+          raw_lint_log = raw_dir / "gradle-lint.log"
+          if raw_lint_log.exists():
+              log_text = raw_lint_log.read_text(encoding="utf-8", errors="replace")
+              m = re.search(r"Lint found\s+(\d+)\s+errors?,\s+(\d+)\s+warnings?", log_text)
+              if m:
+                  parsed_from_log = True
+                  md.append(f"- Parsed from log: errors={m.group(1)}, warnings={m.group(2)}")
+
+              first_failure = re.search(
+                  r"First failure:\s*\n\s*(.+?):(\d+):\s*Error:\s*(.+)",
+                  log_text,
+                  re.MULTILINE,
+              )
+              if first_failure:
+                  file_path, line_no, message = first_failure.groups()
+                  md.append(f"- First failure: `{file_path}:{line_no}` - {message.strip()}")
+
+          if not lint_xml_candidates and not parsed_from_log:
+              md.append("- Could not parse issue counts from lint outputs.")
+
           md.append("- Raw task log: `ci-report/raw/gradle-lint.log`")
           md.append("")
 
