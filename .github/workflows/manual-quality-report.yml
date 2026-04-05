@@ -1,0 +1,239 @@
+name: Manual Quality Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      android_lint_variant:
+        description: "Android lint variant"
+        required: true
+        default: "debug"
+        type: choice
+        options:
+          - debug
+          - release
+      run_flutter_analyze:
+        description: "Run flutter analyze"
+        required: true
+        default: true
+        type: boolean
+      run_qodana:
+        description: "Run Qodana (JetBrains inspections, slower)"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  quality_report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Java
+        uses: actions/setup-java@v4.3.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.18.0
+        with:
+          flutter-version: "3.41.6"
+          cache: true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4.1.0
+        with:
+          gradle-version: wrapper
+
+      - name: Prepare report directories
+        run: |
+          mkdir -p ci-report/raw
+
+      - name: Install dependencies
+        run: flutter pub get --offline || flutter pub get
+
+      - name: Run flutter analyze
+        id: flutter_analyze
+        if: ${{ inputs.run_flutter_analyze }}
+        continue-on-error: true
+        run: |
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings | tee ci-report/raw/flutter-analyze.txt
+
+      - name: Run Android Lint
+        id: android_lint
+        continue-on-error: true
+        working-directory: android
+        run: |
+          set -o pipefail
+          VARIANT="${{ inputs.android_lint_variant }}"
+          TASK=":app:lint${VARIANT^}"
+          echo "Running $TASK"
+          ./gradlew "$TASK" --stacktrace | tee ../ci-report/raw/gradle-lint.log
+
+      - name: Collect Android lint reports
+        if: always()
+        run: |
+          mkdir -p ci-report/raw/android-lint-reports
+          if [ -d "android/app/build/reports" ]; then
+            cp -R android/app/build/reports/. ci-report/raw/android-lint-reports/
+          fi
+
+      - name: Prepare Qodana config
+        if: ${{ inputs.run_qodana }}
+        run: |
+          cat > qodana.yaml << 'EOF'
+          version: "1.0"
+          linter: jetbrains/qodana-jvm-community:2025.2
+          EOF
+
+      - name: Run Qodana scan
+        id: qodana
+        if: ${{ inputs.run_qodana }}
+        continue-on-error: true
+        uses: JetBrains/qodana-action@v2025.2
+        with:
+          use-annotations: false
+          upload-result: false
+          results-dir: ci-report/raw/qodana
+          args: --save-report
+
+      - name: Build consolidated report
+        if: always()
+        env:
+          INPUT_VARIANT: ${{ inputs.android_lint_variant }}
+          INPUT_FLUTTER_ANALYZE: ${{ inputs.run_flutter_analyze }}
+          INPUT_QODANA: ${{ inputs.run_qodana }}
+          FLUTTER_ANALYZE_OUTCOME: ${{ steps.flutter_analyze.outcome }}
+          ANDROID_LINT_OUTCOME: ${{ steps.android_lint.outcome }}
+          QODANA_OUTCOME: ${{ steps.qodana.outcome }}
+        run: |
+          python3 - << 'PY'
+          import json
+          import os
+          import pathlib
+          import re
+          import xml.etree.ElementTree as ET
+
+          root = pathlib.Path(".")
+          out_dir = root / "ci-report"
+          raw_dir = out_dir / "raw"
+          out_dir.mkdir(parents=True, exist_ok=True)
+
+          md = []
+          md.append("# Manual Quality Report")
+          md.append("")
+          md.append("## Run Configuration")
+          md.append("")
+          md.append(f"- Android lint variant: {os.getenv('INPUT_VARIANT', 'debug')}")
+          md.append(f"- Run flutter analyze: {os.getenv('INPUT_FLUTTER_ANALYZE', 'false')}")
+          md.append(f"- Run Qodana: {os.getenv('INPUT_QODANA', 'false')}")
+          md.append("")
+
+          md.append("## Step Outcomes")
+          md.append("")
+          md.append(f"- flutter analyze: {os.getenv('FLUTTER_ANALYZE_OUTCOME', 'skipped')}")
+          md.append(f"- Android lint: {os.getenv('ANDROID_LINT_OUTCOME', 'unknown')}")
+          md.append(f"- Qodana: {os.getenv('QODANA_OUTCOME', 'skipped')}")
+          md.append("")
+
+          # Flutter analyze summary
+          md.append("## Flutter Analyze")
+          md.append("")
+          fa = raw_dir / "flutter-analyze.txt"
+          if fa.exists():
+              text = fa.read_text(encoding="utf-8", errors="replace")
+              err = len(re.findall(r"\\berror\\b", text, flags=re.IGNORECASE))
+              warn = len(re.findall(r"\\bwarning\\b", text, flags=re.IGNORECASE))
+              info = len(re.findall(r"\\binfo\\b", text, flags=re.IGNORECASE))
+              md.append(f"- Approximate matches: errors={err}, warnings={warn}, infos={info}")
+              md.append("- Source log: `ci-report/raw/flutter-analyze.txt`")
+          else:
+              md.append("- Not run or no output file found.")
+          md.append("")
+
+          # Android lint summary
+          md.append("## Android Lint")
+          md.append("")
+          lint_xml_candidates = sorted((raw_dir / "android-lint-reports").rglob("lint-results-*.xml"))
+          if lint_xml_candidates:
+              lint_xml = lint_xml_candidates[0]
+              try:
+                  tree = ET.parse(lint_xml)
+                  issues = tree.getroot().findall("issue")
+                  counts = {"Fatal": 0, "Error": 0, "Warning": 0, "Information": 0}
+                  for i in issues:
+                      sev = i.attrib.get("severity", "")
+                      if sev in counts:
+                          counts[sev] += 1
+                  md.append(f"- File: `{lint_xml.as_posix()}`")
+                  md.append(f"- Total issues: {len(issues)}")
+                  md.append(
+                      "- Severity breakdown: "
+                      f"Fatal={counts['Fatal']}, Error={counts['Error']}, "
+                      f"Warning={counts['Warning']}, Information={counts['Information']}"
+                  )
+              except Exception as ex:
+                  md.append(f"- Lint XML parse failed: {ex}")
+          else:
+              md.append("- No lint XML report found.")
+          md.append("- Raw task log: `ci-report/raw/gradle-lint.log`")
+          md.append("")
+
+          # Qodana summary
+          md.append("## Qodana")
+          md.append("")
+          sarif_candidates = sorted((raw_dir / "qodana").rglob("*.sarif.json"))
+          if sarif_candidates:
+              sarif = sarif_candidates[0]
+              try:
+                  data = json.loads(sarif.read_text(encoding="utf-8", errors="replace"))
+                  results = []
+                  for run in data.get("runs", []):
+                      results.extend(run.get("results", []))
+                  levels = {"error": 0, "warning": 0, "note": 0, "none": 0}
+                  for r in results:
+                      lvl = r.get("level", "none")
+                      if lvl not in levels:
+                          lvl = "none"
+                      levels[lvl] += 1
+                  md.append(f"- File: `{sarif.as_posix()}`")
+                  md.append(f"- Total findings: {len(results)}")
+                  md.append(
+                      "- Level breakdown: "
+                      f"error={levels['error']}, warning={levels['warning']}, "
+                      f"note={levels['note']}, none={levels['none']}"
+                  )
+              except Exception as ex:
+                  md.append(f"- Qodana SARIF parse failed: {ex}")
+          else:
+              md.append("- Not run or no SARIF result found.")
+          md.append("- Qodana raw folder: `ci-report/raw/qodana/`")
+          md.append("")
+
+          md.append("## Notes")
+          md.append("")
+          md.append("- This workflow is manual-only (`workflow_dispatch`) and independent from release workflow.")
+          md.append("- It does not create PR comments or annotations.")
+          md.append("- Download `quality-report` artifact for full raw logs and reports.")
+
+          out = out_dir / "QUALITY_REPORT.md"
+          out.write_text("\n".join(md) + "\n", encoding="utf-8")
+          print(f"Wrote {out}")
+          PY
+
+      - name: Publish report summary
+        if: always()
+        run: |
+          cat ci-report/QUALITY_REPORT.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload quality report artifact
+        if: always()
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: quality-report
+          path: ci-report/
+          retention-days: 14
