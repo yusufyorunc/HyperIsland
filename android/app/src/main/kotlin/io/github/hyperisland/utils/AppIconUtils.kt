@@ -7,10 +7,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import androidx.core.graphics.createBitmap
 
-/**
- * 将 Drawable 渲染为指定尺寸的 Bitmap。
- * AdaptiveIconDrawable.intrinsicWidth/Height 返回 -1，必须用固定尺寸。
- */
 fun Drawable.toBitmap(size: Int): Bitmap {
     val bmp = createBitmap(size, size, Bitmap.Config.ARGB_8888)
     setBounds(0, 0, size, size)
@@ -18,10 +14,6 @@ fun Drawable.toBitmap(size: Int): Bitmap {
     return bmp
 }
 
-/**
- * 从 PackageManager 获取应用图标并渲染为 Icon。
- * 失败时返回 null。
- */
 fun PackageManager.getAppIcon(packageName: String, size: Int = 192): Icon? {
     return try {
         Icon.createWithBitmap(getApplicationIcon(packageName).toBitmap(size))
@@ -29,4 +21,3 @@ fun PackageManager.getAppIcon(packageName: String, size: Int = 192): Icon? {
         null
     }
 }
-

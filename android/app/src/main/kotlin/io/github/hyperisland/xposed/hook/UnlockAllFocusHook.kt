@@ -39,7 +39,7 @@ object UnlockAllFocusHook {
             val clazz = classLoader.loadClass(TARGET_CLASS)
             val method =
                 clazz.getDeclaredMethod("canShowFocus", Context::class.java, String::class.java)
-            module.hook(method).intercept { chain -> true }
+            module.hook(method).intercept { _ -> true }
             module.log("$TAG: hooked canShowFocus(Context, String)")
         } catch (e: Throwable) {
             module.log("$TAG: failed to hook canShowFocus — ${e.message}")
@@ -50,7 +50,7 @@ object UnlockAllFocusHook {
         try {
             val clazz = classLoader.loadClass(TARGET_CLASS)
             val method = clazz.getDeclaredMethod("canCustomFocus", String::class.java)
-            module.hook(method).intercept { chain -> true }
+            module.hook(method).intercept { _ -> true }
             module.log("$TAG: hooked canCustomFocus(String)")
         } catch (e: Throwable) {
             module.log("$TAG: canCustomFocus not found (may be expected) — ${e.message}")

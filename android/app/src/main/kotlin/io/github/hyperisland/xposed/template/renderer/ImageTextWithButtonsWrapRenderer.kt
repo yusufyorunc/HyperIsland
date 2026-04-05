@@ -1,8 +1,8 @@
-package io.github.hyperisland.xposed.renderer
+package io.github.hyperisland.xposed.template.renderer
 
 import android.content.Context
 import android.os.Bundle
-import io.github.hyperisland.xposed.IslandViewModel
+import io.github.hyperisland.xposed.template.IslandViewModel
 
 /**
  * 新图文组件+按钮组件4·换行 渲染器。

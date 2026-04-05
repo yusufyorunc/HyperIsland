@@ -12,11 +12,11 @@ import android.service.notification.StatusBarNotification
 import io.github.hyperisland.utils.getAppIcon
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.IslandDispatcher
-import io.github.hyperisland.xposed.NotifData
-import io.github.hyperisland.xposed.TemplateRegistry
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logWarn
-import io.github.hyperisland.xposed.templates.NotificationIslandNotification
+import io.github.hyperisland.xposed.template.NotifData
+import io.github.hyperisland.xposed.template.NotificationIslandNotification
+import io.github.hyperisland.xposed.template.TemplateRegistry
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import java.lang.reflect.Method

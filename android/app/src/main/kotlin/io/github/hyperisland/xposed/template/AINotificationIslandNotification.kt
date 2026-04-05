@@ -1,30 +1,17 @@
-package io.github.hyperisland.xposed.templates
+package io.github.hyperisland.xposed.template
 
 import android.content.Context
-import android.graphics.drawable.Icon
 import android.os.Bundle
-import io.github.d4viddf.hyperisland_kit.HyperAction
-import io.github.d4viddf.hyperisland_kit.HyperIslandNotification
-import io.github.d4viddf.hyperisland_kit.HyperPicture
-import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoLeft
-import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoRight
-import io.github.d4viddf.hyperisland_kit.models.PicInfo
-import io.github.d4viddf.hyperisland_kit.models.TextInfo
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.IslandDispatcher
+import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.logWarn
-import io.github.hyperisland.xposed.IslandRequest
-import io.github.hyperisland.xposed.IslandTemplate
-import io.github.hyperisland.xposed.IslandViewModel
-import io.github.hyperisland.xposed.NotifData
-import io.github.hyperisland.xposed.defaultDialogIcon
-import io.github.hyperisland.xposed.resolveModeIconAutoLarge
-import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
-import io.github.hyperisland.xposed.renderer.ImageTextWithButtonsRenderer
-import io.github.hyperisland.xposed.renderer.resolveRenderer
-import io.github.hyperisland.xposed.toRounded
+import io.github.hyperisland.xposed.template.AINotificationIslandNotification.process
+import io.github.hyperisland.xposed.template.renderer.ImageTextWithButtonsRenderer
+import io.github.hyperisland.xposed.template.renderer.resolveRenderer
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -55,7 +42,7 @@ object AINotificationIslandNotification : IslandTemplate {
             fetchAiText(aiConfig, data)
         } else null
 
-        val leftText  = aiText?.left  ?: data.title
+        val leftText = aiText?.left ?: data.title
         val rightText = aiText?.right ?: data.subtitle.ifEmpty { data.title }
 
         log(
@@ -96,10 +83,10 @@ object AINotificationIslandNotification : IslandTemplate {
 
     private fun loadAiConfig(context: Context): AiConfig = AiConfig(
         enabled = ConfigManager.getBoolean("pref_ai_enabled", false),
-        url     = ConfigManager.getString("pref_ai_url"),
-        apiKey  = ConfigManager.getString("pref_ai_api_key"),
-        model   = ConfigManager.getString("pref_ai_model"),
-        prompt  = ConfigManager.getString("pref_ai_prompt"),
+        url = ConfigManager.getString("pref_ai_url"),
+        apiKey = ConfigManager.getString("pref_ai_api_key"),
+        model = ConfigManager.getString("pref_ai_model"),
+        prompt = ConfigManager.getString("pref_ai_prompt"),
         timeout = ConfigManager.getInt("pref_ai_timeout", 3).coerceIn(3, 15),
         promptInUser = ConfigManager.getBoolean("pref_ai_prompt_in_user", false),
         temperature = ConfigManager.getFloat("pref_ai_temperature", 0.1f).coerceIn(0f, 1f),
@@ -130,17 +117,24 @@ object AINotificationIslandNotification : IslandTemplate {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
-            if (config.apiKey.isNotEmpty()) setRequestProperty("Authorization", "Bearer ${config.apiKey}")
+            if (config.apiKey.isNotEmpty()) setRequestProperty(
+                "Authorization",
+                "Bearer ${config.apiKey}"
+            )
             connectTimeout = 2500
-            readTimeout    = 2500
-            doOutput       = true
+            readTimeout = 2500
+            doOutput = true
         }
         //log("$TAG: POST ${config.url}")
         return try {
             conn.outputStream.use { it.write(requestBody.toByteArray(Charsets.UTF_8)) }
             val code = conn.responseCode
             if (code != HttpURLConnection.HTTP_OK) {
-                val errorBody = try { conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: "" } catch (_: Exception) { "" }
+                val errorBody = try {
+                    conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                } catch (_: Exception) {
+                    ""
+                }
                 logError("$TAG: HTTP $code — $errorBody")
                 return null
             }
@@ -152,7 +146,7 @@ object AINotificationIslandNotification : IslandTemplate {
 
     private fun buildRequestBody(config: AiConfig, data: NotifData): String {
         val defaultPrompt = "根据通知信息，提取关键信息，左右分别不超过6汉字12字符"
-        val userPrompt = if (config.prompt.isNotEmpty()) config.prompt else defaultPrompt
+        val userPrompt = config.prompt.ifEmpty { defaultPrompt }
 
         val userContent = buildString {
             append("应用包名：${data.pkg}\n")
@@ -160,7 +154,7 @@ object AINotificationIslandNotification : IslandTemplate {
             if (data.subtitle.isNotEmpty()) append("正文：${data.subtitle}")
         }
 
-        val messages = org.json.JSONArray()
+        val messages = JSONArray()
 
         if (config.promptInUser) {
             // 提示词放在用户消息中
@@ -192,13 +186,14 @@ $userPrompt
 
     private fun parseAiResponse(responseText: String): AiIslandText? {
         return try {
-            val root    = JSONObject(responseText)
+            val root = JSONObject(responseText)
             val content = root.getJSONArray("choices")
                 .getJSONObject(0).getJSONObject("message").getString("content").trim()
-            val jsonStr = content.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-            val result  = JSONObject(jsonStr)
-            val left    = result.optString("left",  "").trim()
-            val right   = result.optString("right", "").trim()
+            val jsonStr =
+                content.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val result = JSONObject(jsonStr)
+            val left = result.optString("left", "").trim()
+            val right = result.optString("right", "").trim()
             if (left.isEmpty() && right.isEmpty()) null
             else AiIslandText(left.ifEmpty { "通知" }, right.ifEmpty { "新消息" })
         } catch (e: Exception) {
@@ -217,21 +212,22 @@ $userPrompt
     ) {
         try {
             val fallbackIcon = context.defaultDialogIcon()
-            val displayIcon  = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
+            val displayIcon =
+                data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
             IslandDispatcher.post(
                 context,
                 IslandRequest(
-                    title            = leftText,
-                    content          = rightText,
-                    icon             = displayIcon,
-                    timeoutSecs      = data.islandTimeout,
-                    firstFloat       = data.firstFloat == "on",
-                    enableFloat      = data.enableFloatMode == "on",
+                    title = leftText,
+                    content = rightText,
+                    icon = displayIcon,
+                    timeoutSecs = data.islandTimeout,
+                    firstFloat = data.firstFloat == "on",
+                    enableFloat = data.enableFloatMode == "on",
                     showNotification = false,
                     preserveStatusBarSmallIcon = data.preserveStatusBarSmallIcon != "off",
-                    contentIntent    = data.contentIntent,
-                    isOngoing        = data.isOngoing,
-                    actions          = data.actions.take(2),
+                    contentIntent = data.contentIntent,
+                    isOngoing = data.isOngoing,
+                    actions = data.actions.take(2),
                 ),
             )
         } catch (e: Exception) {
@@ -244,35 +240,37 @@ $userPrompt
     fun process(
         context: Context,
         data: NotifData,
-        leftText: String  = data.title,
+        leftText: String = data.title,
         rightText: String = data.subtitle.ifEmpty { data.title },
     ): IslandViewModel {
-        val fallbackIcon     = context.defaultDialogIcon()
-        val islandIcon       = data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
-        val focusIcon        = data.resolveModeIconAutoLarge(data.focusIconMode, fallbackIcon).toRounded(context)
+        val fallbackIcon = context.defaultDialogIcon()
+        val islandIcon =
+            data.resolveModeIconAutoLarge(data.iconMode, fallbackIcon).toRounded(context)
+        val focusIcon =
+            data.resolveModeIconAutoLarge(data.focusIconMode, fallbackIcon).toRounded(context)
         val showNotification = data.focusNotif != "off"
 
         return IslandViewModel(
-            templateId        = TEMPLATE_ID,
-            leftTitle         = leftText,
-            rightTitle        = rightText,
-            focusTitle        = data.title,
-            focusContent      = data.subtitle.ifEmpty { data.title },
-            islandIcon        = islandIcon,
-            focusIcon         = focusIcon,
-            circularProgress  = null,
-            showRightSide     = true,
-            actions           = data.actions,
-            updatable         = data.isOngoing,
-            showNotification  = showNotification,
-            setFocusProxy     = showNotification,
+            templateId = TEMPLATE_ID,
+            leftTitle = leftText,
+            rightTitle = rightText,
+            focusTitle = data.title,
+            focusContent = data.subtitle.ifEmpty { data.title },
+            islandIcon = islandIcon,
+            focusIcon = focusIcon,
+            circularProgress = null,
+            showRightSide = true,
+            actions = data.actions,
+            updatable = data.isOngoing,
+            showNotification = showNotification,
+            setFocusProxy = showNotification,
             preserveStatusBarSmallIcon = showNotification && data.preserveStatusBarSmallIcon != "off",
-            firstFloat        = data.firstFloat == "on",
-            enableFloat       = data.enableFloatMode == "on",
-            timeoutSecs       = data.islandTimeout,
-            isOngoing         = data.isOngoing,
-            showIslandIcon    = data.showIslandIcon == "on",
-            highlightColor    = data.highlightColor,
+            firstFloat = data.firstFloat == "on",
+            enableFloat = data.enableFloatMode == "on",
+            timeoutSecs = data.islandTimeout,
+            isOngoing = data.isOngoing,
+            showIslandIcon = data.showIslandIcon == "on",
+            highlightColor = data.highlightColor,
             showLeftHighlightColor = data.showLeftHighlightColor,
             showRightHighlightColor = data.showRightHighlightColor,
         )

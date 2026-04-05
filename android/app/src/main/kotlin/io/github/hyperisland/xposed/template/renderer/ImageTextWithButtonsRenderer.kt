@@ -1,4 +1,4 @@
-package io.github.hyperisland.xposed.renderer
+package io.github.hyperisland.xposed.template.renderer
 
 import android.content.Context
 import android.os.Bundle
@@ -12,8 +12,8 @@ import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoRight
 import io.github.d4viddf.hyperisland_kit.models.PicInfo
 import io.github.d4viddf.hyperisland_kit.models.ProgressTextInfo
 import io.github.d4viddf.hyperisland_kit.models.TextInfo
-import io.github.hyperisland.xposed.IslandViewModel
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
+import io.github.hyperisland.xposed.template.IslandViewModel
 
 /**
  * 新图文组件+按钮组件4 渲染器。
@@ -37,19 +37,26 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
     }
 
     /** 供 [ImageTextWithButtonsWrapRenderer] 和 [ImageTextWithRightTextButtonRenderer] 复用，避免重复布局代码。 */
-    internal fun renderWith(context: Context, extras: Bundle, vm: IslandViewModel, applyWrap: Boolean, maxButtons: Int = 2, useActionsButton: Boolean = false) {
+    internal fun renderWith(
+        context: Context,
+        extras: Bundle,
+        vm: IslandViewModel,
+        applyWrap: Boolean,
+        maxButtons: Int = 2,
+        useActionsButton: Boolean = false,
+    ) {
         try {
-            val iconKey      = "key_${vm.templateId}_island"
+            val iconKey = "key_${vm.templateId}_island"
             val focusIconKey = "key_${vm.templateId}_focus"
 
             val builder = HyperIslandNotification.Builder(context, vm.templateId, vm.focusTitle)
 
-            builder.addPicture(HyperPicture(iconKey,      vm.islandIcon))
+            builder.addPicture(HyperPicture(iconKey, vm.islandIcon))
             builder.addPicture(HyperPicture(focusIconKey, vm.focusIcon))
 
             builder.setIconTextInfo(
-                picKey  = focusIconKey,
-                title   = vm.focusTitle,
+                picKey = focusIconKey,
+                title = vm.focusTitle,
                 content = vm.focusContent,
             )
 
@@ -68,14 +75,20 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             // 大岛
             val leftSide = if (!vm.showIslandIcon) {
                 ImageTextInfoLeft(
-                    type     = 1,
-                    textInfo = TextInfo(title = vm.leftTitle, showHighlightColor = vm.showLeftHighlightColor),
+                    type = 1,
+                    textInfo = TextInfo(
+                        title = vm.leftTitle,
+                        showHighlightColor = vm.showLeftHighlightColor
+                    ),
                 )
             } else {
                 ImageTextInfoLeft(
-                    type     = 1,
-                    picInfo  = PicInfo(type = 1, pic = iconKey),
-                    textInfo = TextInfo(title = vm.leftTitle, showHighlightColor = vm.showLeftHighlightColor),
+                    type = 1,
+                    picInfo = PicInfo(type = 1, pic = iconKey),
+                    textInfo = TextInfo(
+                        title = vm.leftTitle,
+                        showHighlightColor = vm.showLeftHighlightColor
+                    ),
                 )
             }
             when {
@@ -83,16 +96,26 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
                     left = leftSide,
                     progressText = ProgressTextInfo(
                         progressInfo = CircularProgressInfo(progress = vm.circularProgress),
-                        textInfo     = TextInfo(title = vm.rightTitle, narrowFont = true, showHighlightColor = vm.showRightHighlightColor),
+                        textInfo = TextInfo(
+                            title = vm.rightTitle,
+                            narrowFont = true,
+                            showHighlightColor = vm.showRightHighlightColor
+                        ),
                     ),
                 )
+
                 vm.showRightSide -> builder.setBigIslandInfo(
-                    left  = leftSide,
+                    left = leftSide,
                     right = ImageTextInfoRight(
-                        type     = 2,
-                        textInfo = TextInfo(title = vm.rightTitle, narrowFont = true, showHighlightColor = vm.showRightHighlightColor),
+                        type = 2,
+                        textInfo = TextInfo(
+                            title = vm.rightTitle,
+                            narrowFont = true,
+                            showHighlightColor = vm.showRightHighlightColor
+                        ),
                     ),
                 )
+
                 else -> builder.setBigIslandInfo(left = leftSide)
             }
 
@@ -102,19 +125,21 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
                 if (useActionsButton) {
                     // 按钮组件1 type=2：右侧文字按钮，无图标，仅支持 1 个
                     val action = effectiveActions.first()
-                    builder.addAction(HyperAction(
-                        key              = "action_${vm.templateId}_0",
-                        title            = action.title ?: "",
-                        pendingIntent    = action.actionIntent,
-                        actionIntentType = 2,
-                    ))
+                    builder.addAction(
+                        HyperAction(
+                            key = "action_${vm.templateId}_0",
+                            title = action.title ?: "",
+                            pendingIntent = action.actionIntent,
+                            actionIntentType = 2,
+                        )
+                    )
                 } else {
                     // 按钮组件4：textButton，最多 maxButtons 个
                     val hyperActions = effectiveActions.mapIndexed { index, action ->
                         HyperAction(
-                            key              = "action_${vm.templateId}_$index",
-                            title            = action.title ?: "",
-                            pendingIntent    = action.actionIntent,
+                            key = "action_${vm.templateId}_$index",
+                            title = action.title ?: "",
+                            pendingIntent = action.actionIntent,
                             actionIntentType = 2,
                         )
                     }
@@ -142,9 +167,9 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             }
 
             val rendererTag = when {
-                applyWrap          -> ImageTextWithButtonsWrapRenderer.RENDERER_ID
-                useActionsButton   -> ImageTextWithRightTextButtonRenderer.RENDERER_ID
-                else               -> RENDERER_ID
+                applyWrap -> ImageTextWithButtonsWrapRenderer.RENDERER_ID
+                useActionsButton -> ImageTextWithRightTextButtonRenderer.RENDERER_ID
+                else -> RENDERER_ID
             }
             Log.d("HyperIsland", "HyperIsland[$rendererTag]: rendered template=${vm.templateId}")
         } catch (e: Exception) {

@@ -18,9 +18,12 @@ object ConfigManager {
     private const val FLUTTER_KEY_PREFIX = "flutter."
     private const val PREFS_GROUP = "FlutterSharedPreferences"
 
-    @Volatile private var prefs: SharedPreferences? = null
-    @Volatile private var initialized = false
-    @Volatile private var module: XposedModule? = null
+    @Volatile
+    private var prefs: SharedPreferences? = null
+    @Volatile
+    private var initialized = false
+    @Volatile
+    private var module: XposedModule? = null
 
     private val changeListeners = mutableListOf<() -> Unit>()
 
@@ -44,7 +47,7 @@ object ConfigManager {
             initialized = true
             module.log("$TAG: remote prefs '$PREFS_GROUP' loaded")
             notifyListeners()
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             module.logWarn("$TAG: init failed — embedded framework, remote prefs unavailable")
             initialized = true
         } catch (e: Exception) {
@@ -62,27 +65,40 @@ object ConfigManager {
     // ── 类型化读取 ──────────────────────────────────────────────────────────────
 
     fun getBoolean(key: String, default: Boolean): Boolean =
-        try { prefs?.getBoolean(fk(key), default) ?: default }
-        catch (_: ClassCastException) { default }
+        try {
+            prefs?.getBoolean(fk(key), default) ?: default
+        } catch (_: ClassCastException) {
+            default
+        }
 
     fun getString(key: String, default: String = ""): String =
-        try { prefs?.getString(fk(key), default) ?: default }
-        catch (_: ClassCastException) { default }
+        try {
+            prefs?.getString(fk(key), default) ?: default
+        } catch (_: ClassCastException) {
+            default
+        }
 
     /**
      * Flutter 的 int 在 Android SharedPreferences 中以 Long 存储，
      * 优先用 getLong 读取再转换，若类型不符再尝试 getInt。
      */
     fun getInt(key: String, default: Int): Int =
-        try { prefs?.getLong(fk(key), default.toLong())?.toInt() ?: default }
-        catch (_: ClassCastException) {
-            try { prefs?.getInt(fk(key), default) ?: default }
-            catch (_: ClassCastException) { default }
+        try {
+            prefs?.getLong(fk(key), default.toLong())?.toInt() ?: default
+        } catch (_: ClassCastException) {
+            try {
+                prefs?.getInt(fk(key), default) ?: default
+            } catch (_: ClassCastException) {
+                default
+            }
         }
 
     fun getFloat(key: String, default: Float): Float =
-        try { prefs?.getFloat(fk(key), default) ?: default }
-        catch (_: ClassCastException) { default }
+        try {
+            prefs?.getFloat(fk(key), default) ?: default
+        } catch (_: ClassCastException) {
+            default
+        }
 
     fun contains(key: String): Boolean =
         prefs?.contains(fk(key)) ?: false

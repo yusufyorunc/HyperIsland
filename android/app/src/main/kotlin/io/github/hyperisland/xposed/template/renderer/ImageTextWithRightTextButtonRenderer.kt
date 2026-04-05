@@ -1,8 +1,8 @@
-package io.github.hyperisland.xposed.renderer
+package io.github.hyperisland.xposed.template.renderer
 
 import android.content.Context
 import android.os.Bundle
-import io.github.hyperisland.xposed.IslandViewModel
+import io.github.hyperisland.xposed.template.IslandViewModel
 
 /**
  * 新图文组件+右侧文本按钮 渲染器。
@@ -18,6 +18,13 @@ object ImageTextWithRightTextButtonRenderer : IslandRenderer {
     override val id = RENDERER_ID
 
     override fun render(context: Context, extras: Bundle, vm: IslandViewModel) {
-        ImageTextWithButtonsRenderer.renderWith(context, extras, vm, applyWrap = false, maxButtons = 1, useActionsButton = true)
+        ImageTextWithButtonsRenderer.renderWith(
+            context,
+            extras,
+            vm,
+            applyWrap = false,
+            maxButtons = 1,
+            useActionsButton = true
+        )
     }
 }

@@ -22,7 +22,7 @@ import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.logWarn
-import io.github.hyperisland.xposed.moduleContext
+import io.github.hyperisland.xposed.template.moduleContext
 import io.github.libxposed.api.XposedModule
 import java.util.UUID
 

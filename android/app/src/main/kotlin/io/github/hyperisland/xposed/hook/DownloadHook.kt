@@ -11,7 +11,7 @@ import io.github.hyperisland.xposed.DownloadManager.InProcessController
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
 import io.github.hyperisland.xposed.logWarn
-import io.github.hyperisland.xposed.moduleContext
+import io.github.hyperisland.xposed.template.moduleContext
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import java.lang.reflect.Field

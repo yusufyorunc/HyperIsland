@@ -17,40 +17,13 @@ import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoRight
 import io.github.d4viddf.hyperisland_kit.models.PicInfo
 import io.github.d4viddf.hyperisland_kit.models.TextInfo
 import io.github.hyperisland.utils.getAppIcon
-import io.github.hyperisland.xposed.IslandDispatcher.post
-import io.github.hyperisland.xposed.IslandDispatcher.register
-import io.github.hyperisland.xposed.IslandDispatcher.sendBroadcast
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
-import io.github.hyperisland.xposed.renderer.fixTextButtonJson
-import io.github.hyperisland.xposed.renderer.flattenActionsToExtras
-import io.github.hyperisland.xposed.renderer.injectIslandAppearance
+import io.github.hyperisland.xposed.template.renderer.fixTextButtonJson
+import io.github.hyperisland.xposed.template.renderer.flattenActionsToExtras
+import io.github.hyperisland.xposed.template.renderer.injectIslandAppearance
+import io.github.hyperisland.xposed.template.toRounded
 import io.github.libxposed.api.XposedModule
 
-/**
- * SystemUI 进程内超级岛发送调度器。
- *
- * ## 原理
- * HyperOS 会抑制前台应用自身发出的岛通知。将通知改由 SystemUI（system UID）发出，
- * 可绕过该限制。[io.github.hyperisland.xposed.hook.IslandDispatcherHook] 在 SystemUI 进程启动时调用 [register]，
- * 注册一个受权限保护的 BroadcastReceiver；HyperIsland 应用通过 [sendBroadcast]
- * 触发它，由此以 SystemUI 身份发出岛通知。
- *
- * ## 其他 Xposed 模块的使用方式（同在 SystemUI 进程内）
- * ```kotlin
- * IslandDispatcher.post(
- *     context,
- *     IslandRequest(title = "标题", content = "内容", icon = myIcon)
- * )
- * ```
- *
- * ## 跨进程使用方式（从任意应用）
- * ```kotlin
- * IslandDispatcher.sendBroadcast(
- *     context,
- *     IslandRequest(title = "标题", content = "内容", icon = myIcon)
- * )
- * ```
- */
 object IslandDispatcher {
 
     /** 广播 Action，由 HyperIsland 应用发出，由 SystemUI 进程内 Receiver 接收。*/
@@ -114,10 +87,7 @@ object IslandDispatcher {
 
     // ── 初始化 ───────────────────────────────────────────────────────────────
 
-    /**
-     * 在 SystemUI 进程中注册广播接收器。由 [io.github.hyperisland.xposed.hook.IslandDispatcherHook] 在 Application.onCreate
-     * 后调用。重复调用安全（幂等）。
-     */
+
     fun register(context: Context, xposedModule: XposedModule) {
         if (registered) return
         module = xposedModule
@@ -137,11 +107,6 @@ object IslandDispatcher {
 
     // ── 公开 API ──────────────────────────────────────────────────────────────
 
-    /**
-     * [进程内直接调用]
-     * 在 SystemUI 进程内立即发出岛通知。其他运行在 SystemUI 进程内的 Xposed 模块
-     * 可直接调用，无需广播，效率更高。
-     */
     fun post(context: Context, request: IslandRequest) {
         try {
             val nm = context.getSystemService(NotificationManager::class.java) ?: return
@@ -229,9 +194,11 @@ object IslandDispatcher {
             notif.extras.putAll(resourceBundle)
             flattenActionsToExtras(resourceBundle, notif.extras)
 
-            val jsonParam = islandBuilder.buildJsonParam()
-                .let { fixTextButtonJson(it) }
-                .let { injectIslandAppearance(it, request.highlightColor, request.dismissIsland) }
+            val jsonParam = injectIslandAppearance(
+                fixTextButtonJson(islandBuilder.buildJsonParam()),
+                request.highlightColor,
+                request.dismissIsland,
+            )
             notif.extras.putString("miui.focus.param", jsonParam)
             if (request.showNotification) {
                 notif.extras.putBoolean("hyperisland_focus_proxy", true)
@@ -261,11 +228,6 @@ object IslandDispatcher {
         }
     }
 
-    /**
-     * [跨进程调用]
-     * 从任意进程向 SystemUI 进程发送岛展示请求。
-     * 安全性由 Receiver 注册时的 broadcastPermission 保证，调用方无需额外操作。
-     */
     fun sendBroadcast(context: Context, request: IslandRequest) {
         val intent = Intent(ACTION).apply {
             putExtras(request.toBundle())
@@ -273,11 +235,6 @@ object IslandDispatcher {
         context.sendBroadcast(intent)
     }
 
-    /**
-     * [进程内直接调用]
-     * 原始通知被取消时调用，同步取消代理通知并清除首次发送状态。
-     * 下次再为同一 [notifId] 调用 [post] 时将重新触发岛动画。
-     */
     fun cancel(context: Context, notifId: Int) {
         try {
             val nm = context.getSystemService(NotificationManager::class.java) ?: return
@@ -289,12 +246,6 @@ object IslandDispatcher {
         }
     }
 
-    // ── 内部工具 ──────────────────────────────────────────────────────────────
-
-    /**
-     * 优先使用 [IslandRequest.icon]；为 null 时从 HyperIsland 应用获取启动图标并做圆角处理；
-     * 失败时降级为系统默认图标。
-     */
     private fun resolveIcon(icon: Icon?, context: Context): Icon {
         if (icon != null) return icon
         return try {
@@ -310,7 +261,6 @@ object IslandDispatcher {
         Icon.createWithResource(context, android.R.drawable.sym_def_app_icon)
 
     private fun createChannel(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         val existing = nm.getNotificationChannel(CHANNEL_ID)
         if (existing != null) {

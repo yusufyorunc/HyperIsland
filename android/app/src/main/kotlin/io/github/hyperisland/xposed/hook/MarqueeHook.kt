@@ -47,7 +47,7 @@ private fun normalizeText(text: String): String {
         return island?.let { islandMarqueeState[it] } ?: false
     }
 
-    fun ensureObserver(context: android.content.Context, module: XposedModule) {
+    fun ensureObserver(module: XposedModule) {
         if (observerRegistered) return
         ConfigManager.init(module)
         ConfigManager.addChangeListener {
@@ -78,7 +78,7 @@ private fun normalizeText(text: String): String {
             return
         }
         if (textView.maxLines != 1) {
-            textView.setSingleLine(true)
+            textView.isSingleLine = true
         }
         if (fullText != cleanText) {
             textView.text = cleanText
@@ -112,7 +112,8 @@ private fun normalizeText(text: String): String {
         var visibleW = if (view.width > 0) view.width else Int.MAX_VALUE
         var p = view.parent
         while (p is ViewGroup) {
-            if (p.width > 0 && p.width < visibleW) visibleW = p.width
+            val parentWidth = p.width
+            if (parentWidth in 1 until visibleW) visibleW = parentWidth
             p = p.parent
         }
         return if (visibleW == Int.MAX_VALUE) 0 else visibleW
@@ -169,7 +170,7 @@ private fun normalizeText(text: String): String {
     // ─── IXposedHookLoadPackage → init ────────────────────────────────────────
 
     private var hookedContentView = false
-    private val targetPkg = java.util.Collections.synchronizedMap(java.util.WeakHashMap<View, String>())
+    private val targetPkg = java.util.Collections.synchronizedMap(WeakHashMap<View, String>())
 
     fun init(module: XposedModule, param: PackageLoadedParam) {
         module.log("$TAG: initializing for ${param.packageName}")
@@ -197,8 +198,7 @@ private fun normalizeText(text: String): String {
                     module.hook(updateMethod).intercept { chain ->
                         val result = chain.proceed()
                         try {
-                            val islandView = chain.thisObject as? ViewGroup
-                            if (islandView == null) return@intercept result
+                            val islandView = chain.thisObject as? ViewGroup ?: return@intercept result
                             val islandData = chain.args.getOrNull(0)
                             var pkgName = ""
                             try {
@@ -214,7 +214,7 @@ private fun normalizeText(text: String): String {
                                 pkgName = targetPkg[islandView] ?: ""
                             }
                             if (pkgName.isEmpty()) return@intercept result
-                            ensureObserver(islandView.context, module)
+                            ensureObserver(module)
                             val isOngoing = try {
                                 islandData?.javaClass?.getMethod("isOngoing")?.invoke(islandData) as? Boolean ?: false
                             } catch (_: Exception) { false }
@@ -309,7 +309,8 @@ private fun normalizeText(text: String): String {
             var visibleW = if (view.width > 0) view.width else Int.MAX_VALUE
             var p = view.parent
             while (p is ViewGroup) {
-                if (p.width > 0 && p.width < visibleW) visibleW = p.width
+                val parentWidth = p.width
+                if (parentWidth in 1 until visibleW) visibleW = parentWidth
                 p = p.parent
             }
             if (visibleW == Int.MAX_VALUE) visibleW = 0

@@ -1,6 +1,7 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.template
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -10,6 +11,8 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import io.github.hyperisland.xposed.ConfigManager
+import androidx.core.graphics.createBitmap
 
 /**
  * 在 Xposed 进程（如 SystemUI）中，[Context] 属于宿主进程，不包含本模块的资源。
@@ -19,22 +22,24 @@ import android.os.Bundle
  */
 internal fun Context.moduleContext(): Context = try {
     createPackageContext("io.github.hyperisland", Context.CONTEXT_IGNORE_SECURITY)
-} catch (_: Exception) { this }
+} catch (_: Exception) {
+    this
+}
 
 /**
  * 将 Icon 转为圆角版本。失败时原样返回。
  * @param radiusFraction 圆角半径占图标尺寸的比例，默认 0.25（25%）
  */
 fun Icon.toRounded(context: Context, radiusFraction: Float = 0.25f): Icon {
-    if (!isRoundIconEnabled(context)) return this
+    if (!isRoundIconEnabled()) return this
     return try {
         val drawable = loadDrawable(context) ?: return this
         val size = 192
-        val src = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val src = createBitmap(size, size, Bitmap.Config.ARGB_8888)
         drawable.setBounds(0, 0, size, size)
         drawable.draw(Canvas(src))
 
-        val dst = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val dst = createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(dst)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         val r = size * radiusFraction
@@ -49,7 +54,7 @@ fun Icon.toRounded(context: Context, radiusFraction: Float = 0.25f): Icon {
     }
 }
 
-private fun isRoundIconEnabled(context: Context): Boolean =
+private fun isRoundIconEnabled(): Boolean =
     ConfigManager.getBoolean("pref_round_icon", true)
 
 /**
@@ -108,7 +113,7 @@ data class NotifData(
     /** 是否为实时（持续）通知，对应 Notification.FLAG_ONGOING_EVENT */
     val isOngoing: Boolean = false,
     /** 原通知的点击动作，用于代发通知时还原点击行为。 */
-    val contentIntent: android.app.PendingIntent? = null,
+    val contentIntent: PendingIntent? = null,
     /** 渲染器（样式）标识符，对应 ImageTextWithButtonsRenderer.RENDERER_ID 等。 */
     val renderer: String = "image_text_with_buttons_4",
     /** 岛边框高亮颜色，十六进制字符串如 "#E040FB"，null 表示不设置（使用默认颜色）。 */
@@ -130,8 +135,8 @@ fun NotifData.resolveModeIconAutoLarge(mode: String, fallback: Icon): Icon =
     when (mode) {
         "notif_small" -> firstNonNullIcon(fallback, notifIcon)
         "notif_large" -> firstNonNullIcon(fallback, largeIcon, notifIcon)
-        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
-        else          -> firstNonNullIcon(fallback, largeIcon, notifIcon)
+        "app_icon" -> firstNonNullIcon(fallback, appIconRaw)
+        else -> firstNonNullIcon(fallback, largeIcon, notifIcon)
     }
 
 /**
@@ -142,8 +147,8 @@ fun NotifData.resolveModeIconAutoNotif(mode: String, fallback: Icon): Icon =
     when (mode) {
         "notif_small" -> firstNonNullIcon(fallback, notifIcon)
         "notif_large" -> firstNonNullIcon(fallback, largeIcon, notifIcon)
-        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
-        else          -> firstNonNullIcon(fallback, notifIcon, largeIcon)
+        "app_icon" -> firstNonNullIcon(fallback, appIconRaw)
+        else -> firstNonNullIcon(fallback, notifIcon, largeIcon)
     }
 
 /**
@@ -153,6 +158,6 @@ fun NotifData.resolveModeIconWithAppFallback(mode: String, fallback: Icon): Icon
     when (mode) {
         "notif_small" -> firstNonNullIcon(fallback, notifIcon, appIconRaw)
         "notif_large" -> firstNonNullIcon(fallback, largeIcon, appIconRaw, notifIcon)
-        "app_icon"    -> firstNonNullIcon(fallback, appIconRaw)
-        else          -> firstNonNullIcon(fallback, largeIcon, appIconRaw, notifIcon)
+        "app_icon" -> firstNonNullIcon(fallback, appIconRaw)
+        else -> firstNonNullIcon(fallback, largeIcon, appIconRaw, notifIcon)
     }

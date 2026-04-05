@@ -35,10 +35,6 @@ class MainActivity : FlutterActivity() {
         val source: String,
     )
 
-    private val CHANNEL = "io.github.hyperisland/test"
-    private val TAG = "HyperIsland"
-    private val REQUEST_APP_LIST_PERMISSION = 1002
-
     private var pendingAppsResult: MethodChannel.Result? = null
     private var pendingAppsIncludeSystem: Boolean = false
 
@@ -47,11 +43,11 @@ class MainActivity : FlutterActivity() {
         if (isModuleActive()) {
             val prefs = getSharedPreferences(
                 "FlutterSharedPreferences",
-                android.content.Context.MODE_PRIVATE
+                MODE_PRIVATE
             )
             val showWelcome = try {
                 prefs.getBoolean("flutter.pref_show_welcome", true)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 true
             }
 
@@ -127,7 +123,7 @@ class MainActivity : FlutterActivity() {
                             val stream = ByteArrayOutputStream()
                             bmp.compress(Bitmap.CompressFormat.PNG, 90, stream)
                             runOnUiThread { result.success(stream.toByteArray()) }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             runOnUiThread { result.success(null) }
                         }
                     }.start()
@@ -241,7 +237,6 @@ class MainActivity : FlutterActivity() {
      * 用 root 直接读取 ABX 原始数据后在应用内解码为文本 XML，再交给 XmlPullParser 解析。
      */
     private fun getNotificationChannelsForPackage(pkg: String): List<Map<String, Any?>>? {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return emptyList()
         return tryGetChannelsFromPolicyFile(pkg)
     }
 
@@ -459,8 +454,7 @@ class MainActivity : FlutterActivity() {
             "fallback fragment found: targetPkg=$targetPkg endReason=${fragment.endReason} hasClosingTag=${fragment.hasClosingTag} length=${fragment.content.length}"
         )
 
-        val fragmentChannels = tryParseChannelsFromFragment(fragment)
-        if (fragmentChannels == null) return null
+        val fragmentChannels = tryParseChannelsFromFragment(fragment) ?: return null
         Log.d(
             TAG,
             "fallback fragment parser result: targetPkg=$targetPkg count=${fragmentChannels.size}"
@@ -637,6 +631,9 @@ class MainActivity : FlutterActivity() {
     }
 
     private companion object {
+        const val CHANNEL = "io.github.hyperisland/test"
+        const val TAG = "HyperIsland"
+        const val REQUEST_APP_LIST_PERMISSION = 1002
         const val PERM_GET_INSTALLED_APPS = "com.android.permission.GET_INSTALLED_APPS"
         const val PERM_MANAGER_MIUI = "com.lbe.security.miui"
     }

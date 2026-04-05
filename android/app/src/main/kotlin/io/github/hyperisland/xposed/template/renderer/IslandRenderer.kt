@@ -1,10 +1,11 @@
-package io.github.hyperisland.xposed.renderer
+package io.github.hyperisland.xposed.template.renderer
 
 import android.app.Notification
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import io.github.hyperisland.xposed.IslandViewModel
+import io.github.hyperisland.xposed.template.IslandViewModel
+import org.json.JSONObject
 
 /**
  * 灵动岛渲染器接口。
@@ -19,9 +20,9 @@ interface IslandRenderer {
 
 private inline fun mutateParamV2(
     jsonParam: String,
-    mutation: (pv2: org.json.JSONObject) -> Unit,
+    mutation: (pv2: JSONObject) -> Unit,
 ): String = try {
-    val json = org.json.JSONObject(jsonParam)
+    val json = JSONObject(jsonParam)
     val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
     mutation(pv2)
     json.toString()
@@ -60,7 +61,7 @@ fun fixTextButtonJson(jsonParam: String): String =
  */
 fun wrapLongTextJson(jsonParam: String): String =
     try {
-        val json = org.json.JSONObject(jsonParam)
+        val json = JSONObject(jsonParam)
         val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
         val iconTextInfo = pv2.optJSONObject("iconTextInfo") ?: return jsonParam
         val content = iconTextInfo.optString("content", "")
@@ -77,7 +78,7 @@ fun wrapLongTextJson(jsonParam: String): String =
         val subContent = content.substring(splitIdx)
         if (subContent.all { it == '.' || it == '…' || it.isWhitespace() }) return jsonParam
 
-        val coverInfo = org.json.JSONObject()
+        val coverInfo = JSONObject()
         val animIcon = iconTextInfo.optJSONObject("animIconInfo")
         if (animIcon != null) coverInfo.put("picCover", animIcon.optString("src", ""))
         coverInfo.put("title", iconTextInfo.optString("title", ""))
@@ -104,7 +105,7 @@ fun injectIslandAppearance(
 ): String {
     if (highlightColor == null && !dismissIsland) return jsonParam
     return mutateParamV2(jsonParam) { pv2 ->
-        val paramIsland = pv2.optJSONObject("param_island") ?: org.json.JSONObject()
+        val paramIsland = pv2.optJSONObject("param_island") ?: JSONObject()
         highlightColor?.let { paramIsland.put("highlightColor", it) }
         if (dismissIsland) paramIsland.put("dismissIsland", true)
         pv2.put("param_island", paramIsland)

@@ -1,37 +1,31 @@
 package io.github.hyperisland
 
 import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/**
- * 自定义 Application，负责将 Flutter 端写入的 SharedPreferences
- * 镜像同步到 LSPosed 的 RemotePreferences，使 Hook 进程能通过
- * [XposedModule.getRemotePreferences] 读到最新配置。
- *
- * 架构参考 example/App.kt + example/MainActivity.kt：
- *   - App 端通过 [XposedServiceHelper] 获取 [XposedService]
- *   - 写入用 [XposedService.getRemotePreferences].edit()
- *   - Hook 端用 module.getRemotePreferences() 读取
- */
 class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
 
     private val flutterPrefs: SharedPreferences by lazy {
-        getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE)
     }
 
-    @Volatile private var xposedService: XposedService? = null
-        set(value) { field = value; serviceReady = value != null }
+    @Volatile
+    private var xposedService: XposedService? = null
+        set(value) {
+            field = value; serviceReady = value != null
+        }
 
-    private val flutterPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-        syncKeyToRemote(prefs, key)
-    }
+    private val flutterPrefsListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            syncKeyToRemote(prefs, key)
+        }
 
     override fun onCreate() {
         super.onCreate()
@@ -63,13 +57,13 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
         val service = xposedService ?: return
         try {
             val remote = service.getRemotePreferences(REMOTE_PREFS_NAME)
-            val editor = remote.edit() ?: return
-            if (key == null) {
-                writeAll(prefs, editor)
-            } else {
-                writeValue(editor, key, prefs.all[key])
+            remote.edit {
+                if (key == null) {
+                    writeAll(prefs, this)
+                } else {
+                    writeValue(this, key, prefs.all[key])
+                }
             }
-            editor.apply()
             Log.d(TAG, "synced key=$key to remote prefs")
         } catch (e: Exception) {
             Log.w(TAG, "syncKeyToRemote failed: ${e.message}")
@@ -80,9 +74,9 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
     private fun syncAllToRemote(service: XposedService) {
         try {
             val remote = service.getRemotePreferences(REMOTE_PREFS_NAME)
-            val editor = remote.edit() ?: return
-            writeAll(flutterPrefs, editor)
-            editor.apply()
+            remote.edit {
+                writeAll(flutterPrefs, this)
+            }
             Log.d(TAG, "full sync done: ${flutterPrefs.all.size} keys")
         } catch (e: Exception) {
             Log.w(TAG, "syncAllToRemote failed: ${e.message}")
@@ -98,11 +92,11 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
     private fun writeValue(editor: SharedPreferences.Editor, key: String, value: Any?) {
         when (value) {
             is Boolean -> editor.putBoolean(key, value)
-            is Int     -> editor.putInt(key, value)
-            is Long    -> editor.putLong(key, value)
-            is Float   -> editor.putFloat(key, value)
-            is String  -> editor.putString(key, value)
-            null       -> editor.remove(key)
+            is Int -> editor.putInt(key, value)
+            is Long -> editor.putLong(key, value)
+            is Float -> editor.putFloat(key, value)
+            is String -> editor.putString(key, value)
+            null -> editor.remove(key)
         }
     }
 
@@ -110,8 +104,11 @@ class HyperIslandApp : Application(), XposedServiceHelper.OnServiceListener {
         private const val TAG = "HyperIsland[App]"
         const val REMOTE_PREFS_NAME = "FlutterSharedPreferences"
 
-        @Volatile private var serviceReady = false
-        @Volatile private var apiVersion: Int = 0
+        @Volatile
+        private var serviceReady = false
+
+        @Volatile
+        private var apiVersion: Int = 0
         private val serviceReadyLock = ReentrantLock()
         private val serviceReadyCondition = serviceReadyLock.newCondition()
 

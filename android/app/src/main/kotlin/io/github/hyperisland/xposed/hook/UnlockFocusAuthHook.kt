@@ -4,8 +4,8 @@ import android.os.Build
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logWarn
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
 /**
  * 移除焦点通知白名单签名验证。
@@ -40,38 +40,44 @@ object UnlockFocusAuthHook {
         hookAuthSession(module, param.defaultClassLoader)
     }
 
-    private fun getIntField(instance: Any, fieldName: String): Int {
+    private fun getErrorCode(instance: Any): Int {
         var c: Class<*>? = instance.javaClass
         while (c != null) {
             try {
-                val f = c.getDeclaredField(fieldName)
+                val f = c.getDeclaredField("a")
                 f.isAccessible = true
                 return (f.get(instance) as? Int) ?: 0
-            } catch (_: NoSuchFieldException) { c = c.superclass }
+            } catch (_: NoSuchFieldException) {
+                c = c.superclass
+            }
         }
         return 0
     }
 
-    private fun setField(instance: Any, fieldName: String, value: Any?) {
+    private fun clearErrorCode(instance: Any) {
         var c: Class<*>? = instance.javaClass
         while (c != null) {
             try {
-                val f = c.getDeclaredField(fieldName)
+                val f = c.getDeclaredField("a")
                 f.isAccessible = true
-                f.set(instance, value)
+                f.set(instance, 0)
                 return
-            } catch (_: NoSuchFieldException) { c = c.superclass }
+            } catch (_: NoSuchFieldException) {
+                c = c.superclass
+            }
         }
     }
 
-    private fun callMethod(instance: Any, methodName: String): Any? {
+    private fun invokeSuccessCallback(instance: Any): Any? {
         var c: Class<*>? = instance.javaClass
         while (c != null) {
             try {
-                val m = c.getDeclaredMethod(methodName)
+                val m = c.getDeclaredMethod("h")
                 m.isAccessible = true
                 return m.invoke(instance)
-            } catch (_: NoSuchMethodException) { c = c.superclass }
+            } catch (_: NoSuchMethodException) {
+                c = c.superclass
+            }
         }
         return null
     }
@@ -80,11 +86,9 @@ object UnlockFocusAuthHook {
         try {
             val authSessionClass = classLoader.loadClass(AUTH_SESSION_CLASS)
 
-            val targetMethod = authSessionClass.declaredMethods
-                .filter { it.name == "b" && it.parameterCount == 1 }
-                .firstOrNull()
-
-            if (targetMethod == null) {
+            val targetMethod = authSessionClass.declaredMethods.firstOrNull {
+                it.name == "b" && it.parameterCount == 1
+            } ?: run {
                 module.log("$TAG: method 'b(error)' not found in $AUTH_SESSION_CLASS")
                 return
             }
@@ -94,10 +98,10 @@ object UnlockFocusAuthHook {
                 if (error == null) return@intercept chain.proceed()
 
                 try {
-                    val originalCode = getIntField(error, "a")
+                    val originalCode = getErrorCode(error)
                     module.log("$TAG: auth error intercepted, original errorCode=$originalCode, forcing to 0")
-                    setField(error, "a", 0)
-                    val successResult = callMethod(chain.thisObject!!, "h")
+                    clearErrorCode(error)
+                    val successResult = invokeSuccessCallback(chain.thisObject!!)
                     module.log("$TAG: auth bypassed successfully")
                     successResult  // skip original
                 } catch (e: Throwable) {

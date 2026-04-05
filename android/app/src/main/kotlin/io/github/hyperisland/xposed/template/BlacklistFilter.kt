@@ -1,8 +1,9 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.template
 
 import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
+import io.github.hyperisland.xposed.ConfigManager
 
 /**
  * 应用黑名单过滤器。
@@ -12,7 +13,7 @@ import android.util.Log
  */
 object BlacklistFilter {
 
-    fun applyTo(context: Context, data: NotifData): NotifData? {
+    fun applyTo(context: Context, data: NotifData): NotifData {
         val blacklistStr = ConfigManager.getString("pref_app_blacklist")
 
         if (blacklistStr.isEmpty()) return data
@@ -26,8 +27,12 @@ object BlacklistFilter {
             ""
         }
 
-        val isBlacklisted = foregroundApp.isNotEmpty() && blacklistStr.split(",").contains(foregroundApp)
-        Log.d("HyperIsland", "HyperIsland[Blacklist]: foreground=$foregroundApp, isBlacklisted=$isBlacklisted")
+        val isBlacklisted =
+            foregroundApp.isNotEmpty() && blacklistStr.split(",").contains(foregroundApp)
+        Log.d(
+            "HyperIsland",
+            "HyperIsland[Blacklist]: foreground=$foregroundApp, isBlacklisted=$isBlacklisted"
+        )
 
         if (!isBlacklisted) return data
 
