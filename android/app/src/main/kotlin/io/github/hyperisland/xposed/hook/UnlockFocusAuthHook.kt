@@ -1,7 +1,6 @@
 package io.github.hyperisland.xposed.hook
 
 import io.github.hyperisland.xposed.ConfigManager
-import io.github.hyperisland.xposed.log
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 
@@ -15,18 +14,19 @@ import io.github.libxposed.api.XposedModule
  *
  * 设置 key：pref_unlock_focus_auth（布尔，默认 false）
  */
-object UnlockFocusAuthHook {
+object UnlockFocusAuthHook : BaseHook() {
 
     private const val TAG = "HyperIsland[UnlockFocusAuthHook]"
     private const val SETTINGS_KEY = "pref_unlock_focus_auth"
     private const val AUTH_SESSION_CLASS = "com.xiaomi.xms.auth.AuthSession"
 
+    override fun getTag() = TAG
+
     private fun isEnabled(): Boolean = ConfigManager.getBoolean(SETTINGS_KEY, false)
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
-        ConfigManager.init(module)
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         if (!isEnabled()) {
-            module.log("$TAG: disabled, skipping hook for ${param.packageName}")
+            log(module, "disabled, skipping hook for ${param.packageName}")
             return
         }
         hookAuthSession(module, param.defaultClassLoader)
@@ -77,7 +77,7 @@ object UnlockFocusAuthHook {
                 .firstOrNull()
 
             if (targetMethod == null) {
-                module.log("$TAG: method 'b(error)' not found in $AUTH_SESSION_CLASS")
+                logError(module, "method 'b(error)' not found in $AUTH_SESSION_CLASS")
                 return
             }
 
@@ -87,20 +87,20 @@ object UnlockFocusAuthHook {
 
                 try {
                     val originalCode = getIntField(error, "a")
-                    module.log("$TAG: auth error intercepted, original errorCode=$originalCode, forcing to 0")
+                    log(module, "auth error intercepted, original errorCode=$originalCode, forcing to 0")
                     setField(error, "a", 0)
                     val successResult = callMethod(chain.thisObject!!, "h")
-                    module.log("$TAG: auth bypassed successfully")
+                    log(module, "auth bypassed successfully")
                     successResult  // skip original
                 } catch (e: Throwable) {
-                    module.log("$TAG: bypass failed — ${e.message}")
+                    logError(module, "bypass failed — ${e.message}")
                     chain.proceed()
                 }
             }
 
-            module.log("$TAG: hooked AuthSession.b(error)")
+            log(module, "hooked AuthSession.b(error)")
         } catch (e: Throwable) {
-            module.log("$TAG: failed to hook $AUTH_SESSION_CLASS — ${e.message}")
+            logError(module, "failed to hook $AUTH_SESSION_CLASS — ${e.message}")
         }
     }
 }

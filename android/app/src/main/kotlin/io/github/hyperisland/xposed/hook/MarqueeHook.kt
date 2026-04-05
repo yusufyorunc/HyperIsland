@@ -1,11 +1,12 @@
 package io.github.hyperisland.xposed.hook
 
+import android.util.Log
 import android.view.Choreographer
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import io.github.hyperisland.xposed.ConfigManager
-import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.util.WeakHashMap
@@ -13,23 +14,35 @@ import java.util.WeakHashMap
 /**
  * Hook SystemUI 中超级岛大岛视图的 TextView，实现自定义跑马灯（文字横向滚动）效果。
  */
-object MarqueeHook {
+object MarqueeHook : BaseHook() {
 
     private const val TAG = "HyperIsland[MarqueeHook]"
 
-private fun normalizeText(text: String): String {
+    override fun getTag() = TAG
+
+    override fun onConfigChanged() {
+        cachedSpeed = null
+        hookedContentView = false
+        stopAllMarquees()
+    }
+
+    private val scrollerMap = WeakHashMap<TextView, MarqueeController>()
+    private val observedViews = WeakHashMap<TextView, TextViewListeners>()
+    private val islandMarqueeState = WeakHashMap<ViewGroup, Boolean>()
+
+    @Volatile private var cachedSpeed: Int? = null
+
+    private data class TextViewListeners(
+        val layoutListeners: ArrayList<View.OnLayoutChangeListener>,
+        val textWatcher: android.text.TextWatcher
+    )
+
+    private fun normalizeText(text: String): String {
         return text
             .replace(Regex("[\\n\\r\\t\\u00A0\\u200B\\uFEFF]+"), " ")
             .replace(Regex(" +"), " ")
             .trim()
     }
-
-    private val scrollerMap = WeakHashMap<TextView, MarqueeController>()
-    private val observedViews = WeakHashMap<TextView, Boolean>()
-    private val islandMarqueeState = WeakHashMap<ViewGroup, Boolean>()
-
-    @Volatile private var cachedSpeed: Int? = null
-    @Volatile private var observerRegistered = false
 
     private fun findBigIslandView(view: View): ViewGroup? {
         var p = view.parent
@@ -43,18 +56,6 @@ private fun normalizeText(text: String): String {
     private fun isMarqueeEnabledFor(textView: TextView): Boolean {
         val island = findBigIslandView(textView)
         return island?.let { islandMarqueeState[it] } ?: false
-    }
-
-    fun ensureObserver(context: android.content.Context, module: XposedModule) {
-        if (observerRegistered) return
-        ConfigManager.init(module)
-        ConfigManager.addChangeListener {
-            cachedSpeed = null
-            stopAllMarquees()
-            //module.log("$TAG: settings changed via Observer, cache cleared")
-        }
-        observerRegistered = true
-        module.log("$TAG: ConfigManager Observer registered in SystemUI")
     }
 
     private fun getMarqueeSpeed(): Int {
@@ -128,21 +129,27 @@ private fun normalizeText(text: String): String {
                 else stopMarquee(view)
                 return
             }
-            observedViews[view] = true
-
-            view.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            
+            val listeners = ArrayList<View.OnLayoutChangeListener>()
+            val layoutListener = View.OnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
                 val tv = v as TextView
                 if (isMarqueeEnabledFor(tv)) startMarquee(tv)
                 else stopMarquee(tv)
             }
-            view.addTextChangedListener(object : android.text.TextWatcher {
+            listeners.add(layoutListener)
+            view.addOnLayoutChangeListener(layoutListener)
+            
+            val textWatcher = object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(s: android.text.Editable?) {
                     if (isMarqueeEnabledFor(view)) startMarquee(view)
                     else stopMarquee(view)
                 }
-            })
+            }
+            view.addTextChangedListener(textWatcher)
+            observedViews[view] = TextViewListeners(listeners, textWatcher)
+            
             if (enabled) startMarquee(view)
             else stopMarquee(view)
         } else if (view is ViewGroup) {
@@ -164,14 +171,10 @@ private fun normalizeText(text: String): String {
         }
     }
 
-    // ─── IXposedHookLoadPackage → init ────────────────────────────────────────
-
     private var hookedContentView = false
-    private val targetPkg = java.util.Collections.synchronizedMap(java.util.WeakHashMap<View, String>())
+    private val targetPkg = java.util.Collections.synchronizedMap(WeakHashMap<View, String>())
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
-        module.log("$TAG: initializing for ${param.packageName}")
-        hookContentViewClasses(module, param.defaultClassLoader)
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         hookDynamicClassLoaders(module)
     }
 
@@ -206,7 +209,7 @@ private fun normalizeText(text: String): String {
                                 pkgName = targetPkg[islandView] ?: ""
                             }
                             if (pkgName.isEmpty()) return@intercept result
-                            ensureObserver(islandView.context, module)
+                            
                             val isOngoing = try {
                                 islandData?.javaClass?.getMethod("isOngoing")?.invoke(islandData) as? Boolean ?: false
                             } catch (_: Exception) { false }
@@ -214,6 +217,7 @@ private fun normalizeText(text: String): String {
                                 traverseAndApplyMarquee(islandView, false)
                                 return@intercept result
                             }
+                            
                             val marqueeRaw = ConfigManager.getString("pref_channel_marquee_${pkgName}", "default")
                             val defaultMarquee = ConfigManager.getBoolean("pref_default_marquee", false)
                             val enabled = when (marqueeRaw) {
@@ -226,39 +230,19 @@ private fun normalizeText(text: String): String {
                         result
                     }
                     hookedContentView = true
-                    module.log("$TAG: hooked updateBigIslandView on $className")
+                    module.log(Log.DEBUG, TAG, "hooked updateBigIslandView on $className")
                 }
             } catch (_: Exception) {}
         }
     }
 
     private fun hookDynamicClassLoaders(module: XposedModule) {
-        val classLoaders = arrayOf(
-            "dalvik.system.BaseDexClassLoader",
-            "dalvik.system.PathClassLoader",
-            "dalvik.system.DexClassLoader",
-            "dalvik.system.DelegateLastClassLoader"
-        )
-        for (clName in classLoaders) {
-            try {
-                val clazz = Class.forName(clName)
-                for (ctor in clazz.declaredConstructors) {
-                    try {
-                        module.hook(ctor).intercept { chain ->
-                            val result = chain.proceed()
-                            val cl = chain.thisObject as? ClassLoader
-                            if (cl != null && !hookedContentView) {
-                                hookContentViewClasses(module, cl)
-                            }
-                            result
-                        }
-                    } catch (_: Exception) {}
-                }
-            } catch (_: Exception) {}
+        HookUtils.hookDynamicClassLoaders(module, ClassLoader.getSystemClassLoader()) { cl ->
+            if (!hookedContentView) {
+                hookContentViewClasses(module, cl)
+            }
         }
     }
-
-    // ─── MarqueeController ────────────────────────────────────────────────────
 
     class MarqueeController(
         private val view: TextView,

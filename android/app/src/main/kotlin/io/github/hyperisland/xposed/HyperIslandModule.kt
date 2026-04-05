@@ -1,7 +1,10 @@
 package io.github.hyperisland.xposed
 
 import io.github.hyperisland.xposed.hook.BigIslandMinWidthHook
+import io.github.hyperisland.xposed.hook.DownloadHook
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
+import io.github.hyperisland.xposed.hook.GenericProgressHook
+import io.github.hyperisland.xposed.hook.IslandDispatcherHook
 import io.github.hyperisland.xposed.hook.MarqueeHook
 import io.github.hyperisland.xposed.hook.UnlockAllFocusHook
 import io.github.hyperisland.xposed.hook.UnlockFocusAuthHook
@@ -14,11 +17,13 @@ import io.github.libxposed.api.XposedModule
  */
 class HyperIslandModule : XposedModule() {
 
-    override fun onPackageLoaded(param: PackageLoadedParam) {
-        when (param.packageName) {
+    private var configManagerInitialized = false
 
-            "com.android.systemui",
-            "miui.systemui.plugin" -> {
+    override fun onPackageLoaded(param: PackageLoadedParam) {
+        initializeConfigManager()
+        
+        when (param.packageName) {
+            "com.android.systemui"-> {
                 IslandDispatcherHook.init(this, param)
                 GenericProgressHook.init(this, param)
                 MarqueeHook.init(this, param)
@@ -33,6 +38,13 @@ class HyperIslandModule : XposedModule() {
 
             "com.xiaomi.xmsf" ->
                 UnlockFocusAuthHook.init(this, param)
+        }
+    }
+
+    private fun initializeConfigManager() {
+        if (!configManagerInitialized) {
+            ConfigManager.init(this)
+            configManagerInitialized = true
         }
     }
 }

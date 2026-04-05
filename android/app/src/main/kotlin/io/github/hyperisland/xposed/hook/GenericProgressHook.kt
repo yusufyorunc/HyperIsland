@@ -1,11 +1,15 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.hook
 
 import android.app.KeyguardManager
 import android.app.Notification
 import android.service.notification.StatusBarNotification
 import io.github.hyperisland.getAppIcon
-import io.github.hyperisland.xposed.hook.MarqueeHook
+import io.github.hyperisland.xposed.ConfigManager
+import io.github.hyperisland.xposed.IslandDispatcher
+import io.github.hyperisland.xposed.NotifData
+import io.github.hyperisland.xposed.TemplateRegistry
 import io.github.hyperisland.xposed.templates.NotificationIslandNotification
+import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 
@@ -23,28 +27,22 @@ import io.github.libxposed.api.XposedModule
  * 必须在 generateInnerNotifBean 之前（intercept 中先处理再 proceed）写入 island extras，
  * 否则 bean 已经用原始 extras 创建完毕，后续修改不影响岛的触发判断。
  */
-object GenericProgressHook {
+object GenericProgressHook : BaseHook() {
 
     private const val TAG = "HyperIsland[Generic]"
+
+    override fun getTag() = TAG
+
+    override fun onConfigChanged() {
+        clearAllCaches()
+    }
 
     @Volatile private var cachedWhitelist: Map<String, Set<String>>? = null
     private val cachedTemplates = mutableMapOf<String, String>()
     private val cachedChannelSettings = mutableMapOf<String, String>()
 
-    @Volatile private var observerRegistered = false
-
     private val lastProgressCache = mutableMapOf<String, Int>()
     private val trackedForCancel = mutableMapOf<String, Int>()
-
-    fun ensureObserver(context: android.content.Context, module: XposedModule) {
-        if (observerRegistered) return
-        ConfigManager.init(module)
-        ConfigManager.addChangeListener {
-            clearAllCaches("prefs_changed", module)
-        }
-        observerRegistered = true
-        module.log("$TAG: ConfigManager Observer registered in SystemUI")
-    }
 
     private fun loadChannelStringSetting(cacheKey: String, prefKey: String, default: String): String {
         cachedChannelSettings[cacheKey]?.let { return it }
@@ -75,11 +73,10 @@ object GenericProgressHook {
             else  -> if (globalDefault) "on" else "off"
         }
 
-    private fun clearAllCaches(reason: String, module: XposedModule) {
+    private fun clearAllCaches() {
         cachedWhitelist = null
         cachedTemplates.clear()
         cachedChannelSettings.clear()
-        //module.log("$TAG: settings changed, cache cleared ($reason)")
     }
 
     fun loadChannelTemplate(pkg: String, channelId: String): String {
@@ -105,11 +102,11 @@ object GenericProgressHook {
                 pkg to channels
             }
         if (map.isNotEmpty()) cachedWhitelist = map
-        module.log("$TAG: whitelist loaded (${map.size} apps): ${map.keys}")
+        log(module, "whitelist loaded (${map.size} apps): ${map.keys}")
         return map
     }
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         val classLoader = param.defaultClassLoader
 
         // Hook generateInnerNotifBean (before)
@@ -121,9 +118,9 @@ object GenericProgressHook {
                 if (sbn != null) handleSbn(sbn, module, classLoader)
                 chain.proceed()
             }
-            module.log("$TAG: hooked MiuiBaseNotifUtil.generateInnerNotifBean")
+            log(module, "hooked MiuiBaseNotifUtil.generateInnerNotifBean")
         } catch (e: Throwable) {
-            module.log("$TAG: hook failed: ${e.message}")
+            logError(module, "hook failed: ${e.message}")
         }
 
         // Hook onNotificationRemoved (after) — 优先 3 参数版本
@@ -141,14 +138,14 @@ object GenericProgressHook {
             )
             module.hook(removeMethod).intercept { chain ->
                 val result = chain.proceed()
-                handleNotificationRemoved(chain.args[0] as? StatusBarNotification, module, classLoader)
-                result
+                    handleNotificationRemoved(chain.args[0] as? StatusBarNotification, module, classLoader)
+                    result
+                }
+                cancelHooked = true
+                log(module, "hooked onNotificationRemoved(sbn, rankingMap, reason)")
+            } catch (e: Throwable) {
+                logError(module, "onNotificationRemoved 3-param hook failed: ${e.message}")
             }
-            cancelHooked = true
-            module.log("$TAG: hooked onNotificationRemoved(sbn, rankingMap, reason)")
-        } catch (e: Throwable) {
-            module.log("$TAG: onNotificationRemoved 3-param hook failed: ${e.message}")
-        }
 
         if (!cancelHooked) {
             try {
@@ -162,12 +159,12 @@ object GenericProgressHook {
                     handleNotificationRemoved(chain.args[0] as? StatusBarNotification, module, classLoader)
                     result
                 }
-                module.log("$TAG: hooked onNotificationRemoved(sbn)")
+                log(module, "hooked onNotificationRemoved(sbn)")
             } catch (e: Throwable) {
-                module.log("$TAG: onNotificationRemoved 1-param hook failed: ${e.message}")
-            }
+                logError(module, "onNotificationRemoved 1-param hook failed: ${e.message}")
         }
     }
+}
 
     private fun handleNotificationRemoved(
         sbn: StatusBarNotification?,
@@ -177,7 +174,7 @@ object GenericProgressHook {
         sbn ?: return
         val key = "${sbn.packageName}#${sbn.id}"
         val proxyId = trackedForCancel.remove(key) ?: return
-        val context = getContext(classLoader) ?: return
+        val context = HookUtils.getContext(classLoader) ?: return
         IslandDispatcher.cancel(context, proxyId)
     }
 
@@ -188,10 +185,9 @@ object GenericProgressHook {
             if (pkg == "com.android.systemui" &&
                 sbn.notification?.channelId == IslandDispatcher.CHANNEL_ID) return
 
-            val context = getContext(classLoader) ?: return
-            ensureObserver(context, module)
+        val context = HookUtils.getContext(classLoader) ?: return
 
-            val allowedChannels = loadWhitelist(module)[pkg] ?: return
+        val allowedChannels = loadWhitelist(module)[pkg] ?: return
             val notif = sbn.notification ?: return
             val channelId = notif.channelId ?: ""
             if (allowedChannels.isNotEmpty() && channelId !in allowedChannels) return
@@ -203,10 +199,10 @@ object GenericProgressHook {
             val defaultRestoreLockscreen = loadBooleanSetting("global:default_restore_lockscreen", "pref_default_restore_lockscreen", false)
             val restoreLockscreenRaw = loadChannelStringSetting("restore_lockscreen:$pkg/$channelId", "pref_channel_restore_lockscreen_${pkg}_$channelId", "default")
             val restoreLockscreen = resolveTriOpt(restoreLockscreenRaw, defaultRestoreLockscreen)
-            module.log("$TAG: restoreLockscreen raw=$restoreLockscreenRaw, resolved=$restoreLockscreen, default=$defaultRestoreLockscreen")
+            log(module, "restoreLockscreen raw=$restoreLockscreenRaw, resolved=$restoreLockscreen, default=$defaultRestoreLockscreen")
 
             if (restoreLockscreen == "on" && shouldRedactPrivateContentOnLockscreen(context, notif, module)) {
-                module.log("$TAG: skipping due to lockscreen restore")
+                log(module, "skipping due to lockscreen restore")
                 extras.remove("miui.focus.param")
                 extras.remove("hyperisland_generic_processed")
                 return
@@ -301,12 +297,8 @@ object GenericProgressHook {
                 "show_right_highlight:$pkg/$channelId", "pref_channel_show_right_highlight_${pkg}_$channelId", "off"
             ) == "on"
 
-            module.log(
-                "$TAG: $pkg/$channelId | $title |  template=$template"
-            )
-//            module.log(
-//                "$TAG: $pkg/$channelId | $title | $progressPercent% | template=$template | buttons=${actions.size} | largeIcon=${largeIcon != null} | preserveSmallIcon=$preserveStatusBarSmallIcon"
-//            )
+            log(module, "$pkg/$channelId | $title |  template=$template")
+//            log(module, "$pkg/$channelId | $title | $progressPercent% | template=$template | buttons=${actions.size} | largeIcon=${largeIcon != null} | preserveSmallIcon=$preserveStatusBarSmallIcon")
 
             TemplateRegistry.dispatch(
                 templateId = template,
@@ -344,7 +336,7 @@ object GenericProgressHook {
             trackedForCancel["$pkg#${sbn.id}"] = IslandDispatcher.NOTIF_ID
 
         } catch (e: Throwable) {
-            module.log("$TAG: handleSbn error: ${e.message}")
+            logError(module, "handleSbn error: ${e.message}")
         }
     }
 
@@ -355,7 +347,7 @@ object GenericProgressHook {
     ): Boolean {
         if (!isKeyguardLocked(context, module)) return false
         val vis = notif.visibility
-        module.log("$TAG: notification visibility = $vis (PUBLIC=${Notification.VISIBILITY_PUBLIC}, PRIVATE=${Notification.VISIBILITY_PRIVATE}, SECRET=${Notification.VISIBILITY_SECRET})")
+        log(module, "notification visibility = $vis (PUBLIC=${Notification.VISIBILITY_PUBLIC}, PRIVATE=${Notification.VISIBILITY_PRIVATE}, SECRET=${Notification.VISIBILITY_SECRET})")
         if (vis == Notification.VISIBILITY_PUBLIC) return false
         // VISIBILITY_PRIVATE 或 VISIBILITY_SECRET 都应该跳过处理
         return true
@@ -364,7 +356,7 @@ object GenericProgressHook {
     private fun isKeyguardLocked(context: android.content.Context, module: XposedModule): Boolean {
         val keyguardManager = context.getSystemService(KeyguardManager::class.java) ?: return false
         val locked = keyguardManager.isKeyguardLocked
-        module.log("$TAG: isKeyguardLocked = $locked")
+        log(module, "isKeyguardLocked = $locked")
         return locked
     }
 

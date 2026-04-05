@@ -2,7 +2,6 @@ package io.github.hyperisland.xposed.hook
 
 import android.content.Context
 import io.github.hyperisland.xposed.ConfigManager
-import io.github.hyperisland.xposed.log
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 
@@ -16,18 +15,19 @@ import io.github.libxposed.api.XposedModule
  *
  * 设置 key：pref_unlock_all_focus（布尔，默认 false）
  */
-object UnlockAllFocusHook {
+object UnlockAllFocusHook : BaseHook() {
 
     private const val TAG = "HyperIsland[UnlockAllFocusHook]"
     private const val SETTINGS_KEY = "pref_unlock_all_focus"
     private const val TARGET_CLASS = "miui.systemui.notification.NotificationSettingsManager"
 
+    override fun getTag() = TAG
+
     private fun isEnabled(): Boolean = ConfigManager.getBoolean(SETTINGS_KEY, false)
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
-        ConfigManager.init(module)
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         if (!isEnabled()) {
-            module.log("$TAG: disabled, skipping hook for ${param.packageName}")
+            log(module, "disabled, skipping hook for ${param.packageName}")
             return
         }
         hookCanShowFocus(module, param.defaultClassLoader)
@@ -39,9 +39,9 @@ object UnlockAllFocusHook {
             val clazz = classLoader.loadClass(TARGET_CLASS)
             val method = clazz.getDeclaredMethod("canShowFocus", Context::class.java, String::class.java)
             module.hook(method).intercept { chain -> true }
-            module.log("$TAG: hooked canShowFocus(Context, String)")
+            log(module, "hooked canShowFocus(Context, String)")
         } catch (e: Throwable) {
-            module.log("$TAG: failed to hook canShowFocus — ${e.message}")
+            logError(module, "failed to hook canShowFocus — ${e.message}")
         }
     }
 
@@ -50,9 +50,9 @@ object UnlockAllFocusHook {
             val clazz = classLoader.loadClass(TARGET_CLASS)
             val method = clazz.getDeclaredMethod("canCustomFocus", String::class.java)
             module.hook(method).intercept { chain -> true }
-            module.log("$TAG: hooked canCustomFocus(String)")
+            log(module, "hooked canCustomFocus(String)")
         } catch (e: Throwable) {
-            module.log("$TAG: canCustomFocus not found (may be expected) — ${e.message}")
+            logError(module, "canCustomFocus not found (may be expected) — ${e.message}")
         }
     }
 }

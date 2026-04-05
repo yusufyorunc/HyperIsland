@@ -4,7 +4,6 @@ import android.app.Notification
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import io.github.hyperisland.xposed.log
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import kotlin.jvm.JvmStatic
@@ -14,7 +13,7 @@ import kotlin.jvm.JvmStatic
  *
  * 作用域：com.android.systemui（系统界面）
  */
-object FocusNotifStatusBarIconHook {
+object FocusNotifStatusBarIconHook : BaseHook() {
 
     private const val TAG = "HyperIsland[FocusStatusBarIcon]"
     private const val TARGET_ENTRY_CLASS =
@@ -28,6 +27,8 @@ object FocusNotifStatusBarIconHook {
 
     @Volatile private var cachedDirectProxyActiveUntilElapsed = 0L
     @Volatile private var hooked = false
+
+    override fun getTag() = TAG
 
     @JvmStatic
     internal fun markDirectProxyPosted(timeoutSecs: Int) {
@@ -44,7 +45,7 @@ object FocusNotifStatusBarIconHook {
     private fun isDirectProxyActive(): Boolean =
         cachedDirectProxyActiveUntilElapsed > SystemClock.elapsedRealtime()
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         if (hooked) return
         hooked = true
         val classLoader = param.defaultClassLoader
@@ -68,13 +69,13 @@ object FocusNotifStatusBarIconHook {
                 try {
                     setFieldValue(model, "isFocusNotification", false)
                 } catch (e: Throwable) {
-                    module.log("$TAG: failed to override isFocusNotification — ${e.message}")
+                    logError(module, "failed to override isFocusNotification — ${e.message}")
                 }
                 result
             }
-            module.log("$TAG: hooked ActiveNotificationsStoreBuilder.toModel(NotificationEntry)")
+            log(module, "hooked ActiveNotificationsStoreBuilder.toModel(NotificationEntry)")
         } catch (e: Throwable) {
-            module.log("$TAG: ActiveNotificationsStoreBuilder.toModel hook failed — ${e.message}")
+            logError(module, "ActiveNotificationsStoreBuilder.toModel hook failed — ${e.message}")
         }
     }
 
@@ -89,13 +90,13 @@ object FocusNotifStatusBarIconHook {
                     forceShowNotificationIconsModel(module, fragment)
                     restoreNotificationIconArea(fragment)
                     refreshNotificationIconArea(module, fragment)
-                    module.log("$TAG: icon area restored")
+                    log(module, "icon area restored")
                 }
                 result
             }
-            module.log("$TAG: hooked MiuiCollapsedStatusBarFragment.updateStatusBarVisibilities(boolean)")
+            log(module, "hooked MiuiCollapsedStatusBarFragment.updateStatusBarVisibilities(boolean)")
         } catch (e: Throwable) {
-            module.log("$TAG: updateStatusBarVisibilities hook failed — ${e.message}")
+            logError(module, "updateStatusBarVisibilities hook failed — ${e.message}")
         }
     }
 
@@ -115,7 +116,7 @@ object FocusNotifStatusBarIconHook {
             )
             setFieldValue(fragment, "mLastModifiedVisibility", newModel)
         } catch (e: Throwable) {
-            module.log("$TAG: forceShowNotificationIconsModel failed — ${e.message}")
+            logError(module, "forceShowNotificationIconsModel failed — ${e.message}")
         }
     }
 
@@ -124,7 +125,7 @@ object FocusNotifStatusBarIconHook {
         try {
             callMethod(fragment, "updateNotificationIconAreaAndOngoingActivityChip", false)
         } catch (e: Throwable) {
-            module.log("$TAG: refreshNotificationIconArea failed — ${e.message}")
+            logError(module, "refreshNotificationIconArea failed — ${e.message}")
         }
     }
 

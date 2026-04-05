@@ -1,8 +1,10 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.hook
 
 import android.app.Notification
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import io.github.hyperisland.xposed.utils.HookUtils
+import io.github.hyperisland.xposed.InProcessController
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
@@ -11,9 +13,11 @@ import java.util.regex.Pattern
 /**
  * Xposed Hook — 拦截下载通知并注入小米超级岛参数
  */
-object DownloadHook {
+object DownloadHook : BaseHook() {
 
     private const val TAG = "HyperIsland[DownloadHook]"
+
+    override fun getTag() = TAG
 
     var extrasField: Field? = null
 
@@ -38,11 +42,11 @@ object DownloadHook {
         }
     }
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         val classLoader = param.defaultClassLoader
         val pkg = param.packageName
 
-        module.log("$TAG: handleLoadPackage pkg=$pkg")
+        log(module, "handleLoadPackage pkg=$pkg")
 
         try {
             val nmClass = classLoader.loadClass("android.app.NotificationManager")
@@ -53,9 +57,9 @@ object DownloadHook {
                 InProcessController.hookMiuiDownloadManager(module, classLoader)
             }
 
-            hookDownloadManagerService(module, classLoader)
+                hookDownloadManagerService(module, classLoader)
         } catch (e: Throwable) {
-            module.logError("$TAG: Error hooking $pkg: ${e.message}")
+            logError(module, "Error hooking $pkg: ${e.message}")
         }
     }
 
@@ -82,7 +86,7 @@ object DownloadHook {
                 chain.proceed()
             }
         } catch (e: Throwable) {
-            module.logError("$TAG: notify hook failed: ${e.message}")
+            logError(module, "notify hook failed: ${e.message}")
         }
     }
 
@@ -92,7 +96,7 @@ object DownloadHook {
             val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
             val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
             val channelId = notif.channelId ?: ""
-            module.log("$TAG: [RAW/Notify] ch=$channelId | title=$title | text=$text")
+            log(module, "[RAW/Notify] ch=$channelId | title=$title | text=$text")
             if (!isDownloadNotification(title, text, extras) && channelId.isEmpty()) return
 
             val appName = pkg.substringAfterLast(".").replaceFirstChar { it.uppercase() }
@@ -109,9 +113,9 @@ object DownloadHook {
                                combined.contains("queued", ignoreCase = true) || combined.contains("pending", ignoreCase = true))
             val isPaused    = !isComplete && !isWaiting &&
                               (combined.contains("暂停") || combined.contains("已暂停") ||
-                               combined.contains("paused", ignoreCase = true))
+                                combined.contains("paused", ignoreCase = true))
 
-            val context = getContext(classLoader) ?: return
+            val context = HookUtils.getContext(classLoader) ?: return
             InProcessController.ensureRegistered(context, module)
 
             // 按钮：每次通知都设置，避免因去重跳过导致闪烁
@@ -154,7 +158,7 @@ object DownloadHook {
             if (downloadId > 0) { info.downloadId = downloadId; downloadIdMap[downloadId] = pkg }
             processedNotifications.entries.removeIf { now - it.value.lastProcessTime > 10000 }
 
-            module.log("$TAG: [Notify] $appName | $fileName | $progress% | paused=$isPaused | notifId=$id | tag=$tag | downloadId=$downloadId")
+            log(module, "[Notify] $appName | $fileName | $progress% | paused=$isPaused | notifId=$id | tag=$tag | downloadId=$downloadId")
 
             val snapshotKey = "${tag}_$id"
             if (isComplete) {
@@ -172,7 +176,7 @@ object DownloadHook {
             }
 
         } catch (e: Throwable) {
-            module.logError("$TAG: handleNotification error: ${e.message}")
+            logError(module, "handleNotification error: ${e.message}")
         }
     }
 
@@ -194,12 +198,12 @@ object DownloadHook {
                         name.contains("pause") -> hookLogMethod(module, clazz, method.name, "Pause")
                         name.contains("resume") -> hookLogMethod(module, clazz, method.name, "Resume")
                         name.contains("cancel") || name.contains("remove") || name.contains("delete") ->
-                            hookLogMethod(module, clazz, method.name, "Cancel")
+                         hookLogMethod(module, clazz, method.name, "Cancel")
                     }
                 }
             } catch (_: ClassNotFoundException) {
             } catch (e: Throwable) {
-                module.logError("$TAG: DownloadManager hook error ($className): ${e.message}")
+                logError(module, "DownloadManager hook error ($className): ${e.message}")
             }
         }
     }
@@ -208,7 +212,7 @@ object DownloadHook {
         try {
             val method = clazz.getDeclaredMethod(methodName)
             module.hook(method).intercept { chain ->
-                module.log("$TAG: [$label] $methodName called")
+                log(module, "[$label] $methodName called")
                 chain.proceed()
             }
         } catch (_: Throwable) {}

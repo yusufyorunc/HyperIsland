@@ -1,5 +1,7 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.hook
 
+import io.github.hyperisland.xposed.ConfigManager
+import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 
@@ -9,11 +11,13 @@ import io.github.libxposed.api.XposedModule
  * 通过 hook [android.app.Application.onCreate] 在 SystemUI 启动早期获取
  * ApplicationContext，完成 [IslandDispatcher] 的 BroadcastReceiver 注册。
  */
-object IslandDispatcherHook {
+object IslandDispatcherHook : BaseHook() {
 
     private const val TAG = "HyperIsland[DispatcherHook]"
 
-    fun init(module: XposedModule, param: PackageLoadedParam) {
+    override fun getTag() = TAG
+
+    override fun onInit(module: XposedModule, param: PackageLoadedParam) {
         try {
             val method = param.defaultClassLoader
                 .loadClass("android.app.Application")
@@ -27,9 +31,9 @@ object IslandDispatcherHook {
                 }
                 result
             }
-            module.log("$TAG: hooked Application.onCreate in SystemUI")
+            log(module, "hooked Application.onCreate in SystemUI")
         } catch (e: Throwable) {
-            module.logError("$TAG: hook failed: ${e.message}")
+            logError(module, "hook failed: ${e.message}")
         }
     }
 }
