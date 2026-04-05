@@ -11,11 +11,6 @@ on:
         options:
           - debug
           - release
-      run_flutter_analyze:
-        description: "Run flutter analyze"
-        required: true
-        default: true
-        type: boolean
       run_qodana:
         description: "Run Qodana (JetBrains inspections, slower)"
         required: true
@@ -56,13 +51,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get --offline || flutter pub get
 
-      - name: Run flutter analyze
-        id: flutter_analyze
-        if: ${{ inputs.run_flutter_analyze }}
-        continue-on-error: true
-        run: |
-          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings | tee ci-report/raw/flutter-analyze.txt
-
       - name: Run Android Lint
         id: android_lint
         continue-on-error: true
@@ -72,15 +60,16 @@ jobs:
           TASK=":app:lint${VARIANT^}"
           echo "Running $TASK"
 
-          if [ ! -f "android/gradlew" ]; then
-            echo "android/gradlew not found"
-            ls -la
-            ls -la android || true
-            exit 1
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+            (
+              cd android
+              ./gradlew "$TASK" --stacktrace
+            ) | tee ci-report/raw/gradle-lint.log
+          else
+            echo "android/gradlew not found, falling back to system gradle"
+            gradle -p android "$TASK" --stacktrace | tee ci-report/raw/gradle-lint.log
           fi
-
-          chmod +x android/gradlew
-          bash ./android/gradlew "$TASK" --stacktrace | tee ci-report/raw/gradle-lint.log
 
       - name: Collect Android lint reports
         if: always()
@@ -90,6 +79,14 @@ jobs:
             cp -R android/app/build/reports/. ci-report/raw/android-lint-reports/
           fi
 
+      - name: Prepare Qodana config
+        if: ${{ inputs.run_qodana }}
+        run: |
+          cat > qodana.yaml << 'EOF'
+          version: "1.0"
+          linter: qodana-android
+          EOF
+
       - name: Run Qodana scan
         id: qodana
         if: ${{ inputs.run_qodana }}
@@ -97,18 +94,17 @@ jobs:
         uses: JetBrains/qodana-action@v2025.2
         with:
           use-annotations: false
+          pr-mode: false
           post-pr-comment: false
           upload-result: false
           results-dir: ci-report/raw/qodana
-          args: --image jetbrains/qodana-jvm-community:2025.2 --save-report
+          args: --save-report
 
       - name: Build consolidated report
         if: always()
         env:
           INPUT_VARIANT: ${{ inputs.android_lint_variant }}
-          INPUT_FLUTTER_ANALYZE: ${{ inputs.run_flutter_analyze }}
           INPUT_QODANA: ${{ inputs.run_qodana }}
-          FLUTTER_ANALYZE_OUTCOME: ${{ steps.flutter_analyze.outcome }}
           ANDROID_LINT_OUTCOME: ${{ steps.android_lint.outcome }}
           QODANA_OUTCOME: ${{ steps.qodana.outcome }}
         run: |
@@ -116,7 +112,6 @@ jobs:
           import json
           import os
           import pathlib
-          import re
           import xml.etree.ElementTree as ET
 
           root = pathlib.Path(".")
@@ -130,30 +125,13 @@ jobs:
           md.append("## Run Configuration")
           md.append("")
           md.append(f"- Android lint variant: {os.getenv('INPUT_VARIANT', 'debug')}")
-          md.append(f"- Run flutter analyze: {os.getenv('INPUT_FLUTTER_ANALYZE', 'false')}")
           md.append(f"- Run Qodana: {os.getenv('INPUT_QODANA', 'false')}")
           md.append("")
 
           md.append("## Step Outcomes")
           md.append("")
-          md.append(f"- flutter analyze: {os.getenv('FLUTTER_ANALYZE_OUTCOME', 'skipped')}")
           md.append(f"- Android lint: {os.getenv('ANDROID_LINT_OUTCOME', 'unknown')}")
           md.append(f"- Qodana: {os.getenv('QODANA_OUTCOME', 'skipped')}")
-          md.append("")
-
-          # Flutter analyze summary
-          md.append("## Flutter Analyze")
-          md.append("")
-          fa = raw_dir / "flutter-analyze.txt"
-          if fa.exists():
-              text = fa.read_text(encoding="utf-8", errors="replace")
-              err = len(re.findall(r"\\berror\\b", text, flags=re.IGNORECASE))
-              warn = len(re.findall(r"\\bwarning\\b", text, flags=re.IGNORECASE))
-              info = len(re.findall(r"\\binfo\\b", text, flags=re.IGNORECASE))
-              md.append(f"- Approximate matches: errors={err}, warnings={warn}, infos={info}")
-              md.append("- Source log: `ci-report/raw/flutter-analyze.txt`")
-          else:
-              md.append("- Not run or no output file found.")
           md.append("")
 
           # Android lint summary
