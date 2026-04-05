@@ -66,13 +66,21 @@ jobs:
       - name: Run Android Lint
         id: android_lint
         continue-on-error: true
-        working-directory: android
         run: |
           set -o pipefail
           VARIANT="${{ inputs.android_lint_variant }}"
           TASK=":app:lint${VARIANT^}"
           echo "Running $TASK"
-          ./gradlew "$TASK" --stacktrace | tee ../ci-report/raw/gradle-lint.log
+
+          if [ ! -f "android/gradlew" ]; then
+            echo "android/gradlew not found"
+            ls -la
+            ls -la android || true
+            exit 1
+          fi
+
+          chmod +x android/gradlew
+          bash ./android/gradlew "$TASK" --stacktrace | tee ci-report/raw/gradle-lint.log
 
       - name: Collect Android lint reports
         if: always()
@@ -82,14 +90,6 @@ jobs:
             cp -R android/app/build/reports/. ci-report/raw/android-lint-reports/
           fi
 
-      - name: Prepare Qodana config
-        if: ${{ inputs.run_qodana }}
-        run: |
-          cat > qodana.yaml << 'EOF'
-          version: "1.0"
-          linter: jetbrains/qodana-jvm-community:2025.2
-          EOF
-
       - name: Run Qodana scan
         id: qodana
         if: ${{ inputs.run_qodana }}
@@ -97,9 +97,10 @@ jobs:
         uses: JetBrains/qodana-action@v2025.2
         with:
           use-annotations: false
+          post-pr-comment: false
           upload-result: false
           results-dir: ci-report/raw/qodana
-          args: --save-report
+          args: --image jetbrains/qodana-jvm-community:2025.2 --save-report
 
       - name: Build consolidated report
         if: always()
