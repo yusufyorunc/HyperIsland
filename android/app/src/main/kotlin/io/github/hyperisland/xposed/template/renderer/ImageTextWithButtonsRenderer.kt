@@ -22,6 +22,7 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
     const val RENDERER_ID = "image_text_with_buttons_4"
     private const val ACTION_TITLE_MAX_VISUAL_LENGTH = 16
     private const val ACTION_TITLE_TRUNCATE_VISUAL_LENGTH = 12
+    private const val ACTION_SEMANTIC_NONE = 0
 
     private val ACTION_TITLE_WHITESPACE = Regex("\\s+")
 
@@ -42,12 +43,12 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
         return length
     }
 
-    private fun truncateByVisualLength(text: String, maxVisualLength: Int): String {
+    private fun truncateByVisualLength(text: String): String {
         val out = StringBuilder(text.length)
         var visual = 0
         for (ch in text) {
             val width = if (ch.code > 255) 2 else 1
-            if (visual + width > maxVisualLength) break
+            if (visual + width > ACTION_TITLE_TRUNCATE_VISUAL_LENGTH) break
             out.append(ch)
             visual += width
         }
@@ -65,7 +66,7 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
             return firstWord
         }
 
-        val short = truncateByVisualLength(collapsed, ACTION_TITLE_TRUNCATE_VISUAL_LENGTH)
+        val short = truncateByVisualLength(collapsed)
         return if (short.isNotEmpty()) "$short..." else ""
     }
 
@@ -78,7 +79,7 @@ object ImageTextWithButtonsRenderer : IslandRenderer {
         val semantic = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             action.semanticAction
         } else {
-            Notification.Action.SEMANTIC_ACTION_NONE
+            ACTION_SEMANTIC_NONE
         }
 
         return when (semantic) {
