@@ -1,10 +1,13 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.DownloadManager
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
 import android.util.Log
+import androidx.core.net.toUri
 
 /**
  * 下载控制接收器
@@ -24,27 +27,35 @@ class DownloadControlReceiver : BroadcastReceiver() {
         const val ACTION_RESUME = "resume"
         const val ACTION_CANCEL = "cancel"
 
-        private val DOWNLOADS_URI = android.net.Uri.parse("content://downloads/my_downloads")
+        private val DOWNLOADS_URI = "content://downloads/my_downloads".toUri()
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
+
+        val intentAction = intent.action
+        if (intentAction != null && intentAction != ACTION_CONTROL) {
+            Log.w(TAG, "unexpected broadcast action=$intentAction expected=$ACTION_CONTROL")
+        }
 
         val action = intent.getStringExtra(EXTRA_ACTION) ?: return
         val downloadId = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1L)
         val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "未知文件"
         val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME) ?: ""
 
-        Log.d(TAG, "onReceive action=$action downloadId=$downloadId file=$fileName pkg=$packageName")
+        Log.d(
+            TAG,
+            "onReceive action=$action downloadId=$downloadId file=$fileName pkg=$packageName"
+        )
 
         when (action) {
-            ACTION_PAUSE  -> handlePause(context, downloadId, fileName, packageName)
-            ACTION_RESUME -> handleResume(context, downloadId, fileName, packageName)
-            ACTION_CANCEL -> handleCancel(context, downloadId, fileName, packageName)
+            ACTION_PAUSE -> handlePause(context, downloadId, fileName)
+            ACTION_RESUME -> handleResume(context, downloadId, fileName)
+            ACTION_CANCEL -> handleCancel(context, downloadId, fileName)
         }
     }
 
-    private fun handlePause(context: Context, downloadId: Long, fileName: String, packageName: String) {
+    private fun handlePause(context: Context, downloadId: Long, fileName: String) {
         try {
             if (downloadId > 0) {
                 pauseDownloadViaReflection(context, downloadId)
@@ -57,7 +68,7 @@ class DownloadControlReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun handleResume(context: Context, downloadId: Long, fileName: String, packageName: String) {
+    private fun handleResume(context: Context, downloadId: Long, fileName: String) {
         try {
             if (downloadId > 0) {
                 resumeDownloadViaReflection(context, downloadId)
@@ -70,10 +81,11 @@ class DownloadControlReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun handleCancel(context: Context, downloadId: Long, fileName: String, packageName: String) {
+    private fun handleCancel(context: Context, downloadId: Long, fileName: String) {
         try {
             if (downloadId > 0) {
-                val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+                val downloadManager =
+                    context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
                 downloadManager?.remove(downloadId)
                 Log.d(TAG, "cancelled via DownloadManager: $downloadId")
             } else {
@@ -87,8 +99,10 @@ class DownloadControlReceiver : BroadcastReceiver() {
 
     private fun pauseDownloadViaReflection(context: Context, downloadId: Long) {
         try {
-            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val pauseMethod = downloadManager?.javaClass?.getDeclaredMethod("pause", Long::class.java)
+            val downloadManager =
+                context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            val pauseMethod =
+                downloadManager?.javaClass?.getDeclaredMethod("pause", Long::class.java)
             pauseMethod?.isAccessible = true
             pauseMethod?.invoke(downloadManager, downloadId)
             Log.d(TAG, "paused via reflection: $downloadId")
@@ -100,8 +114,10 @@ class DownloadControlReceiver : BroadcastReceiver() {
 
     private fun resumeDownloadViaReflection(context: Context, downloadId: Long) {
         try {
-            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val resumeMethod = downloadManager?.javaClass?.getDeclaredMethod("resume", Long::class.java)
+            val downloadManager =
+                context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            val resumeMethod =
+                downloadManager?.javaClass?.getDeclaredMethod("resume", Long::class.java)
             resumeMethod?.isAccessible = true
             resumeMethod?.invoke(downloadManager, downloadId)
             Log.d(TAG, "resumed via reflection: $downloadId")
@@ -111,11 +127,23 @@ class DownloadControlReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun queryByIdOrTitle(context: Context, identifier: String): android.database.Cursor? {
+    private fun queryByIdOrTitle(context: Context, identifier: String): Cursor? {
         return if (identifier.isNotEmpty() && identifier.toLongOrNull() != null) {
-            context.contentResolver.query(DOWNLOADS_URI, arrayOf("_id", "status"), "_id = ?", arrayOf(identifier), null)
+            context.contentResolver.query(
+                DOWNLOADS_URI,
+                arrayOf("_id", "status"),
+                "_id = ?",
+                arrayOf(identifier),
+                null
+            )
         } else {
-            context.contentResolver.query(DOWNLOADS_URI, arrayOf("_id", "status"), "title LIKE ?", arrayOf("%$identifier%"), null)
+            context.contentResolver.query(
+                DOWNLOADS_URI,
+                arrayOf("_id", "status"),
+                "title LIKE ?",
+                arrayOf("%$identifier%"),
+                null
+            )
         }
     }
 
@@ -124,13 +152,16 @@ class DownloadControlReceiver : BroadcastReceiver() {
             val query = queryByIdOrTitle(context, identifier)
             query?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    val id = cursor.getLong(cursor.getColumnIndex("_id"))
-                    val values = android.content.ContentValues().apply {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"))
+                    val values = ContentValues().apply {
                         put("status", DownloadManager.STATUS_PAUSED)
                         put("control", 1)
                     }
                     val updated = context.contentResolver.update(
-                        DOWNLOADS_URI.buildUpon().appendPath(id.toString()).build(), values, null, null
+                        DOWNLOADS_URI.buildUpon().appendPath(id.toString()).build(),
+                        values,
+                        null,
+                        null
                     )
                     Log.d(TAG, "paused via provider: $id (updated=$updated)")
                 }
@@ -145,13 +176,16 @@ class DownloadControlReceiver : BroadcastReceiver() {
             val query = queryByIdOrTitle(context, identifier)
             query?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    val id = cursor.getLong(cursor.getColumnIndex("_id"))
-                    val values = android.content.ContentValues().apply {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"))
+                    val values = ContentValues().apply {
                         put("status", DownloadManager.STATUS_RUNNING)
                         put("control", 0)
                     }
                     val updated = context.contentResolver.update(
-                        DOWNLOADS_URI.buildUpon().appendPath(id.toString()).build(), values, null, null
+                        DOWNLOADS_URI.buildUpon().appendPath(id.toString()).build(),
+                        values,
+                        null,
+                        null
                     )
                     Log.d(TAG, "resumed via provider: $id (updated=$updated)")
                 }
@@ -168,7 +202,7 @@ class DownloadControlReceiver : BroadcastReceiver() {
             )
             query?.use { cursor ->
                 while (cursor.moveToNext()) {
-                    val id = cursor.getLong(cursor.getColumnIndex("_id"))
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"))
                     val deleted = context.contentResolver.delete(
                         DOWNLOADS_URI.buildUpon().appendPath(id.toString()).build(), null, null
                     )

@@ -1,21 +1,14 @@
 package io.github.hyperisland.xposed.hook
 
 import android.content.Context
+import android.os.Build
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import io.github.hyperisland.xposed.logWarn
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
-/**
- * 移除焦点通知白名单限制。
- *
- * 作用域：com.android.systemui（系统界面）
- *
- * Hook [NotificationSettingsManager.canShowFocus] 和 [canCustomFocus]，
- * 当用户开关启用时直接返回 true，使所有应用均可发送焦点通知。
- *
- * 设置 key：pref_unlock_all_focus（布尔，默认 false）
- */
+
 object UnlockAllFocusHook {
 
     private const val TAG = "HyperIsland[UnlockAllFocusHook]"
@@ -30,14 +23,22 @@ object UnlockAllFocusHook {
             module.log("$TAG: disabled, skipping hook for ${param.packageName}")
             return
         }
-        hookCanShowFocus(module, param.defaultClassLoader)
-        hookCanCustomFocus(module, param.defaultClassLoader)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            module.logWarn("$TAG: skip init for ${param.packageName} because onPackageLoaded/defaultClassLoader requires API 29+")
+            return
+        }
+
+        val classLoader = param.defaultClassLoader
+        hookCanShowFocus(module, classLoader)
+        hookCanCustomFocus(module, classLoader)
     }
 
     private fun hookCanShowFocus(module: XposedModule, classLoader: ClassLoader) {
         try {
             val clazz = classLoader.loadClass(TARGET_CLASS)
-            val method = clazz.getDeclaredMethod("canShowFocus", Context::class.java, String::class.java)
+            val method =
+                clazz.getDeclaredMethod("canShowFocus", Context::class.java, String::class.java)
             module.hook(method).intercept { chain -> true }
             module.log("$TAG: hooked canShowFocus(Context, String)")
         } catch (e: Throwable) {

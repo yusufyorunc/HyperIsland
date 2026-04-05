@@ -11,8 +11,11 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.github.hyperisland.utils.AbxXmlDecoder
+import io.github.hyperisland.utils.RootShell
+import io.github.hyperisland.utils.getAppIcon
+import io.github.hyperisland.utils.toBitmap
 import java.io.ByteArrayOutputStream
-import java.util.LinkedHashMap
 
 class MainActivity : FlutterActivity() {
     private data class StrictParseResult(
@@ -42,22 +45,27 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (isModuleActive()) {
-            val prefs = getSharedPreferences("FlutterSharedPreferences", android.content.Context.MODE_PRIVATE)
+            val prefs = getSharedPreferences(
+                "FlutterSharedPreferences",
+                android.content.Context.MODE_PRIVATE
+            )
             val showWelcome = try {
                 prefs.getBoolean("flutter.pref_show_welcome", true)
-            } catch (e: Exception) { true }
+            } catch (e: Exception) {
+                true
+            }
 
             if (showWelcome) {
                 val icon = packageManager.getAppIcon(packageName)
                 io.github.hyperisland.xposed.IslandDispatcher.sendBroadcast(
                     this,
                     io.github.hyperisland.xposed.IslandRequest(
-                        title            = getString(R.string.island_welcome_title),
-                        content          = "HyperIsland",
-                        icon             = icon,
-                        firstFloat       = false,
-                        enableFloat      = false,
-                        highlightColor   = "#E040FB",
+                        title = getString(R.string.island_welcome_title),
+                        content = "HyperIsland",
+                        icon = icon,
+                        firstFloat = false,
+                        enableFloat = false,
+                        highlightColor = "#E040FB",
                         showNotification = false,
                     )
                 )
@@ -68,7 +76,10 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CHANNEL
+        ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "showTest" -> {
                     // 通过广播由 SystemUI 发送，无需本地通知权限
@@ -95,7 +106,11 @@ class MainActivity : FlutterActivity() {
                         val channels = getNotificationChannelsForPackage(pkg)
                         runOnUiThread {
                             if (channels == null) {
-                                result.error("ROOT_REQUIRED", "无法读取通知渠道，请检查ROOT权限", null)
+                                result.error(
+                                    "ROOT_REQUIRED",
+                                    "无法读取通知渠道，请检查ROOT权限",
+                                    null
+                                )
                             } else {
                                 result.success(channels)
                             }
@@ -133,7 +148,11 @@ class MainActivity : FlutterActivity() {
                             val exitCode = process.waitFor()
                             if (exitCode != 0) {
                                 runOnUiThread {
-                                    result.error("ROOT_REQUIRED", "Root permission denied (exit $exitCode)", null)
+                                    result.error(
+                                        "ROOT_REQUIRED",
+                                        "Root permission denied (exit $exitCode)",
+                                        null
+                                    )
                                 }
                             } else {
                                 runOnUiThread { result.success(true) }
@@ -204,6 +223,7 @@ class MainActivity : FlutterActivity() {
                         result.error("ERROR", e.message, null)
                     }
                 }
+
                 else -> {
                     result.notImplemented()
                 }
@@ -321,13 +341,20 @@ class MainActivity : FlutterActivity() {
         if (result.exitCode != 0) {
             Log.d(
                 TAG,
-                "notification_policy read failed: exit=${result.exitCode}, bytes=${result.stdout.size}, stderr=${result.stderr.take(120)}"
+                "notification_policy read failed: exit=${result.exitCode}, bytes=${result.stdout.size}, stderr=${
+                    result.stderr.take(
+                        120
+                    )
+                }"
             )
             return byteArrayOf()
         }
 
         if (!AbxXmlDecoder.isAbx(result.stdout)) {
-            Log.d(TAG, "notification_policy read failed: expected ABX, got ${result.stdout.size} bytes")
+            Log.d(
+                TAG,
+                "notification_policy read failed: expected ABX, got ${result.stdout.size} bytes"
+            )
             return byteArrayOf()
         }
 
@@ -342,9 +369,15 @@ class MainActivity : FlutterActivity() {
             "/data/local/tmp/.hyp_policy_snapshot.abx",
         )
         try {
-            val result = RootShell.run("rm -f ${tempFiles.joinToString(separator = " ")} 2>/dev/null")
+            val result =
+                RootShell.run("rm -f ${tempFiles.joinToString(separator = " ")} 2>/dev/null")
             if (result.exitCode != 0) {
-                Log.d(TAG, "policy temp cleanup failed: exit=${result.exitCode}, stderr=${result.stderr.take(120)}")
+                Log.d(
+                    TAG,
+                    "policy temp cleanup failed: exit=${result.exitCode}, stderr=${
+                        result.stderr.take(120)
+                    }"
+                )
             }
         } catch (e: Exception) {
             Log.d(TAG, "policy temp cleanup failed: ${e.message}")
@@ -385,7 +418,10 @@ class MainActivity : FlutterActivity() {
 
                 org.xmlpull.v1.XmlPullParser.END_TAG -> if (parser.name == "package" && inTarget) {
                     if (result.isNotEmpty()) {
-                        Log.d(TAG, "strict parse completed target package: $targetPkg, count=${result.size}")
+                        Log.d(
+                            TAG,
+                            "strict parse completed target package: $targetPkg, count=${result.size}"
+                        )
                         return StrictParseResult(
                             channels = result,
                             enteredTargetPackage = enteredTarget,
@@ -393,7 +429,10 @@ class MainActivity : FlutterActivity() {
                         )
                     } else {
                         // 该 package 条目无 channel（如工作空间副本），继续查找下一个同名 package
-                        Log.d(TAG, "strict parse: $targetPkg entry had no channels, continuing search")
+                        Log.d(
+                            TAG,
+                            "strict parse: $targetPkg entry had no channels, continuing search"
+                        )
                         inTarget = false
                     }
                 }
@@ -422,7 +461,10 @@ class MainActivity : FlutterActivity() {
 
         val fragmentChannels = tryParseChannelsFromFragment(fragment)
         if (fragmentChannels == null) return null
-        Log.d(TAG, "fallback fragment parser result: targetPkg=$targetPkg count=${fragmentChannels.size}")
+        Log.d(
+            TAG,
+            "fallback fragment parser result: targetPkg=$targetPkg count=${fragmentChannels.size}"
+        )
         return FallbackParseResult(fragmentChannels, "fallback-fragment")
     }
 
@@ -539,11 +581,11 @@ class MainActivity : FlutterActivity() {
 
     private fun isValidXmlCodePoint(codePoint: Int): Boolean {
         return codePoint == 0x9 ||
-            codePoint == 0xA ||
-            codePoint == 0xD ||
-            codePoint in 0x20..0xD7FF ||
-            codePoint in 0xE000..0xFFFD ||
-            codePoint in 0x10000..0x10FFFF
+                codePoint == 0xA ||
+                codePoint == 0xD ||
+                codePoint in 0x20..0xD7FF ||
+                codePoint in 0xE000..0xFFFD ||
+                codePoint in 0x10000..0x10FFFF
     }
 
     private fun isValidXmlChar(ch: Char): Boolean {
@@ -577,24 +619,26 @@ class MainActivity : FlutterActivity() {
         return pm.getInstalledApplications(0)
             .filter { app ->
                 app.packageName != packageName &&
-                (includeSystem || (app.flags and ApplicationInfo.FLAG_SYSTEM) == 0)
+                        (includeSystem || (app.flags and ApplicationInfo.FLAG_SYSTEM) == 0)
             }
             .mapNotNull { app ->
                 try {
-                    val label    = pm.getApplicationLabel(app).toString()
+                    val label = pm.getApplicationLabel(app).toString()
                     mapOf(
                         "packageName" to app.packageName,
-                        "appName"     to label,
-                        "isSystem"    to ((app.flags and ApplicationInfo.FLAG_SYSTEM) != 0)
+                        "appName" to label,
+                        "isSystem" to ((app.flags and ApplicationInfo.FLAG_SYSTEM) != 0)
                     )
-                } catch (_: Exception) { null }
+                } catch (_: Exception) {
+                    null
+                }
             }
             .sortedBy { it["appName"] as String }
     }
 
     private companion object {
         const val PERM_GET_INSTALLED_APPS = "com.android.permission.GET_INSTALLED_APPS"
-        const val PERM_MANAGER_MIUI       = "com.lbe.security.miui"
+        const val PERM_MANAGER_MIUI = "com.lbe.security.miui"
     }
 
     /** 返回 MIUI 是否支持动态申请获取应用列表权限。 */
@@ -624,7 +668,7 @@ class MainActivity : FlutterActivity() {
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
@@ -649,11 +693,11 @@ class MainActivity : FlutterActivity() {
             io.github.hyperisland.xposed.IslandDispatcher.sendBroadcast(
                 this,
                 io.github.hyperisland.xposed.IslandRequest(
-                    title            = getString(R.string.island_welcome_title),
-                    content          = "HyperIsland",
-                    icon             = icon,
-                    firstFloat       = false,
-                    highlightColor   = "#E040FB",
+                    title = getString(R.string.island_welcome_title),
+                    content = "HyperIsland",
+                    icon = icon,
+                    firstFloat = false,
+                    highlightColor = "#E040FB",
                     showNotification = true,
                 )
             )

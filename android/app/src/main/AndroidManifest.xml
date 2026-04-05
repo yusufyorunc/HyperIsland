@@ -7,6 +7,8 @@
     <permission
         android:name="io.github.hyperisland.SEND_ISLAND"
         android:protectionLevel="signature" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="io.github.hyperisland.SEND_ISLAND" />
 
     <!-- 下载管理权限 -->
@@ -38,8 +40,8 @@
                  to determine the Window background behind the Flutter UI. -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"
-            />
+                android:resource="@style/NormalTheme" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -69,7 +71,7 @@
 
         <!-- 下载控制接收器 -->
         <receiver
-            android:name=".xposed.DownloadControlReceiver"
+            android:name=".xposed.DownloadManager.DownloadControlReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

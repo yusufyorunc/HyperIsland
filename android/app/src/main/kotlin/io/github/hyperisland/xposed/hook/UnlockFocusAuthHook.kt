@@ -1,7 +1,9 @@
 package io.github.hyperisland.xposed.hook
 
+import android.os.Build
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.logWarn
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 
@@ -29,6 +31,12 @@ object UnlockFocusAuthHook {
             module.log("$TAG: disabled, skipping hook for ${param.packageName}")
             return
         }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            module.logWarn("$TAG: skip init for ${param.packageName} because onPackageLoaded/defaultClassLoader requires API 29+")
+            return
+        }
+
         hookAuthSession(module, param.defaultClassLoader)
     }
 

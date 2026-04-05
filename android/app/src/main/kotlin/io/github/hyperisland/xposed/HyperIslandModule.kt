@@ -1,11 +1,14 @@
 package io.github.hyperisland.xposed
 
+import io.github.hyperisland.xposed.hook.DownloadHook
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
+import io.github.hyperisland.xposed.hook.GenericProgressHook
+import io.github.hyperisland.xposed.hook.IslandDispatcherHook
 import io.github.hyperisland.xposed.hook.MarqueeHook
 import io.github.hyperisland.xposed.hook.UnlockAllFocusHook
 import io.github.hyperisland.xposed.hook.UnlockFocusAuthHook
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
 /**
  * 模块主入口，继承 XposedModule。
@@ -25,7 +28,8 @@ class HyperIslandModule : XposedModule() {
             }
 
             "com.android.providers.downloads",
-            "com.xiaomi.android.app.downloadmanager" ->
+            "com.xiaomi.android.app.downloadmanager",
+                ->
                 DownloadHook.init(this, param)
 
             "com.xiaomi.xmsf" ->

@@ -2,6 +2,7 @@ package io.github.hyperisland
 
 import android.content.Context
 import android.util.Log
+import io.github.hyperisland.utils.getAppIcon
 import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.hyperisland.xposed.IslandRequest
 
@@ -25,9 +26,9 @@ object HyperIslandHelper {
             IslandDispatcher.sendBroadcast(
                 context,
                 IslandRequest(
-                    title   = title,
+                    title = title,
                     content = content,
-                    icon    = icon,
+                    icon = icon,
                 )
             )
             Log.d(TAG, "Island request sent: $title | $content")

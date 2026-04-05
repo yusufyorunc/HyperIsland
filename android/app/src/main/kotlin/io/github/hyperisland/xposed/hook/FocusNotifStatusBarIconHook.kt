@@ -1,13 +1,15 @@
 package io.github.hyperisland.xposed.hook
 
+import android.annotation.SuppressLint
 import android.app.Notification
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import io.github.hyperisland.xposed.log
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import io.github.hyperisland.xposed.logWarn
 import io.github.libxposed.api.XposedModule
-import kotlin.jvm.JvmStatic
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
 /**
  * 定向保留 HyperIsland 代理焦点通知的状态栏左上角小图标。
@@ -26,8 +28,11 @@ object FocusNotifStatusBarIconHook {
     private const val VISIBILITY_MODEL_CLASS =
         "com.android.systemui.statusbar.phone.fragment.StatusBarVisibilityModel"
 
-    @Volatile private var cachedDirectProxyActiveUntilElapsed = 0L
-    @Volatile private var hooked = false
+    @Volatile
+    private var cachedDirectProxyActiveUntilElapsed = 0L
+
+    @Volatile
+    private var hooked = false
 
     @JvmStatic
     internal fun markDirectProxyPosted(timeoutSecs: Int) {
@@ -36,22 +41,24 @@ object FocusNotifStatusBarIconHook {
             SystemClock.elapsedRealtime() + (safeTimeoutSecs * 1000L) + 3000L
     }
 
-    @JvmStatic
-    internal fun clearDirectProxyPosted() {
-        cachedDirectProxyActiveUntilElapsed = 0L
-    }
-
     private fun isDirectProxyActive(): Boolean =
         cachedDirectProxyActiveUntilElapsed > SystemClock.elapsedRealtime()
 
     fun init(module: XposedModule, param: PackageLoadedParam) {
         if (hooked) return
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            module.logWarn("$TAG: skip init for ${param.packageName} because onPackageLoaded/defaultClassLoader requires API 29+")
+            return
+        }
+
         hooked = true
         val classLoader = param.defaultClassLoader
         hookActiveNotificationModel(module, classLoader)
         hookUpdateStatusBarVisibilities(module, classLoader)
     }
 
+    @SuppressLint("PrivateApi", "BlockedPrivateApi", "SoonBlockedPrivateApi")
     private fun hookActiveNotificationModel(module: XposedModule, classLoader: ClassLoader) {
         try {
             val entryClass = classLoader.loadClass(TARGET_ENTRY_CLASS)
@@ -78,10 +85,14 @@ object FocusNotifStatusBarIconHook {
         }
     }
 
+    @SuppressLint("PrivateApi", "BlockedPrivateApi", "SoonBlockedPrivateApi")
     private fun hookUpdateStatusBarVisibilities(module: XposedModule, classLoader: ClassLoader) {
         try {
             val fragmentClass = classLoader.loadClass(TARGET_FRAGMENT_CLASS)
-            val method = fragmentClass.getDeclaredMethod("updateStatusBarVisibilities", Boolean::class.javaPrimitiveType!!)
+            val method = fragmentClass.getDeclaredMethod(
+                "updateStatusBarVisibilities",
+                Boolean::class.javaPrimitiveType!!
+            )
             module.hook(method).intercept { chain ->
                 val result = chain.proceed()
                 val fragment = chain.thisObject
@@ -99,6 +110,7 @@ object FocusNotifStatusBarIconHook {
         }
     }
 
+    @SuppressLint("PrivateApi", "BlockedPrivateApi", "SoonBlockedPrivateApi")
     private fun forceShowNotificationIconsModel(module: XposedModule, fragment: Any?) {
         if (fragment == null) return
         try {
@@ -122,7 +134,7 @@ object FocusNotifStatusBarIconHook {
     private fun refreshNotificationIconArea(module: XposedModule, fragment: Any?) {
         if (fragment == null) return
         try {
-            callMethod(fragment, "updateNotificationIconAreaAndOngoingActivityChip", false)
+            callUpdateNotificationIconAreaAndOngoingActivityChip(fragment)
         } catch (e: Throwable) {
             module.log("$TAG: refreshNotificationIconArea failed — ${e.message}")
         }
@@ -145,7 +157,7 @@ object FocusNotifStatusBarIconHook {
 
     private fun resolveNotificationFromSbnLike(sbn: Any?): Notification? {
         if (sbn == null) return null
-        (callMethodOrNull(sbn, "getNotification") as? Notification)?.let { return it }
+        (callGetNotificationMethodOrNull(sbn) as? Notification)?.let { return it }
         (getObjectFieldOrNull(sbn, "notification") as? Notification)?.let { return it }
         (getObjectFieldOrNull(sbn, "mNotification") as? Notification)?.let { return it }
         return null
@@ -163,7 +175,9 @@ object FocusNotifStatusBarIconHook {
                 val f = c.getDeclaredField(fieldName)
                 f.isAccessible = true
                 return f.get(instance)
-            } catch (_: NoSuchFieldException) { c = c.superclass }
+            } catch (_: NoSuchFieldException) {
+                c = c.superclass
+            }
         }
         return null
     }
@@ -176,32 +190,41 @@ object FocusNotifStatusBarIconHook {
                 f.isAccessible = true
                 f.set(instance, value)
                 return
-            } catch (_: NoSuchFieldException) { c = c.superclass }
+            } catch (_: NoSuchFieldException) {
+                c = c.superclass
+            }
         }
     }
 
     private fun getBooleanFieldValue(instance: Any, fieldName: String): Boolean =
         getObjectFieldOrNull(instance, fieldName) as? Boolean ?: false
 
-    private fun callMethodOrNull(instance: Any, methodName: String): Any? {
+    @SuppressLint("PrivateApi", "BlockedPrivateApi", "SoonBlockedPrivateApi")
+    private fun callGetNotificationMethodOrNull(instance: Any): Any? {
         var c: Class<*>? = instance.javaClass
         while (c != null) {
             try {
-                val m = c.getDeclaredMethod(methodName)
+                val m = c.getDeclaredMethod("getNotification")
                 m.isAccessible = true
                 return m.invoke(instance)
-            } catch (_: NoSuchMethodException) { c = c.superclass }
+            } catch (_: NoSuchMethodException) {
+                c = c.superclass
+            }
         }
         return null
     }
 
-    private fun callMethod(instance: Any, methodName: String, vararg args: Any?): Any? {
+    @SuppressLint("PrivateApi", "BlockedPrivateApi", "SoonBlockedPrivateApi")
+    private fun callUpdateNotificationIconAreaAndOngoingActivityChip(instance: Any): Any? {
         var c: Class<*>? = instance.javaClass
         while (c != null) {
             for (m in c.declaredMethods) {
-                if (m.name == methodName && m.parameterCount == args.size) {
+                if (m.name == "updateNotificationIconAreaAndOngoingActivityChip" && m.parameterCount == 1) {
                     m.isAccessible = true
-                    try { return m.invoke(instance, *args) } catch (_: Throwable) {}
+                    try {
+                        return m.invoke(instance, false)
+                    } catch (_: Throwable) {
+                    }
                 }
             }
             c = c.superclass
@@ -213,7 +236,10 @@ object FocusNotifStatusBarIconHook {
         for (ctor in clazz.declaredConstructors) {
             if (ctor.parameterCount == args.size) {
                 ctor.isAccessible = true
-                try { return ctor.newInstance(*args) } catch (_: Throwable) {}
+                try {
+                    return ctor.newInstance(*args)
+                } catch (_: Throwable) {
+                }
             }
         }
         return null

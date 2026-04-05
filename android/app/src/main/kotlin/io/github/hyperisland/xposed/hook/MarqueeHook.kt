@@ -1,11 +1,13 @@
 package io.github.hyperisland.xposed.hook
 
+import android.os.Build
 import android.view.Choreographer
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.logWarn
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
 import java.util.WeakHashMap
@@ -171,6 +173,12 @@ private fun normalizeText(text: String): String {
 
     fun init(module: XposedModule, param: PackageLoadedParam) {
         module.log("$TAG: initializing for ${param.packageName}")
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            module.logWarn("$TAG: skip init for ${param.packageName} because onPackageLoaded/defaultClassLoader requires API 29+")
+            return
+        }
+
         hookContentViewClasses(module, param.defaultClassLoader)
         hookDynamicClassLoaders(module)
     }

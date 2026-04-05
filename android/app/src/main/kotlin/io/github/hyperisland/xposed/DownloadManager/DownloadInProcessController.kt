@@ -1,5 +1,6 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.DownloadManager
 
+import android.Manifest
 import android.app.DownloadManager
 import android.app.Notification
 import android.app.NotificationManager
@@ -9,10 +10,19 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
-import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.Process
+import androidx.core.net.toUri
 import io.github.hyperisland.R
+import io.github.hyperisland.xposed.ConfigManager
+import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.logError
+import io.github.hyperisland.xposed.logWarn
+import io.github.hyperisland.xposed.moduleContext
 import io.github.libxposed.api.XposedModule
 import java.util.UUID
 
@@ -25,32 +35,41 @@ object InProcessController {
 
     private const val TAG = "HyperIsland[InProcessController]"
 
-    private const val ACTION          = "io.github.hyperisland.INTERNAL_CTRL"
-    private const val EXTRA_CMD       = "cmd"
-    private const val EXTRA_ID        = "dlId"
-    private const val EXTRA_TOKEN     = "token"
-    private const val EXTRA_NOTIF_ID  = "notifId"
+    private const val ACTION = "io.github.hyperisland.INTERNAL_CTRL"
+    private const val EXTRA_CMD = "cmd"
+    private const val EXTRA_ID = "dlId"
+    private const val EXTRA_TOKEN = "token"
+    private const val EXTRA_NOTIF_ID = "notifId"
     private const val EXTRA_NOTIF_TAG = "notifTag"
 
-    const val CMD_PAUSE   = "pause"
-    const val CMD_RESUME  = "resume"
-    const val CMD_CANCEL  = "cancel"
+    const val CMD_PAUSE = "pause"
+    const val CMD_RESUME = "resume"
+    const val CMD_CANCEL = "cancel"
     const val CMD_DISMISS = "dismiss"
 
-    private const val STATUS_PENDING       = 190
-    private const val STATUS_RUNNING       = 192
+    private const val STATUS_PENDING = 190
+    private const val STATUS_RUNNING = 192
     private const val STATUS_PAUSED_BY_APP = 193
-    private const val CONTROL_RUN          = 0
-    private const val CONTROL_PAUSED       = 1
+    private const val CONTROL_RUN = 0
+    private const val CONTROL_PAUSED = 1
 
-    private val DOWNLOADS_URI     = Uri.parse("content://downloads/my_downloads")
-    private val DOWNLOADS_URI_ALL = Uri.parse("content://downloads/all_downloads")
+    private val DOWNLOADS_URI = "content://downloads/my_downloads".toUri()
+    private val DOWNLOADS_URI_ALL = "content://downloads/all_downloads".toUri()
 
-    @Volatile private var registered = false
-    @Volatile private var resumeNotificationEnabled = true
-    @Volatile var useHookAppIconEnabled = true
-    @Volatile private var module: XposedModule? = null
-    @Volatile private var commandToken: String = ""
+    @Volatile
+    private var registered = false
+
+    @Volatile
+    private var resumeNotificationEnabled = true
+
+    @Volatile
+    var useHookAppIconEnabled = true
+
+    @Volatile
+    private var module: XposedModule? = null
+
+    @Volatile
+    private var commandToken: String = ""
 
     data class DownloadNotifSnapshot(
         val notifId: Int,
@@ -60,10 +79,11 @@ object InProcessController {
         val progress: Int,
         val downloadId: Long,
         val isMultiFile: Boolean,
-        val packageName: String
+        val packageName: String,
     )
 
-    @Volatile var lastDownloadSnapshot: DownloadNotifSnapshot? = null
+    @Volatile
+    var lastDownloadSnapshot: DownloadNotifSnapshot? = null
     private const val PAUSED_OVERLAY_ID = 0x48594F01
 
     private fun loadSettings() {
@@ -94,23 +114,27 @@ object InProcessController {
                     CMD_PAUSE -> {
                         val isAll = id <= 0
                         if (isAll) pauseAll(appCtx) else pause(appCtx, id)
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        Handler(Looper.getMainLooper()).postDelayed({
                             postPausedOverlay(appCtx, isAll)
                         }, 300)
                     }
+
                     CMD_RESUME -> {
                         if (id > 0) resume(appCtx, id) else resumeAll(appCtx)
                         cancelPausedOverlay(appCtx)
                     }
+
                     CMD_CANCEL -> {
                         if (id > 0) cancel(appCtx, id) else cancelAll(appCtx)
                         cancelPausedOverlay(appCtx)
                     }
+
                     CMD_DISMISS -> {
-                        val notifId  = intent.getIntExtra(EXTRA_NOTIF_ID, -1)
+                        val notifId = intent.getIntExtra(EXTRA_NOTIF_ID, -1)
                         val notifTag = intent.getStringExtra(EXTRA_NOTIF_TAG)
                         if (notifId > 0) {
-                            val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                            val nm =
+                                ctx.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                             nm?.cancel(notifTag, notifId)
                         }
                     }
@@ -126,7 +150,7 @@ object InProcessController {
             appCtx.registerReceiver(receiver, filter)
         }
         registered = true
-        xposedModule.log("$TAG: registered in pid=${android.os.Process.myPid()}")
+        xposedModule.log("$TAG: registered in pid=${Process.myPid()}")
     }
 
     /**
@@ -152,17 +176,23 @@ object InProcessController {
                 }
                 module.log("$TAG: Hooked pauseDownload in $className")
                 break
-            } catch (_: Throwable) {}
+            } catch (_: Throwable) {
+            }
         }
     }
 
     // ── PendingIntent 工厂 ────────────────────────────────────────────────────
 
-    fun pauseIntent(context: Context, downloadId: Long)  = makeIntent(context, CMD_PAUSE,  downloadId, reqCode(downloadId, 0))
-    fun resumeIntent(context: Context, downloadId: Long) = makeIntent(context, CMD_RESUME, downloadId, reqCode(downloadId, 1))
-    fun cancelIntent(context: Context, downloadId: Long) = makeIntent(context, CMD_CANCEL, downloadId, reqCode(downloadId, 2))
+    fun pauseIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_PAUSE, downloadId, reqCode(downloadId, 0))
 
-    fun pauseAllIntent(context: Context)  = makeIntent(context, CMD_PAUSE,  -1L, 9000001)
+    fun resumeIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_RESUME, downloadId, reqCode(downloadId, 1))
+
+    fun cancelIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_CANCEL, downloadId, reqCode(downloadId, 2))
+
+    fun pauseAllIntent(context: Context) = makeIntent(context, CMD_PAUSE, -1L, 9000001)
     fun cancelAllIntent(context: Context) = makeIntent(context, CMD_CANCEL, -1L, 9000002)
     fun resumeAllIntent(context: Context) = makeIntent(context, CMD_RESUME, -1L, 9000003)
 
@@ -183,7 +213,12 @@ object InProcessController {
 
     private fun reqCode(id: Long, offset: Int) = ((id and 0xFFFFF) * 3 + offset).toInt()
 
-    private fun makeIntent(context: Context, cmd: String, downloadId: Long, requestCode: Int): PendingIntent {
+    private fun makeIntent(
+        context: Context,
+        cmd: String,
+        downloadId: Long,
+        requestCode: Int,
+    ): PendingIntent {
         val token = ensureCommandToken()
         val intent = Intent(ACTION).apply {
             setPackage(context.packageName)
@@ -206,7 +241,7 @@ object InProcessController {
 
     private fun isTrustedControlIntent(intent: Intent): Boolean {
         val token = intent.getStringExtra(EXTRA_TOKEN)
-        return token != null && token.isNotBlank() && token == commandToken
+        return !token.isNullOrBlank() && token == commandToken
     }
 
     private fun pausedByAppValues(): ContentValues = ContentValues().apply {
@@ -240,7 +275,8 @@ object InProcessController {
     private fun updateDownloadById(context: Context, id: Long, values: ContentValues): Boolean {
         for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
             try {
-                val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
+                val rows =
+                    context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
                 if (rows > 0) return true
             } catch (e: Exception) {
                 module?.logError("$TAG: update id=$id uri=$uri err=${e.message}")
@@ -361,8 +397,8 @@ object InProcessController {
         if (!resumeNotificationEnabled) return
         val snap = lastDownloadSnapshot ?: return
         val overlaySnap = snap.copy(
-            notifId    = PAUSED_OVERLAY_ID,
-            notifTag   = null,
+            notifId = PAUSED_OVERLAY_ID,
+            notifTag = null,
             isMultiFile = isAll || snap.isMultiFile
         )
         repostAsPaused(context, overlaySnap)
@@ -376,12 +412,19 @@ object InProcessController {
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(if (snapshot.isMultiFile) "${snapshot.fileName} $pausedTitle" else pausedTitle)
                 .setContentText(snapshot.fileName)
+                .setDeleteIntent(dismissIntent(context, snapshot.notifId, snapshot.notifTag))
                 .setOngoing(false)
                 .setAutoCancel(false)
                 .build()
 
-            val resumeIntent = if (snapshot.isMultiFile) resumeAllIntent(context) else resumeIntent(context, snapshot.downloadId)
-            val cancelIntent = if (snapshot.isMultiFile) cancelAllIntent(context) else cancelIntent(context, snapshot.downloadId)
+            val resumeIntent = if (snapshot.isMultiFile) resumeAllIntent(context) else resumeIntent(
+                context,
+                snapshot.downloadId
+            )
+            val cancelIntent = if (snapshot.isMultiFile) cancelAllIntent(context) else cancelIntent(
+                context,
+                snapshot.downloadId
+            )
             val resumeLabel = if (snapshot.isMultiFile) {
                 mc.getString(R.string.island_action_resume_all)
             } else {
@@ -405,6 +448,12 @@ object InProcessController {
             )
 
             val nm = context.getSystemService(NotificationManager::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) {
+                module?.logWarn("$TAG: skip paused overlay notify, POST_NOTIFICATIONS not granted")
+                return
+            }
             nm?.notify(null, snapshot.notifId, notif)
         } catch (e: Exception) {
             module?.logError("$TAG: repostAsPaused failed: ${e.message}")

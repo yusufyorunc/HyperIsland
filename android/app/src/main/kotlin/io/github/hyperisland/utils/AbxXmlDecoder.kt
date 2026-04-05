@@ -1,4 +1,4 @@
-package io.github.hyperisland
+package io.github.hyperisland.utils
 
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
@@ -53,10 +53,7 @@ internal object AbxXmlDecoder {
         private val trueLiteral: String,
         private val falseLiteral: String,
     ) {
-        LOWERCASE("true", "false"),
-        TITLECASE("True", "False"),
-        UPPERCASE("TRUE", "FALSE"),
-        NUMERIC("1", "0");
+        LOWERCASE("true", "false");
 
         fun render(value: Boolean): String = if (value) trueLiteral else falseLiteral
     }
@@ -67,7 +64,8 @@ internal object AbxXmlDecoder {
         REPLACEMENT_CHARACTER,
     }
 
-    class ParseException(message: String, cause: Throwable? = null) : IllegalStateException(message, cause)
+    class ParseException(message: String, cause: Throwable? = null) :
+        IllegalStateException(message, cause)
 
     fun isAbx(bytes: ByteArray): Boolean {
         if (bytes.size < ABX_MAGIC.size) return false
@@ -169,7 +167,8 @@ internal object AbxXmlDecoder {
 
                 XML_TEXT,
                 XML_CDSECT,
-                XML_ENTITY_REF -> {
+                XML_ENTITY_REF,
+                    -> {
                     if (insideStartTag) {
                         out.append('>')
                         appendNewLine(out, options)
@@ -250,7 +249,13 @@ internal object AbxXmlDecoder {
         if (!endedDocument) throw ParseException("ABX stream ended without END_DOCUMENT")
         if (insideStartTag) throw ParseException("ABX stream ended while a start tag was still open")
         if (tagStack.isNotEmpty()) {
-            throw ParseException("ABX stream ended with unclosed tags: ${tagStack.joinToString(separator = "/")}")
+            throw ParseException(
+                "ABX stream ended with unclosed tags: ${
+                    tagStack.joinToString(
+                        separator = "/"
+                    )
+                }"
+            )
         }
         if (reader.hasRemainingData()) {
             throw ParseException("ABX document ended with trailing data still present")
@@ -270,7 +275,9 @@ internal object AbxXmlDecoder {
             TYPE_STRING -> TypedValue(type, reader.readUtf8String())
             TYPE_STRING_INTERNED -> TypedValue(type, reader.readInternedString(internedStrings))
             TYPE_BYTES_HEX,
-            TYPE_BYTES_BASE64 -> TypedValue(type, reader.readLengthPrefixedBytes())
+            TYPE_BYTES_BASE64,
+                -> TypedValue(type, reader.readLengthPrefixedBytes())
+
             TYPE_INT -> TypedValue(type, reader.readInt())
             TYPE_INT_HEX -> TypedValue(type, formatHex(reader.readBytes(4), options.trimHexValues))
             TYPE_LONG -> TypedValue(type, reader.readLong())
@@ -354,11 +361,11 @@ internal object AbxXmlDecoder {
 
     private fun isValidXmlCodePoint(codePoint: Int): Boolean {
         return codePoint == 0x9 ||
-            codePoint == 0xA ||
-            codePoint == 0xD ||
-            codePoint in 0x20..0xD7FF ||
-            codePoint in 0xE000..0xFFFD ||
-            codePoint in 0x10000..0x10FFFF
+                codePoint == 0xA ||
+                codePoint == 0xD ||
+                codePoint in 0x20..0xD7FF ||
+                codePoint in 0xE000..0xFFFD ||
+                codePoint in 0x10000..0x10FFFF
     }
 
     private fun formatUnicodeEscape(codePoint: Int): String {
@@ -400,7 +407,7 @@ internal object AbxXmlDecoder {
                 null -> ""
                 is String -> currentValue
                 is ByteArray -> when (type) {
-                    TYPE_BYTES_HEX -> AbxXmlDecoder.toHexString(currentValue)
+                    TYPE_BYTES_HEX -> toHexString(currentValue)
                     TYPE_BYTES_BASE64 -> Base64.getEncoder().encodeToString(currentValue)
                     else -> throw ParseException("Unexpected byte-array type $type")
                 }
@@ -408,7 +415,9 @@ internal object AbxXmlDecoder {
                 is Int,
                 is Long,
                 is Float,
-                is Double -> currentValue.toString()
+                is Double,
+                    -> currentValue.toString()
+
                 is Boolean -> options.booleanFormat.render(currentValue)
                 else -> throw ParseException("Unsupported value type ${currentValue::class.java.name}")
             }

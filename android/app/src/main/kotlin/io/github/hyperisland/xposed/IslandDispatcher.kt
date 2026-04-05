@@ -9,10 +9,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.drawable.Icon
 import android.os.Build
-import io.github.hyperisland.getAppIcon
-import android.os.Bundle
-import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
-import io.github.libxposed.api.XposedModule
 import io.github.d4viddf.hyperisland_kit.HyperAction
 import io.github.d4viddf.hyperisland_kit.HyperIslandNotification
 import io.github.d4viddf.hyperisland_kit.HyperPicture
@@ -20,16 +16,22 @@ import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoLeft
 import io.github.d4viddf.hyperisland_kit.models.ImageTextInfoRight
 import io.github.d4viddf.hyperisland_kit.models.PicInfo
 import io.github.d4viddf.hyperisland_kit.models.TextInfo
+import io.github.hyperisland.utils.getAppIcon
+import io.github.hyperisland.xposed.IslandDispatcher.post
+import io.github.hyperisland.xposed.IslandDispatcher.register
+import io.github.hyperisland.xposed.IslandDispatcher.sendBroadcast
+import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.renderer.fixTextButtonJson
 import io.github.hyperisland.xposed.renderer.flattenActionsToExtras
 import io.github.hyperisland.xposed.renderer.injectIslandAppearance
+import io.github.libxposed.api.XposedModule
 
 /**
  * SystemUI 进程内超级岛发送调度器。
  *
  * ## 原理
  * HyperOS 会抑制前台应用自身发出的岛通知。将通知改由 SystemUI（system UID）发出，
- * 可绕过该限制。[IslandDispatcherHook] 在 SystemUI 进程启动时调用 [register]，
+ * 可绕过该限制。[io.github.hyperisland.xposed.hook.IslandDispatcherHook] 在 SystemUI 进程启动时调用 [register]，
  * 注册一个受权限保护的 BroadcastReceiver；HyperIsland 应用通过 [sendBroadcast]
  * 触发它，由此以 SystemUI 身份发出岛通知。
  *
@@ -52,9 +54,11 @@ import io.github.hyperisland.xposed.renderer.injectIslandAppearance
 object IslandDispatcher {
 
     /** 广播 Action，由 HyperIsland 应用发出，由 SystemUI 进程内 Receiver 接收。*/
-    const val ACTION        = "io.github.hyperisland.ACTION_SHOW_ISLAND"
+    const val ACTION = "io.github.hyperisland.ACTION_SHOW_ISLAND"
+
     /** 广播 Action，用于跨进程请求取消代理通知。*/
     const val ACTION_CANCEL = "io.github.hyperisland.ACTION_CANCEL_ISLAND"
+
     /** 取消广播携带的通知 ID extra 键。*/
     const val EXTRA_NOTIF_ID = "notif_id"
 
@@ -62,17 +66,20 @@ object IslandDispatcher {
      * 广播发送方所需权限（signature 级）。
      * 只有与 HyperIsland 使用相同签名的应用才能获得此权限并触发 Receiver。
      */
-    const val PERM     = "io.github.hyperisland.SEND_ISLAND"
+    const val PERM = "io.github.hyperisland.SEND_ISLAND"
 
     /** 默认通知 ID。固定 ID 保证同一时刻只有一条岛通知存在。*/
     const val NOTIF_ID = 0x48594944  // "HYID"
 
-    const val CHANNEL_ID            = "hyperisland_dispatcher"
+    const val CHANNEL_ID = "hyperisland_dispatcher"
     private const val CHANNEL_NAME = "HyperIsland 超级岛"
-    private const val TAG          = "HyperIsland[Dispatcher]"
+    private const val TAG = "HyperIsland[Dispatcher]"
 
-    @Volatile private var registered = false
-    @Volatile private var module: XposedModule? = null
+    @Volatile
+    private var registered = false
+
+    @Volatile
+    private var module: XposedModule? = null
 
     /** 记录已发出的代理通知 ID，用于判断首次发送（触发岛动画）还是后续更新。*/
     private val postedIds = androidx.collection.ArraySet<Int>()
@@ -92,6 +99,7 @@ object IslandDispatcher {
                         module?.logError("$TAG: onReceive error: ${e.message}")
                     }
                 }
+
                 ACTION_CANCEL -> {
                     try {
                         val notifId = intent.getIntExtra(EXTRA_NOTIF_ID, NOTIF_ID)
@@ -107,7 +115,7 @@ object IslandDispatcher {
     // ── 初始化 ───────────────────────────────────────────────────────────────
 
     /**
-     * 在 SystemUI 进程中注册广播接收器。由 [IslandDispatcherHook] 在 Application.onCreate
+     * 在 SystemUI 进程中注册广播接收器。由 [io.github.hyperisland.xposed.hook.IslandDispatcherHook] 在 Application.onCreate
      * 后调用。重复调用安全（幂等）。
      */
     fun register(context: Context, xposedModule: XposedModule) {
@@ -146,11 +154,11 @@ object IslandDispatcher {
             )
 
             islandBuilder.addPicture(HyperPicture("key_island_icon", appIcon))
-            islandBuilder.addPicture(HyperPicture("key_focus_icon",  appIcon))
+            islandBuilder.addPicture(HyperPicture("key_focus_icon", appIcon))
 
             islandBuilder.setIconTextInfo(
-                picKey  = "key_focus_icon",
-                title   = request.title,
+                picKey = "key_focus_icon",
+                title = request.title,
                 content = request.content,
             )
             islandBuilder.setIslandFirstFloat(request.firstFloat)
@@ -164,12 +172,12 @@ object IslandDispatcher {
             // 大岛：左侧图标+标题，右侧内容
             islandBuilder.setBigIslandInfo(
                 left = ImageTextInfoLeft(
-                    type     = 1,
-                    picInfo  = PicInfo(type = 1, pic = "key_island_icon"),
+                    type = 1,
+                    picInfo = PicInfo(type = 1, pic = "key_island_icon"),
                     textInfo = TextInfo(title = request.title),
                 ),
                 right = ImageTextInfoRight(
-                    type     = 2,
+                    type = 2,
                     textInfo = TextInfo(title = request.content, narrowFont = true),
                 ),
             )
@@ -179,9 +187,9 @@ object IslandDispatcher {
             if (effectiveActions.isNotEmpty()) {
                 val hyperActions = effectiveActions.mapIndexed { index, action ->
                     HyperAction(
-                        key              = "action_dispatcher_$index",
-                        title            = action.title?.toString() ?: "",
-                        pendingIntent    = action.actionIntent,
+                        key = "action_dispatcher_$index",
+                        title = action.title?.toString() ?: "",
+                        pendingIntent = action.actionIntent,
                         actionIntentType = 2,
                     )
                 }
@@ -313,7 +321,11 @@ object IslandDispatcher {
         }
 
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH).apply {
+            NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             }
