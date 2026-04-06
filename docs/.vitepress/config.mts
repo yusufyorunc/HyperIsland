@@ -57,7 +57,7 @@ export default defineConfig({
     ],
     footer: {
       message: '基于 MIT 许可证发布',
-      copyright: '© 2024-present 1812z'
+      copyright: 'Copyright 2026-present 1812z'
     }
   }
 })
