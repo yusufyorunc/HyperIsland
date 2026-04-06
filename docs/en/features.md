@@ -51,8 +51,8 @@ Choose the appropriate Super Island template for each app/channel:
 
 - **Island Icon**: Auto or custom icon selection
 - **Large Island Icon**: Toggle large island icon display
-- **Initial Expand**: Auto-expand when notification first appears
-- **Update Expand**: Auto-expand when notification updates
+- **Initial Expand**: Whether Super Island auto-expands to Focus Notification on first display
+- **Update Expand**: Whether Super Island auto-expands to Focus Notification on notification update
 - **Message Scroll**: Toggle text scrolling within the island
 - **Auto Dismiss**: Set seconds before Super Island auto-hides
 - **Highlight Color**: Custom highlight color (supports HEX values)
