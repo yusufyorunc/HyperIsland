@@ -1074,6 +1074,30 @@ abstract class AppLocalizations {
   /// **'高亮颜色'**
   String get highlightColorLabel;
 
+  /// No description provided for @dynamicHighlightColorLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'高亮动态取色'**
+  String get dynamicHighlightColorLabel;
+
+  /// No description provided for @dynamicHighlightModeDark.
+  ///
+  /// In zh, this message translates to:
+  /// **'暗'**
+  String get dynamicHighlightModeDark;
+
+  /// No description provided for @dynamicHighlightModeDarker.
+  ///
+  /// In zh, this message translates to:
+  /// **'更暗'**
+  String get dynamicHighlightModeDarker;
+
+  /// No description provided for @outerGlowLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'外圈光效'**
+  String get outerGlowLabel;
+
   /// No description provided for @highlightColorHint.
   ///
   /// In zh, this message translates to:

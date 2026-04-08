@@ -59,8 +59,9 @@ class _SettingsPageState extends State<SettingsPage> {
     final nextMaxWidth = _ctrl.bigIslandMaxWidth;
     if (nextHash == _uiStateHash &&
         nextMarquee == _marqueeSpeedDraft &&
-        nextMaxWidth == _bigIslandMaxWidthDraft)
+        nextMaxWidth == _bigIslandMaxWidthDraft) {
       return;
+    }
     setState(() {
       _uiStateHash = nextHash;
       _marqueeSpeedDraft = nextMarquee;

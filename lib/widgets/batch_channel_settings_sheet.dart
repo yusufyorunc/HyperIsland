@@ -28,6 +28,7 @@ class SingleChannelMode extends ChannelSettingsMode {
     required this.marquee,
     required this.restoreLockscreen,
     required this.highlightColor,
+    required this.dynamicHighlightColor,
     required this.showLeftHighlight,
     required this.showRightHighlight,
     required this.showLeftNarrowFont,
@@ -49,6 +50,7 @@ class SingleChannelMode extends ChannelSettingsMode {
   final String marquee;
   final String restoreLockscreen;
   final String highlightColor;
+  final String dynamicHighlightColor;
   final String showLeftHighlight;
   final String showRightHighlight;
   final String showLeftNarrowFont;
@@ -163,6 +165,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   String? _marquee;
   String? _restoreLockscreen;
   String? _highlightColor;
+  String? _dynamicHighlightColor;
   bool? _showLeftHighlight;
   bool? _showRightHighlight;
   bool? _showLeftNarrowFont;
@@ -176,6 +179,10 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   late final TextEditingController _highlightColorController;
 
   bool get _isSingle => widget.mode is SingleChannelMode;
+  bool get _dynamicHighlightEnabled =>
+      _dynamicHighlightColor == 'on' ||
+      _dynamicHighlightColor == 'dark' ||
+      _dynamicHighlightColor == 'darker';
 
   @override
   void initState() {
@@ -194,6 +201,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _marquee = m.marquee;
       _restoreLockscreen = m.restoreLockscreen;
       _highlightColor = m.highlightColor;
+      _dynamicHighlightColor = m.dynamicHighlightColor;
       _showLeftHighlight = m.showLeftHighlight == kTriOptOn;
       _showRightHighlight = m.showRightHighlight == kTriOptOn;
       _showLeftNarrowFont = m.showLeftNarrowFont == kTriOptOn;
@@ -329,6 +337,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _marquee != null ||
       _restoreLockscreen != null ||
       _highlightColor != null ||
+      _dynamicHighlightColor != null ||
       _showLeftHighlight != null ||
       _showRightHighlight != null ||
       _showLeftNarrowFont != null ||
@@ -373,6 +382,9 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
           'highlight_color': _isSingle
               ? (_highlightColor ?? '')
               : _highlightColor,
+          'dynamic_highlight_color': _isSingle
+              ? (_dynamicHighlightColor ?? kTriOptOff)
+              : _dynamicHighlightColor,
           'show_left_highlight': _showLeftHighlight == null
               ? null
               : (_showLeftHighlight! ? kTriOptOn : kTriOptOff),
@@ -400,9 +412,6 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
-    final outerGlowLabel = Localizations.localeOf(context).languageCode == 'zh'
-        ? '外圈光效'
-        : 'Outer glow';
     final titleBottomPadding = 12.0;
     final contentTopPadding = 12.0;
     final contentBottomPadding = 4.0;
@@ -411,7 +420,9 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
     final blockGap = 16.0;
     final scopeGap = 12.0;
     final endGap = 20.0;
-    final hasHighlightColor = (_highlightColor?.trim().isNotEmpty ?? false);
+    final hasHighlightColor =
+        _dynamicHighlightEnabled ||
+        (_highlightColor?.trim().isNotEmpty ?? false);
 
     return _KeyboardInsetPadding(
       child: Column(
@@ -680,6 +691,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                         Expanded(
                           child: TextFormField(
                             controller: _highlightColorController,
+                            enabled: !_dynamicHighlightEnabled,
+                            readOnly: _dynamicHighlightEnabled,
                             textInputAction: TextInputAction.done,
                             scrollPadding: EdgeInsets.zero,
                             onTapOutside: (_) {
@@ -693,7 +706,10 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                                       : l10n.noChange,
                                 ).copyWith(
                                   suffixIcon:
-                                      _highlightColorController.text.isNotEmpty
+                                      !_dynamicHighlightEnabled &&
+                                          _highlightColorController
+                                              .text
+                                              .isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(
                                             Icons.clear,
@@ -708,27 +724,31 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                                         )
                                       : null,
                                 ),
-                            onChanged: (v) {
-                              final trimmed = v.trim();
-                              setState(() {
-                                _highlightColor = trimmed.isNotEmpty
-                                    ? trimmed
-                                    : null;
-                              });
-                            },
+                            onChanged: _dynamicHighlightEnabled
+                                ? null
+                                : (v) {
+                                    final trimmed = v.trim();
+                                    setState(() {
+                                      _highlightColor = trimmed.isNotEmpty
+                                          ? trimmed
+                                          : null;
+                                    });
+                                  },
                           ),
                         ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: () async {
-                            final color = await _showColorPicker(context);
-                            if (color != null) {
-                              final hex =
-                                  '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
-                              _highlightColorController.text = hex;
-                              setState(() => _highlightColor = hex);
-                            }
-                          },
+                          onTap: _dynamicHighlightEnabled
+                              ? null
+                              : () async {
+                                  final color = await _showColorPicker(context);
+                                  if (color != null) {
+                                    final hex =
+                                        '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+                                    _highlightColorController.text = hex;
+                                    setState(() => _highlightColor = hex);
+                                  }
+                                },
                           child: Container(
                             width: 48,
                             height: 48,
@@ -741,6 +761,33 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                         ),
                       ],
                     ),
+                  ),
+                  SizedBox(height: rowGap),
+                  _BatchSettingRow(
+                    label: l10n.dynamicHighlightColorLabel,
+                    value: _dynamicHighlightColor,
+                    showNotChange: !_isSingle,
+                    items: [
+                      DropdownMenuItem(
+                        value: kTriOptOff,
+                        child: Text(l10n.optOff),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOn,
+                        child: Text(l10n.optOn),
+                      ),
+                      DropdownMenuItem(
+                        value: 'dark',
+                        child: Text(l10n.dynamicHighlightModeDark),
+                      ),
+                      DropdownMenuItem(
+                        value: 'darker',
+                        child: Text(l10n.dynamicHighlightModeDarker),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() {
+                      _dynamicHighlightColor = v;
+                    }),
                   ),
                   SizedBox(height: rowGap),
                   // 文本高亮
@@ -912,7 +959,7 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                   ),
                   SizedBox(height: rowGap),
                   _SettingField(
-                    label: outerGlowLabel,
+                    label: l10n.outerGlowLabel,
                     child: Material(
                       color: cs.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),

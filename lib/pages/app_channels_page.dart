@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/whitelist_controller.dart';
@@ -211,6 +209,10 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     );
     queueExtra('highlight_color', widget.controller.setChannelHighlightColor);
     queueExtra(
+      'dynamic_highlight_color',
+      widget.controller.setChannelDynamicHighlightColor,
+    );
+    queueExtra(
       'show_left_highlight',
       widget.controller.setChannelShowLeftHighlight,
     );
@@ -313,7 +315,6 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
     final l10n = AppLocalizations.of(context)!;
     final channels = _channels ?? [];
     final allEnabled = _appEnabled && _enabledChannels.isEmpty;
-    final appIconSizePx = (32 * MediaQuery.devicePixelRatioOf(context)).round();
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -500,6 +501,8 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                       restoreLockscreen:
                           extras['restore_lockscreen'] ?? kTriOptDefault,
                       highlightColor: extras['highlight_color'] ?? '',
+                      dynamicHighlightColor:
+                          extras['dynamic_highlight_color'] ?? kTriOptOff,
                       showLeftHighlight:
                           extras['show_left_highlight'] ?? kTriOptOff,
                       showRightHighlight:
@@ -618,6 +621,7 @@ class _ChannelTile extends StatelessWidget {
     required this.marquee,
     required this.restoreLockscreen,
     required this.highlightColor,
+    required this.dynamicHighlightColor,
     required this.showLeftHighlight,
     required this.showRightHighlight,
     required this.showLeftNarrowFont,
@@ -648,6 +652,7 @@ class _ChannelTile extends StatelessWidget {
   final String marquee;
   final String restoreLockscreen;
   final String highlightColor;
+  final String dynamicHighlightColor;
   final String showLeftHighlight;
   final String showRightHighlight;
   final String showLeftNarrowFont;
@@ -674,6 +679,7 @@ class _ChannelTile extends StatelessWidget {
         marquee: marquee,
         restoreLockscreen: restoreLockscreen,
         highlightColor: highlightColor,
+        dynamicHighlightColor: dynamicHighlightColor,
         showLeftHighlight: showLeftHighlight,
         showRightHighlight: showRightHighlight,
         showLeftNarrowFont: showLeftNarrowFont,

@@ -542,6 +542,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get highlightColorLabel => '高亮颜色';
 
   @override
+  String get dynamicHighlightColorLabel => '高亮动态取色';
+
+  @override
+  String get dynamicHighlightModeDark => '暗';
+
+  @override
+  String get dynamicHighlightModeDarker => '更暗';
+
+  @override
+  String get outerGlowLabel => '外圈光效';
+
+  @override
   String get highlightColorHint => '#RRGGBB 格式，留空使用默认';
 
   @override

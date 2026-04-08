@@ -2,13 +2,16 @@ package io.github.hyperisland.xposed.hook
 
 import android.app.KeyguardManager
 import android.app.Notification
+import android.graphics.drawable.Icon
 import android.service.notification.StatusBarNotification
 import io.github.hyperisland.getAppIcon
+import io.github.hyperisland.resolveDynamicHighlightColor
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.TemplateRegistry
 import io.github.hyperisland.xposed.templates.NotificationIslandNotification
+import io.github.hyperisland.xposed.toRounded
 import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
@@ -290,6 +293,20 @@ object GenericProgressHook : BaseHook() {
             val highlightColor = loadChannelStringSetting(
                 "highlight_color:$pkg/$channelId", "pref_channel_highlight_color_${pkg}_$channelId", ""
             ).takeIf { it.isNotBlank() }
+            val dynamicHighlightColorMode = loadChannelStringSetting(
+                "dynamic_highlight_color:$pkg/$channelId",
+                "pref_channel_dynamic_highlight_color_${pkg}_$channelId",
+                "off"
+            )
+            val resolvedHighlightColor = resolveHighlightColor(
+                context = context,
+                iconMode = iconMode,
+                notifIcon = notif.smallIcon,
+                largeIcon = largeIcon,
+                appIconRaw = appIconRaw,
+                manualHighlightColor = highlightColor,
+                dynamicMode = dynamicHighlightColorMode,
+            )
             val showLeftHighlight = loadChannelStringSetting(
                 "show_left_highlight:$pkg/$channelId", "pref_channel_show_left_highlight_${pkg}_$channelId", "off"
             ) == "on"
@@ -335,7 +352,7 @@ object GenericProgressHook : BaseHook() {
                     isOngoing       = isOngoing,
                     contentIntent   = notif.contentIntent,
                     renderer        = renderer,
-                    highlightColor  = highlightColor,
+                    highlightColor  = resolvedHighlightColor,
                     showLeftHighlightColor = showLeftHighlight,
                     showRightHighlightColor = showRightHighlight,
                     showLeftNarrowFont = showLeftNarrowFont,
@@ -349,6 +366,30 @@ object GenericProgressHook : BaseHook() {
         } catch (e: Throwable) {
             logError(module, "handleSbn error: ${e.message}")
         }
+    }
+
+    private fun resolveHighlightColor(
+        context: android.content.Context,
+        iconMode: String,
+        notifIcon: Icon?,
+        largeIcon: Icon?,
+        appIconRaw: Icon?,
+        manualHighlightColor: String?,
+        dynamicMode: String,
+    ): String? {
+        val mode = dynamicMode.trim().lowercase()
+        if (mode != "on" && mode != "dark" && mode != "darker") {
+            return manualHighlightColor
+        }
+        val fallback = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
+        val iconForColor = when (iconMode) {
+            "notif_small" -> notifIcon ?: fallback
+            "notif_large" -> largeIcon ?: notifIcon ?: fallback
+            "app_icon" -> appIconRaw ?: fallback
+            else -> largeIcon ?: notifIcon ?: fallback
+        }.toRounded(context)
+
+        return iconForColor.resolveDynamicHighlightColor(context, mode) ?: manualHighlightColor
     }
 
     private fun shouldRedactPrivateContentOnLockscreen(

@@ -571,6 +571,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get highlightColorLabel => 'Vurgu Rengi';
 
   @override
+  String get dynamicHighlightColorLabel => 'Dinamik vurgu rengi';
+
+  @override
+  String get dynamicHighlightModeDark => 'Koyu';
+
+  @override
+  String get dynamicHighlightModeDarker => 'Daha koyu';
+
+  @override
+  String get outerGlowLabel => 'Dış parlama';
+
+  @override
   String get highlightColorHint =>
       '#RRGGBB formatı, varsayılan için boş bırakın';
 
