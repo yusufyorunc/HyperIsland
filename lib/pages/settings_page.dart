@@ -84,7 +84,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onResumeNotificationChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setResumeNotification(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +96,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onUseHookAppIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setUseHookAppIcon(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,12 +108,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _onRoundIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setRoundIcon(value);
   }
 
   Future<void> _onHideDesktopIconChanged(bool value) async {
-    await InteractionHaptics.toggle();
     await _ctrl.setHideDesktopIcon(value);
   }
 
@@ -132,14 +128,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _persistMarqueeSpeed(double value) async {
-    await InteractionHaptics.sliderTick();
     final next = value.round();
     if (_ctrl.marqueeSpeed == next) return;
     await _ctrl.setMarqueeSpeed(next);
   }
 
   Future<void> _persistBigIslandMaxWidth(double value) async {
-    await InteractionHaptics.sliderTick();
     final next = value.round();
     if (_ctrl.bigIslandMaxWidth == next) return;
     await _ctrl.setBigIslandMaxWidth(next);
@@ -164,7 +158,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _exportToFile() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final path = await ConfigIOController.exportToFile();
       _showSnack(l10n.exportedTo(path));
@@ -177,7 +170,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _exportToClipboard() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       await ConfigIOController.exportToClipboard();
       _showSnack(l10n.configCopied);
@@ -190,7 +182,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _importFromFile() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final count = await ConfigIOController.importFromFile();
       _showSnack(l10n.importSuccess(count));
@@ -203,7 +194,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _importFromClipboard() async {
     final l10n = AppLocalizations.of(context)!;
-    await InteractionHaptics.button();
     try {
       final count = await ConfigIOController.importFromClipboard();
       _showSnack(l10n.importSuccess(count));
@@ -215,7 +205,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _doCheckUpdate() async {
-    await InteractionHaptics.button();
     setState(() => _checkingUpdate = true);
     try {
       final info = await PackageInfo.fromPlatform();
@@ -249,7 +238,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showThemeModeDialog(AppLocalizations l10n) async {
-    await InteractionHaptics.button();
     if (!mounted) return;
     final result = await showDialog<ThemeMode>(
       context: context,
@@ -272,14 +260,12 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     if (result != null) {
-      await InteractionHaptics.button();
       if (!mounted) return;
       _ctrl.setThemeMode(result);
     }
   }
 
   Future<void> _showLanguageDialog(AppLocalizations l10n) async {
-    await InteractionHaptics.button();
     if (!mounted) return;
     final result = await showDialog<Locale?>(
       context: context,
@@ -304,7 +290,6 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     if (result != _ctrl.locale) {
-      await InteractionHaptics.button();
       if (!mounted) return;
       _ctrl.setLocale(result);
     }
@@ -431,10 +416,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.interactionHapticsSubtitle),
                             value: _ctrl.interactionHaptics,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle(force: true);
-                              await _ctrl.setInteractionHaptics(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setInteractionHaptics(value),
+                              force: true,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(16),
@@ -453,7 +438,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.keepFocusNotifSubtitle),
                             value: _ctrl.resumeNotification,
-                            onChanged: _onResumeNotificationChanged,
+                            onChanged: InteractionHaptics.interceptToggle(
+                              _onResumeNotificationChanged,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -467,10 +454,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.unlockAllFocusSubtitle),
                             value: _ctrl.unlockAllFocus,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setUnlockAllFocus(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setUnlockAllFocus(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -484,10 +470,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.unlockFocusAuthSubtitle),
                             value: _ctrl.unlockFocusAuth,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setUnlockFocusAuth(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setUnlockFocusAuth(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -501,10 +486,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.showWelcomeSubtitle),
                             value: _ctrl.showWelcome,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setShowWelcome(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setShowWelcome(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -518,7 +502,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.hideDesktopIconSubtitle),
                             value: _ctrl.hideDesktopIcon,
-                            onChanged: _onHideDesktopIconChanged,
+                            onChanged: InteractionHaptics.interceptToggle(
+                              _onHideDesktopIconChanged,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -532,10 +518,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
                             value: _ctrl.checkUpdateOnLaunch,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setCheckUpdateOnLaunch(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setCheckUpdateOnLaunch(value),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                 bottom: Radius.circular(16),
@@ -570,10 +555,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.firstFloatLabelSubtitle),
                             value: _ctrl.defaultFirstFloat,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultFirstFloat(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setDefaultFirstFloat(value),
+                            ),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(16),
@@ -592,10 +576,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.updateFloatLabelSubtitle),
                             value: _ctrl.defaultEnableFloat,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultEnableFloat(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setDefaultEnableFloat(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -609,10 +592,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.marqueeChannelTitleSubtitle),
                             value: _ctrl.defaultMarquee,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultMarquee(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setDefaultMarquee(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -626,10 +608,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.focusNotificationLabelSubtitle),
                             value: _ctrl.defaultFocusNotif,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultFocusNotif(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setDefaultFocusNotif(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -643,10 +624,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.restoreLockscreenSubtitle),
                             value: _ctrl.defaultRestoreLockscreen,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultRestoreLockscreen(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) =>
+                                  _ctrl.setDefaultRestoreLockscreen(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -660,10 +641,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.islandIconLabelSubtitle),
                             value: _ctrl.defaultShowIslandIcon,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultShowIslandIcon(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setDefaultShowIslandIcon(value),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           SwitchListTile(
@@ -679,10 +659,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               l10n.preserveStatusBarSmallIconLabelSubtitle,
                             ),
                             value: _ctrl.defaultPreserveSmallIcon,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setDefaultPreserveSmallIcon(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) =>
+                                  _ctrl.setDefaultPreserveSmallIcon(value),
+                            ),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                 bottom: Radius.circular(16),
@@ -717,7 +697,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(l10n.useAppIconSubtitle),
                             value: _ctrl.useHookAppIcon,
-                            onChanged: _onUseHookAppIconChanged,
+                            onChanged: InteractionHaptics.interceptToggle(
+                              _onUseHookAppIconChanged,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -731,7 +713,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: Text(l10n.roundIconTitle, style: titleStyle),
                             subtitle: Text(l10n.roundIconSubtitle),
                             value: _ctrl.roundIcon,
-                            onChanged: _onRoundIconChanged,
+                            onChanged: InteractionHaptics.interceptToggle(
+                              _onRoundIconChanged,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -760,13 +744,15 @@ class _SettingsPageState extends State<SettingsPage> {
                                       icon: const Icon(Icons.refresh, size: 18),
                                       padding: EdgeInsets.zero,
                                       visualDensity: VisualDensity.compact,
-                                      onPressed: () async {
-                                        await InteractionHaptics.button();
-                                        setState(
-                                          () => _marqueeSpeedDraft = 100,
-                                        );
-                                        _ctrl.setMarqueeSpeed(100);
-                                      },
+                                      onPressed:
+                                          InteractionHaptics.interceptButton(
+                                            () {
+                                              setState(
+                                                () => _marqueeSpeedDraft = 100,
+                                              );
+                                              _ctrl.setMarqueeSpeed(100);
+                                            },
+                                          ),
                                     ),
                                   ),
                               ],
@@ -786,7 +772,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                       min: 20,
                                       max: 500,
                                       divisions: 48,
-                                      onChanged: _onMarqueeSpeedChanged,
+                                      onChanged:
+                                          InteractionHaptics.interceptSlider(
+                                            _onMarqueeSpeedChanged,
+                                          ),
                                       onChangeEnd: _persistMarqueeSpeed,
                                     ),
                                   ),
@@ -810,10 +799,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ?.copyWith(color: cs.onSurfaceVariant),
                             ),
                             value: _ctrl.bigIslandMaxWidthEnabled,
-                            onChanged: (value) async {
-                              await InteractionHaptics.toggle();
-                              await _ctrl.setBigIslandMaxWidthEnabled(value);
-                            },
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) =>
+                                  _ctrl.setBigIslandMaxWidthEnabled(value),
+                            ),
                           ),
                           if (_ctrl.bigIslandMaxWidthEnabled)
                             Padding(
@@ -840,13 +829,17 @@ class _SettingsPageState extends State<SettingsPage> {
                                         ),
                                         padding: EdgeInsets.zero,
                                         visualDensity: VisualDensity.compact,
-                                        onPressed: () async {
-                                          await InteractionHaptics.button();
-                                          setState(
-                                            () => _bigIslandMaxWidthDraft = 600,
-                                          );
-                                          _ctrl.setBigIslandMaxWidth(600);
-                                        },
+                                        onPressed:
+                                            InteractionHaptics.interceptButton(
+                                              () {
+                                                setState(
+                                                  () =>
+                                                      _bigIslandMaxWidthDraft =
+                                                          600,
+                                                );
+                                                _ctrl.setBigIslandMaxWidth(600);
+                                              },
+                                            ),
                                       ),
                                     ),
                                   Expanded(
@@ -858,7 +851,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                         min: 500,
                                         max: 1000,
                                         divisions: 54,
-                                        onChanged: _onBigIslandMaxWidthChanged,
+                                        onChanged:
+                                            InteractionHaptics.interceptSlider(
+                                              _onBigIslandMaxWidthChanged,
+                                            ),
                                         onChangeEnd: _persistBigIslandMaxWidth,
                                       ),
                                     ),
@@ -874,7 +870,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             title: Text(l10n.themeModeTitle, style: titleStyle),
                             subtitle: Text(_themeModeLabel(l10n)),
-                            onTap: () => _showThemeModeDialog(l10n),
+                            onTap: InteractionHaptics.interceptButton(
+                              () => _showThemeModeDialog(l10n),
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -884,7 +882,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             title: Text(l10n.languageTitle, style: titleStyle),
                             subtitle: Text(_localeLabel(l10n)),
-                            onTap: () => _showLanguageDialog(l10n),
+                            onTap: InteractionHaptics.interceptButton(
+                              () => _showLanguageDialog(l10n),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
                                 bottom: Radius.circular(16),
@@ -921,7 +921,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             leading: const Icon(Icons.upload_file_outlined),
                             title: Text(l10n.exportToFile, style: titleStyle),
                             subtitle: Text(l10n.exportToFileSubtitle),
-                            onTap: _exportToFile,
+                            onTap: InteractionHaptics.interceptButton(
+                              _exportToFile,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -935,7 +937,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               style: titleStyle,
                             ),
                             subtitle: Text(l10n.exportToClipboardSubtitle),
-                            onTap: _exportToClipboard,
+                            onTap: InteractionHaptics.interceptButton(
+                              _exportToClipboard,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -946,7 +950,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             leading: const Icon(Icons.download_outlined),
                             title: Text(l10n.importFromFile, style: titleStyle),
                             subtitle: Text(l10n.importFromFileSubtitle),
-                            onTap: _importFromFile,
+                            onTap: InteractionHaptics.interceptButton(
+                              _importFromFile,
+                            ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -965,7 +971,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               style: titleStyle,
                             ),
                             subtitle: Text(l10n.importFromClipboardSubtitle),
-                            onTap: _importFromClipboard,
+                            onTap: InteractionHaptics.interceptButton(
+                              _importFromClipboard,
+                            ),
                           ),
                         ],
                       ),
@@ -996,7 +1004,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                   )
                                 : null,
-                            onTap: _checkingUpdate ? null : _doCheckUpdate,
+                            onTap: _checkingUpdate
+                                ? null
+                                : InteractionHaptics.interceptButton(
+                                    _doCheckUpdate,
+                                  ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -1009,15 +1021,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: Text('GitHub', style: titleStyle),
                             subtitle: const Text('1812z/HyperIsland'),
                             trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: () async {
-                              await InteractionHaptics.button();
+                            onTap: InteractionHaptics.interceptButton(() async {
                               await launchUrl(
                                 Uri.parse(
                                   'https://github.com/1812z/HyperIsland',
                                 ),
                                 mode: LaunchMode.externalApplication,
                               );
-                            },
+                            }),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
                           ListTile(
@@ -1030,8 +1041,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: Text(l10n.qqGroup, style: titleStyle),
                             subtitle: const Text('1045114341'),
                             trailing: const Icon(Icons.copy, size: 18),
-                            onTap: () async {
-                              await InteractionHaptics.button();
+                            onTap: InteractionHaptics.interceptButton(() async {
                               Clipboard.setData(
                                 const ClipboardData(text: '1045114341'),
                               );
@@ -1042,7 +1052,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
-                            },
+                            }),
                           ),
                         ],
                       ),
