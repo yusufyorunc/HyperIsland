@@ -10,12 +10,6 @@ import io.github.hyperisland.xposed.logWarn
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
-/**
- * 在 SystemUI 进程中注册 [io.github.hyperisland.xposed.IslandDispatcher] 的轻量 Hook。
- *
- * 通过 hook [android.app.Application.onCreate] 在 SystemUI 启动早期获取
- * ApplicationContext，完成 [io.github.hyperisland.xposed.IslandDispatcher] 的 BroadcastReceiver 注册。
- */
 object IslandDispatcherHook {
 
     private const val TAG = "HyperIsland[DispatcherHook]"

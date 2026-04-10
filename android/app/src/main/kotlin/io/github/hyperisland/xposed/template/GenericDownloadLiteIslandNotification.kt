@@ -1,6 +1,5 @@
 package io.github.hyperisland.xposed.template
 
-import android.R
 import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Bundle
@@ -24,7 +23,7 @@ object DownloadLiteIslandNotification : IslandTemplate {
         }
     }
 
-   
+
     fun process(context: Context, data: NotifData): IslandViewModel {
         val isComplete = data.progress >= 100
         val isPaused = !isComplete && "${data.title} ${data.subtitle} ".let {
@@ -40,8 +39,8 @@ object DownloadLiteIslandNotification : IslandTemplate {
             isPaused -> 0xFFFF9800.toInt()
             else -> 0xFF2196F3.toInt()
         }
-        val iconRes = if (isComplete) R.drawable.stat_sys_download_done
-        else R.drawable.stat_sys_download
+        val iconRes = if (isComplete) android.R.drawable.stat_sys_download_done
+        else android.R.drawable.stat_sys_download
         val fallback = Icon.createWithResource(context, iconRes).apply { setTint(tintColor) }
 
         val islandIcon = data.resolveModeIconAutoNotif(data.iconMode, fallback).toRounded(context)

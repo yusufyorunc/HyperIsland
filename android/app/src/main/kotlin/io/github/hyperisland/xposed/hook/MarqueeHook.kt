@@ -8,13 +8,10 @@ import android.widget.TextView
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logWarn
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import java.util.WeakHashMap
 
-/**
- * Hook SystemUI 中超级岛大岛视图的 TextView，实现自定义跑马灯（文字横向滚动）效果。
- */
 object MarqueeHook {
 
     private const val TAG = "HyperIsland[MarqueeHook]"
@@ -32,8 +29,10 @@ object MarqueeHook {
     private val observedViews = WeakHashMap<TextView, Boolean>()
     private val islandMarqueeState = WeakHashMap<ViewGroup, Boolean>()
 
-    @Volatile private var cachedSpeed: Int? = null
-    @Volatile private var observerRegistered = false
+    @Volatile
+    private var cachedSpeed: Int? = null
+    @Volatile
+    private var observerRegistered = false
 
     private fun findBigIslandView(view: View): ViewGroup? {
         var p = view.parent
@@ -55,7 +54,6 @@ object MarqueeHook {
         ConfigManager.addChangeListener {
             cachedSpeed = null
             stopAllMarquees()
-            //module.log("$TAG: settings changed via Observer, cache cleared")
         }
         observerRegistered = true
         module.log("$TAG: ConfigManager Observer registered in SystemUI")
@@ -141,7 +139,14 @@ object MarqueeHook {
                 else stopMarquee(tv)
             }
             view.addTextChangedListener(object : android.text.TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {
+                }
+
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(s: android.text.Editable?) {
                     if (isMarqueeEnabledFor(view)) startMarquee(view)
@@ -159,6 +164,7 @@ object MarqueeHook {
                         traverseInternal(child, false)
                     }
                 }
+
                 override fun onChildViewRemoved(parent: View?, child: View?) {
                     if (child is TextView) stopMarquee(child)
                 }
@@ -168,8 +174,6 @@ object MarqueeHook {
             }
         }
     }
-
-    // ─── IXposedHookLoadPackage → init ────────────────────────────────────────
 
     private var hookedContentView = false
     private val targetPkg = java.util.Collections.synchronizedMap(WeakHashMap<View, String>())
@@ -195,21 +199,26 @@ object MarqueeHook {
         for (className in classNames) {
             try {
                 val clazz = classLoader.loadClass(className)
-                val updateMethod = clazz.declaredMethods.firstOrNull { it.name == "updateBigIslandView" }
+                val updateMethod =
+                    clazz.declaredMethods.firstOrNull { it.name == "updateBigIslandView" }
                 if (updateMethod != null) {
                     module.hook(updateMethod).intercept { chain ->
                         val result = chain.proceed()
                         try {
-                            val islandView = chain.thisObject as? ViewGroup ?: return@intercept result
+                            val islandView =
+                                chain.thisObject as? ViewGroup ?: return@intercept result
                             val islandData = chain.args.getOrNull(0)
                             var pkgName = ""
                             try {
                                 if (islandData != null) {
-                                    val getExtrasMethod = islandData.javaClass.getMethod("getExtras")
-                                    val extras = getExtrasMethod.invoke(islandData) as? android.os.Bundle
+                                    val getExtrasMethod =
+                                        islandData.javaClass.getMethod("getExtras")
+                                    val extras =
+                                        getExtrasMethod.invoke(islandData) as? android.os.Bundle
                                     pkgName = extras?.getString("miui.pkg.name") ?: ""
                                 }
-                            } catch (_: Exception) {}
+                            } catch (_: Exception) {
+                            }
                             if (pkgName.isNotEmpty()) {
                                 targetPkg[islandView] = pkgName
                             } else {
@@ -218,27 +227,36 @@ object MarqueeHook {
                             if (pkgName.isEmpty()) return@intercept result
                             ensureObserver(module)
                             val isOngoing = try {
-                                islandData?.javaClass?.getMethod("isOngoing")?.invoke(islandData) as? Boolean ?: false
-                            } catch (_: Exception) { false }
+                                islandData?.javaClass?.getMethod("isOngoing")
+                                    ?.invoke(islandData) as? Boolean ?: false
+                            } catch (_: Exception) {
+                                false
+                            }
                             if (isOngoing) {
                                 traverseAndApplyMarquee(islandView, false)
                                 return@intercept result
                             }
-                            val marqueeRaw = ConfigManager.getString("pref_channel_marquee_${pkgName}", "default")
-                            val defaultMarquee = ConfigManager.getBoolean("pref_default_marquee", false)
+                            val marqueeRaw = ConfigManager.getString(
+                                "pref_channel_marquee_${pkgName}",
+                                "default"
+                            )
+                            val defaultMarquee =
+                                ConfigManager.getBoolean("pref_default_marquee", false)
                             val enabled = when (marqueeRaw) {
                                 "on" -> true
                                 "off" -> false
                                 else -> defaultMarquee
                             }
                             traverseAndApplyMarquee(islandView, enabled)
-                        } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                        }
                         result
                     }
                     hookedContentView = true
                     module.log("$TAG: hooked updateBigIslandView on $className")
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -262,18 +280,18 @@ object MarqueeHook {
                             }
                             result
                         }
-                    } catch (_: Exception) {}
+                    } catch (_: Exception) {
+                    }
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
-
-    // ─── MarqueeController ────────────────────────────────────────────────────
 
     class MarqueeController(
         private val view: TextView,
         var speedPxPerSec: Int = 100,
-        private val delayMs: Int = 1500
+        private val delayMs: Int = 1500,
     ) : Choreographer.FrameCallback {
 
         private companion object {
@@ -348,6 +366,7 @@ object MarqueeHook {
                     state = 1
                     lastFrameTimeNanos = frameTimeNanos
                 }
+
                 1 -> {
                     currentScrollX += speedPxPerSec * ((frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f)
                     if (currentScrollX >= maxScrollCache) {
@@ -357,6 +376,7 @@ object MarqueeHook {
                     }
                     view.scrollTo(currentScrollX.toInt(), 0)
                 }
+
                 2 -> if (elapsedMs > PAUSE_AT_END_MS) {
                     currentScrollX = 0f
                     view.scrollTo(0, 0)

@@ -52,7 +52,7 @@ class MainActivity : FlutterActivity() {
 
             val prefs = getSharedPreferences(
                 "FlutterSharedPreferences",
-                Context.MODE_PRIVATE
+                MODE_PRIVATE
             )
             val showWelcome = try {
                 prefs.getBoolean("flutter.pref_show_welcome", true)
@@ -372,6 +372,7 @@ class MainActivity : FlutterActivity() {
             Log.d(TAG, "policy temp cleanup failed: ${e.message}")
         }
     }
+
     private fun parseTextXmlChannels(xml: String, targetPkg: String): StrictParseResult {
         val result = mutableListOf<Map<String, Any?>>()
         val parser = android.util.Xml.newPullParser()
@@ -693,12 +694,13 @@ class MainActivity : FlutterActivity() {
 
     private fun sendIslandWithReset(request: io.github.hyperisland.xposed.IslandRequest) {
         val appContext = applicationContext
-        val cancelIntent = Intent(io.github.hyperisland.xposed.IslandDispatcher.ACTION_CANCEL).apply {
-            putExtra(
-                io.github.hyperisland.xposed.IslandDispatcher.EXTRA_NOTIF_ID,
-                request.notifId
-            )
-        }
+        val cancelIntent =
+            Intent(io.github.hyperisland.xposed.IslandDispatcher.ACTION_CANCEL).apply {
+                putExtra(
+                    io.github.hyperisland.xposed.IslandDispatcher.EXTRA_NOTIF_ID,
+                    request.notifId
+                )
+            }
 
         try {
             appContext.sendOrderedBroadcast(

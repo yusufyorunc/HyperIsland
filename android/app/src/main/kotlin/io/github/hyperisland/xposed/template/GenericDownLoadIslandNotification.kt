@@ -5,8 +5,6 @@ import android.graphics.drawable.Icon
 import android.os.Bundle
 import io.github.hyperisland.R
 import io.github.hyperisland.xposed.logError
-import io.github.hyperisland.xposed.template.GenericDownloadIslandNotification.process
-import io.github.hyperisland.xposed.template.renderer.ImageTextWithButtonsRenderer
 import io.github.hyperisland.xposed.template.renderer.resolveRenderer
 
 

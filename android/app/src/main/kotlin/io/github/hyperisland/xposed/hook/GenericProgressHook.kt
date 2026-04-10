@@ -137,7 +137,7 @@ object GenericProgressHook {
         var cancelHooked = false
         try {
             val rankingMapClass = classLoader.loadClass(
-                "android.service.notification.NotificationListenerService${'$'}RankingMap"
+                $$"android.service.notification.NotificationListenerService$RankingMap"
             )
             val removeMethod = findOnNotificationRemovedMethod(
                 classLoader.loadClass("android.service.notification.NotificationListenerService"),
@@ -537,7 +537,7 @@ object GenericProgressHook {
                 extras.getParcelable(Notification.EXTRA_LARGE_ICON, Icon::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                extras.getParcelable<Icon>(Notification.EXTRA_LARGE_ICON)
+                extras.getParcelable(Notification.EXTRA_LARGE_ICON)
             }
             if (icon != null) return icon
 
@@ -545,7 +545,7 @@ object GenericProgressHook {
                 extras.getParcelable(Notification.EXTRA_LARGE_ICON, Bitmap::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                extras.getParcelable<Bitmap>(Notification.EXTRA_LARGE_ICON)
+                extras.getParcelable(Notification.EXTRA_LARGE_ICON)
             }
             if (bitmap != null) Icon.createWithBitmap(bitmap) else null
         } catch (_: Exception) {

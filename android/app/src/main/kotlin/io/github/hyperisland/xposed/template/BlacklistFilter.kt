@@ -5,12 +5,6 @@ import android.content.Context
 import android.util.Log
 import io.github.hyperisland.xposed.ConfigManager
 
-/**
- * 应用黑名单过滤器。
- * 在通知进入模板前检查前台应用是否在黑名单中：
- *  - 命中 → 返回禁用浮动的 [NotifData] 副本（岛正常展示，不自动展开）
- *  - 未命中 → 返回原始 [NotifData]
- */
 object BlacklistFilter {
 
     private const val TAG = "HyperIsland[Blacklist]"

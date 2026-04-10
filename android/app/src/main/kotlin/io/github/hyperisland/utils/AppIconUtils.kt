@@ -49,7 +49,7 @@ fun Icon.resolveDynamicHighlightColor(context: Context, mode: String): String? {
 
 private fun Icon.toBitmap(context: Context, size: Int): Bitmap? {
     val drawable = loadDrawable(context) ?: return null
-    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val bmp = createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
     drawable.setBounds(0, 0, size, size)
     drawable.draw(canvas)

@@ -10,10 +10,6 @@ import io.github.hyperisland.xposed.hook.UnlockFocusAuthHook
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 
-/**
- * 模块主入口，继承 XposedModule。
- * 框架在各目标进程加载时回调 [onPackageLoaded]，由此分发到各子 Hook。
- */
 class HyperIslandModule : XposedModule() {
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
