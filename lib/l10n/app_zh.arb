@@ -32,7 +32,6 @@
   "goUpdate": "前往更新",
   "sponsorSupport": "赞助支持",
   "sponsorAuthor": "赞助作者",
-  "documentation": "文档",
   "restartScope": "重启作用域",
   "systemUI": "系统界面",
   "downloadManager": "下载管理器",
@@ -92,8 +91,6 @@
   "checkUpdateOnLaunchSubtitle": "启动应用时自动检查是否有新版本",
   "showWelcomeTitle": "显示启动欢迎语",
   "showWelcomeSubtitle": "应用启动时在超级岛显示欢迎信息",
-  "interactionHapticsTitle": "交互触感",
-  "interactionHapticsSubtitle": "为开关、滑块和按钮启用 Hyper 定制震感反馈",
   "checkUpdate": "检查更新",
   "alreadyLatest": "已是最新版本",
   "useAppIconTitle": "使用应用图标",
@@ -110,20 +107,14 @@
       }
     }
   },
-  "bigIslandMaxWidthTitle": "修改超级岛最大宽度",
-  "bigIslandMaxWidthLabel": "{width} dp",
-  "@bigIslandMaxWidthLabel": {
-    "placeholders": {
-      "width": {
-        "type": "int"
-      }
-    }
-  },
-  "bigIslandMaxWidthSubtitle": "开启后修改超级岛的最大宽度",
   "themeModeTitle": "颜色模式",
   "themeModeSystem": "跟随系统",
   "themeModeLight": "浅色",
   "themeModeDark": "深色",
+  "themeSeedColorTitle": "主题色",
+  "themeSeedColorSubtitle": "当前预设",
+  "pureBlackThemeTitle": "纯黑深色模式",
+  "pureBlackThemeSubtitle": "深色模式下使用纯黑背景",
   "languageTitle": "语言",
   "languageAuto": "跟随系统",
   "languageZh": "中文",
@@ -341,13 +332,12 @@
   "seconds": "秒",
   "highlightColorLabel": "高亮颜色",
   "dynamicHighlightColorLabel": "高亮动态取色",
-  "dynamicHighlightColorLabelSubtitle": "开启后默认使用图标自动取色",
+  "dynamicHighlightColorLabelSubtitle": "当渠道使用默认值时，使用图标动态取色作为高亮颜色。",
   "dynamicHighlightModeDark": "暗",
   "dynamicHighlightModeDarker": "更暗",
   "outerGlowLabel": "外圈光效",
   "highlightColorHint": "#RRGGBB 格式，留空使用默认",
   "textHighlightLabel": "文本高亮",
-  "narrowFontLabel": "窄字体",
   "showLeftHighlightLabel": "左侧文本高亮",
   "showRightHighlightLabel": "右侧文本高亮",
   "showLeftHighlightShort": "左侧",
@@ -385,15 +375,6 @@
 
   "navBlacklist": "通知黑名单",
   "navBlacklistSubtitle": "启动黑名单应用时，停用焦点通知的自动展开功能",
-  "presetGamesTitle": "一键过滤热门游戏",
-  "presetGamesSuccess": "已从模板中添加 {count} 款已安装游戏至黑名单",
-  "@presetGamesSuccess": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "blacklistedAppsCount": "已拦截 {count} 个应用的焦点通知",
   "@blacklistedAppsCount": {
     "placeholders": {
@@ -416,66 +397,6 @@
   "marqueeChannelTitleSubtitle": "超级岛消息过长是否滚动显示",
   "focusNotificationLabelSubtitle": "替换通知为焦点通知（关闭后显示原始通知）",
   "preserveStatusBarSmallIconLabelSubtitle": "焦点通知打开时，是否强制保留状态栏小图标",
-
-  "aiConfigSection": "AI 增强",
-  "aiConfigTitle": "AI 通知摘要",
-  "aiConfigSubtitleEnabled": "已启用 · 点击配置 AI 参数",
-  "aiConfigSubtitleDisabled": "已关闭 · 点击进行配置",
-  "aiEnabledTitle": "启用 AI 摘要",
-  "aiEnabledSubtitle": "由 AI 生成超级岛左右文本，超时或失败时自动回退",
-  "aiApiSection": "API 参数",
-  "aiUrlLabel": "API 地址（必须完整）",
-  "aiUrlHint": "https://api.openai.com/v1/chat/completions",
-  "aiApiKeyLabel": "API 密钥",
-  "aiApiKeyHint": "sk-...",
-  "aiModelLabel": "模型",
-  "aiModelHint": "gpt-4o-mini",
-  "aiPromptLabel": "系统提示词",
-  "aiPromptHint": "留空则使用默认提示词",
-  "aiPromptInUserTitle": "提示词放在用户消息",
-  "aiPromptInUserSubtitle": "某些模型不支持系统指令，开启后将提示词放在用户消息中",
-  "aiTimeoutTitle": "AI 响应超时",
-  "aiTimeoutLabel": "{seconds}s",
-  "aiTemperatureTitle": "采样温度 (Temperature)",
-  "aiTemperatureSubtitle": "控制回答的随机性。0 为准确，1 则更具创意",
-  "aiMaxTokensTitle": "最大 Token 数 (Max Tokens)",
-  "aiMaxTokensSubtitle": "限制 AI 生成回答的最大长度",
-  "@aiTimeoutLabel": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "aiDefaultPromptFull": "留空使用默认提示词：根据通知信息，提取关键信息，左右分别不超过 6 汉字 12 字符",
-  "aiTestButton": "测试连接",
-  "aiTestUrlEmpty": "请先填写 API 地址",
-  "aiLastLogTitle": "最近一次 AI 请求日志",
-  "aiLastLogSubtitle": "测试连接和通知触发的 AI 请求都会显示在这里",
-  "aiLastLogEmpty": "还没有可显示的 AI 请求日志",
-  "aiLastLogSourceLabel": "来源",
-  "aiLastLogTimeLabel": "时间",
-  "aiLastLogStatusLabel": "状态",
-  "aiLastLogDurationLabel": "耗时",
-  "aiLastLogSourceNotification": "通知触发",
-  "aiLastLogSourceSettingsTest": "设置页测试",
-  "aiLastLogRendered": "渲染",
-  "aiLastLogRaw": "原始",
-  "aiLastLogCopy": "复制日志",
-  "aiLastLogCopied": "AI 请求日志已复制",
-  "aiLastLogRequest": "请求",
-  "aiLastLogResponse": "回复",
-  "aiLastLogUsage": "Token 用量",
-  "aiLastLogMessages": "消息",
-  "aiLastLogError": "错误",
-  "aiLastLogHttpCode": "HTTP 状态",
-  "aiLastLogLeftText": "左侧文本",
-  "aiLastLogRightText": "右侧文本",
-  "aiLastLogAssistantContent": "模型回复内容",
-  "aiConfigSaveButton": "保存",
-  "aiConfigSaved": "AI 配置已保存",
-  "aiConfigTips": "AI 将收到通知的应用包名、标题和正文，返回左侧（来源）和右侧（内容）短文本。支持兼容 OpenAI 格式的接口（如 DeepSeek、Claude 等）。超过 3 秒未响应时自动回退到默认逻辑。",
-  "templateAiNotificationIslandName": "AI 通知超级岛",
 
   "hideDesktopIconTitle": "隐藏桌面图标",
   "hideDesktopIconSubtitle": "隐藏启动器中的应用图标，隐藏后可通过 LSPosed 管理器打开"

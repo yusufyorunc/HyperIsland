@@ -16,6 +16,7 @@
     <string name="island_download_paused">Paused</string>
     <string name="island_download_waiting">Waiting</string>
     <string name="island_downloading">Downloading</string>
+    <string name="island_download_file_fallback">Download file</string>
     <string name="island_downloading_progress">Downloading %d%%</string>
     <string name="island_aod_paused_progress">Paused %d%%</string>
     <string name="island_aod_downloading_progress">Downloading %d%%</string>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="module_description">HyperOS 3 için daha fazla Dynamic Island özelliği</string>
+
+    <!-- Welcome island -->
+    <string name="island_welcome_title">Hoş geldiniz</string>
+
+    <!-- Island state labels (GenericProgress / Download shared) -->
+    <string name="island_state_complete">Tamamlandı</string>
+    <string name="island_state_paused">Duraklatıldı</string>
+    <string name="island_state_waiting">Bekliyor</string>
+    <string name="island_state_downloading">İndiriliyor</string>
+
+    <!-- Download-specific titles -->
+    <string name="island_download_complete">İndirme tamamlandı</string>
+    <string name="island_download_paused">Duraklatıldı</string>
+    <string name="island_download_waiting">Bekliyor</string>
+    <string name="island_downloading">İndiriliyor</string>
+    <string name="island_download_file_fallback">İndirilen dosya</string>
+    <string name="island_downloading_progress">İndiriliyor %d%%</string>
+    <string name="island_aod_paused_progress">Duraklatıldı %d%%</string>
+    <string name="island_aod_downloading_progress">İndiriliyor %d%%</string>
+
+    <!-- Download action buttons -->
+    <string name="island_action_resume_all">Tümünü sürdür</string>
+    <string name="island_action_resume">Sürdür</string>
+    <string name="island_action_pause_all">Tümünü duraklat</string>
+    <string name="island_action_pause">Duraklat</string>
+    <string name="island_action_cancel_all">Tümünü iptal et</string>
+    <string name="island_action_cancel">İptal</string>
+</resources>

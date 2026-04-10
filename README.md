@@ -4,51 +4,55 @@
 
 # HyperIsland
 
-**为澎湃 OS3 打造的超级岛通知增强模块**
+**Dynamic Island–style progress notifications for HyperOS 3, powered by LSPosed**
 
-[![GitHub Release](https://img.shields.io/github/v/release/1812z/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/1812z/HyperIsland/releases)
-![Downloads](https://img.shields.io/github/downloads/1812z/HyperIsland/total?style=flat-square)
-[![License](https://img.shields.io/github/license/1812z/HyperIsland?style=flat-square&color=orange)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/yusufyorunc/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/yusufyorunc/HyperIsland/releases)
+[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=flat-square&logo=android)](https://android.com)
 [![LSPosed](https://img.shields.io/badge/Framework-LSPosed-blueviolet?style=flat-square)](https://github.com/LSPosed/LSPosed)
-[![HyperOS](https://img.shields.io/badge/ROM-澎湃OS3-orange?style=flat-square)](https://hyperos.mi.com)
+[![HyperOS](https://img.shields.io/badge/ROM-HyperOS3-orange?style=flat-square)](https://hyperos.mi.com)
 [![Build](https://img.shields.io/badge/Build-Flutter-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 
+**English** | **[简体中文](README.md)** | **[日本語](README_JA.md)** | **[Türkçe](README_TR.md)**
 
-**[English](README_EN.md)** | **简体中文** | **[日本語](README_JA.md)** | **[Türkçe](README_TR.md)**
+Forked from [`1812z/HyperIsland`](https://github.com/1812z/HyperIsland), and added some interesting changes.
 
 </div>
 
 ---
 
-## ✨ 功能介绍
+## ✨ Features
 
 <table>
 <tr>
 <td width="50%">
 
-### 📥 下载管理器拓展
-拦截 HyperOS 下载管理器的通知，以超级岛样式展示文件名与下载进度，支持**暂停、继续、取消**操作。
+### 📥 Download Manager Extension
+
+Intercepts HyperOS Download Manager notifications and displays them in Dynamic Island style, showing file name and progress with **pause, resume, and cancel** controls.
 
 </td>
 <td width="50%">
 
-### 🏝️ 超级岛 + 焦点通知适配
-拦截任意 App 发出的标准安卓通知，处理后以超级岛 + 焦点通知样式展示，按钮来自原通知。
+### 🏝️ Dynamic Island + Focus Notification
+
+Intercepts standard Android notifications from any app and renders them in Dynamic Island + Focus Notification style, preserving the original action buttons.
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🚫 通知黑名单
-黑名单应用不会弹出通知，仅显示超级岛（全屏状态下随状态栏自动隐藏）。
+### 🚫 Notification Blacklist
+
+Apps on the blacklist will not trigger pop-up notifications — only the Dynamic Island indicator is shown (auto-hidden with the status bar in fullscreen).
 
 </td>
 <td width="50%">
 
-### 🔥 热加载支持
-修改配置后**无需重启**即可生效，安装或更新软件后重启作用域即可。
+### 🔥 Hot Reload Support
+
+Configuration changes take effect **without restarting**. Only scope restarts are required after installing or updating apps.
 
 </td>
 </tr>
@@ -56,41 +60,73 @@
 
 ---
 
-## 📖 使用文档
+## 📋 Setup Guide
 
-> 📌 完整的使用说明、模板介绍及配置指南请查看文档站：**[hyperisland.1812z.top](https://hyperisland.1812z.top)**
+### Step 1 — Activate the Module in LSPosed
+
+> ⚠️ This module requires the **LSPosed** framework. Your device must be rooted and LSPosed must be installed.
+
+1. Open **LSPosed Manager** and navigate to the **Modules** tab.
+2. Find **HyperIsland** and enable the toggle.
+3. In the module scope, check the recommended apps:
+   - **Download notifications**: check **Download Manager**
+   - **Universal adapter**: check **System UI**
+4. Save and tap the **restart button** in the top-right corner to restart the affected scope (or reboot your device) to activate the hook.
 
 ---
 
-## 🔨 构建
+### Step 2 — Enable Focus Notification Whitelist in HyperCeiler
 
-确保已安装 Flutter 开发环境，然后运行：
+> 💡 Dynamic Island–style notifications require the "Focus Notification" permission granted through HyperCeiler.  
+> If you can't find the relevant option, please update HyperCeiler to the latest version.
+
+1. Open **HyperCeiler** and navigate to **System UI** or **Xiaomi Service Framework** settings.
+2. Find **"Remove Focus Notification Whitelist"**.
+3. Enable the toggle and restart the scope.
+
+---
+
+## ⚠️ Important Notes
+
+| Item                       | Details                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Framework                  | Requires **LSPosed** and a **rooted** device                                                                    |
+| Restart Timing             | Restart scope after installing/updating apps; config changes generally support hot reload                       |
+| Notification Compatibility | Universal adapter only handles **standard Android notifications**; custom notification styles are not supported |
+| ROM Compatibility          | Tested on **HyperOS 3**; other ROMs may have compatibility issues                                               |
+
+---
+
+## 🔨 Build
+
+Make sure Flutter is installed, then run:
 
 ```bash
 flutter build apk --target-platform=android-arm64
 ```
+
 ---
 
 ## Star History
 
 <a href="https://www.star-history.com/?repos=1812z%2FHyperIsland&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=1812z/HyperIsland&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=yusufyorunc/HyperIsland&type=date&legend=top-left" />
  </picture>
 </a>
 
 ---
 
-## 📄 许可证
+## 📄 License
 
-本项目基于 [MIT License](LICENSE) 开源，欢迎 Issue 与 PR。
+This project is open source under the [MIT License](LICENSE). Issues and PRs are welcome.
 
 <div align="center">
 
 Made with ❤️ for HyperOS users
 
-[![Star History](https://img.shields.io/github/stars/1812z/HyperIsland?style=social)](https://github.com/1812z/HyperIsland)
+[![Star History](https://img.shields.io/github/stars/yusufyorunc/HyperIsland?style=social)](https://github.com/yusufyorunc/HyperIsland)
 
 </div>

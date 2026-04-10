@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import '../services/app_cache_service.dart';
-import '../services/interaction_haptics.dart';
 
 class AppListSearchHeader extends StatelessWidget {
   const AppListSearchHeader({
@@ -55,8 +53,13 @@ class AppListSearchHeader extends StatelessWidget {
             EdgeInsets.symmetric(horizontal: 16),
           ),
           elevation: const WidgetStatePropertyAll(0),
-          backgroundColor: WidgetStatePropertyAll(cs.surfaceContainerHighest),
+          backgroundColor: WidgetStatePropertyAll(
+            cs.surfaceContainerHighest.withValues(alpha: 0.6),
+          ),
           constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          ),
         ),
       ],
     );
@@ -88,7 +91,7 @@ class AppListItemFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const large = Radius.circular(22);
+    const large = Radius.circular(20);
     const small = Radius.circular(5);
     final radius = BorderRadius.only(
       topLeft: isFirst ? large : small,
@@ -100,7 +103,7 @@ class AppListItemFrame extends StatelessWidget {
     return Material(
       color: selected
           ? (selectedColor ?? cs.primaryContainer)
-          : cs.surfaceContainerHighest,
+          : cs.surfaceContainerHighest.withValues(alpha: 0.6),
       borderRadius: radius,
       child: InkWell(
         borderRadius: radius,
@@ -245,12 +248,7 @@ class AppBarOverflowMenuButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(color: borderColor, width: 0.9),
       ),
-      onSelected: onSelected == null
-          ? null
-          : (value) {
-              unawaited(InteractionHaptics.button());
-              onSelected!(value);
-            },
+      onSelected: onSelected,
       itemBuilder: itemBuilder,
     );
   }

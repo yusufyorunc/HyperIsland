@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/settings_controller.dart';
 import '../controllers/update_controller.dart';
@@ -201,12 +200,6 @@ class _HomePageState extends State<HomePage> {
             centerTitle: false,
             actions: [
               IconButton(
-                tooltip: l10n.documentation,
-                icon: const Icon(Icons.menu_book_outlined),
-                onPressed: () =>
-                    launchUrl(Uri.parse('https://hyperisland.1812z.top/')),
-              ),
-              IconButton(
                 tooltip: l10n.sponsorAuthor,
                 icon: const Icon(Icons.favorite_border),
                 onPressed: _showSponsorDialog,
@@ -240,27 +233,57 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 12),
                   _SystemNotSupportedCard(version: _ctrl.focusProtocolVersion!),
                 ],
-                const SizedBox(height: 16),
-
-                SectionLabel(l10n.notificationTest),
                 const SizedBox(height: 8),
-                FilledButton.icon(
-                  onPressed: _ctrl.isSending ? null : _ctrl.sendTest,
-                  icon: const Icon(Icons.notifications_active_outlined),
-                  label: Text(l10n.sendTestNotification),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Padding(
+                  padding: const EdgeInsets.only(left: 18, bottom: 8),
+                  child: SectionLabel(l10n.notificationTest),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: _ctrl.isSending ? null : _ctrl.sendTest,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.notifications_active_outlined,
+                              color: cs.primary,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                l10n.sendTestNotification,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
-                SectionLabel(l10n.notes),
-                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 18, bottom: 8),
+                  child: SectionLabel(l10n.notes),
+                ),
                 const _NotesCard(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
               ]),
             ),
           ),
@@ -269,8 +292,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-// ── 页面专属组件 ──────────────────────────────────────────────────────────────
 
 class _ModuleStatusCard extends StatelessWidget {
   final bool? active;
@@ -283,10 +304,11 @@ class _ModuleStatusCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     if (active == null) {
-      return Card(
-        elevation: 0,
-        color: cs.surfaceContainerHighest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -311,10 +333,11 @@ class _ModuleStatusCard extends StatelessWidget {
         ? Colors.green.withValues(alpha: 0.12)
         : cs.errorContainer;
 
-    return Card(
-      elevation: 0,
-      color: bgColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -391,10 +414,11 @@ class _SystemNotSupportedCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final color = cs.error;
 
-    return Card(
-      elevation: 0,
-      color: cs.errorContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -446,10 +470,11 @@ class _NotesCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final items = [l10n.note1, l10n.note2, l10n.note3, l10n.note4];
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

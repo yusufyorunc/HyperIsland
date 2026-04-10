@@ -7,7 +7,7 @@ import '../widgets/batch_channel_settings_sheet.dart';
 import '../widgets/app_list_widgets.dart';
 import 'app_channels_page.dart';
 import '../services/app_cache_service.dart';
-import '../services/interaction_haptics.dart';
+import '../widgets/back_to_top_button.dart';
 
 class WhitelistPage extends StatefulWidget {
   const WhitelistPage({super.key});
@@ -20,7 +20,6 @@ class WhitelistPageState extends State<WhitelistPage> {
   static const String _selectEnabledAction = 'select_enabled';
   static const String _enableAction = 'enable';
   static const String _disableAction = 'disable';
-  static const double _backToTopThreshold = 420;
 
   late final WhitelistController _ctrl;
   final _searchCtrl = TextEditingController();
@@ -28,37 +27,11 @@ class WhitelistPageState extends State<WhitelistPage> {
   final _scrollController = ScrollController();
   final Set<String> _selectedPackages = {};
   bool _inSelectionMode = false;
-  bool _showBackToTop = false;
-  double _lastOffset = 0;
 
   @override
   void initState() {
     super.initState();
     _ctrl = WhitelistController();
-    _ctrl.addListener(() {
-      if (mounted) setState(() {});
-    });
-    _scrollController.addListener(_handleScroll);
-  }
-
-  void _handleScroll() {
-    if (!_scrollController.hasClients) return;
-    final offset = _scrollController.offset;
-    final isScrollingUp = offset < _lastOffset;
-    final shouldShow = offset > _backToTopThreshold && isScrollingUp;
-    if (shouldShow != _showBackToTop && mounted) {
-      setState(() => _showBackToTop = shouldShow);
-    }
-    _lastOffset = offset;
-  }
-
-  Future<void> _scrollToTop() async {
-    if (!_scrollController.hasClients) return;
-    await _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-    );
   }
 
   @override
@@ -148,7 +121,6 @@ class WhitelistPageState extends State<WhitelistPage> {
     await _ctrl.setEnabledBatch(_selectedPackages.toList(), enabled);
   }
 
-  /// 对已选应用的已启用渠道批量应用配置。
   Future<void> _batchApplySelected() async {
     if (_selectedPackages.isEmpty) return;
     if (!mounted) return;
@@ -182,10 +154,8 @@ class WhitelistPageState extends State<WhitelistPage> {
     for (var i = 0; i < selected.length; i++) {
       final pkg = selected[i];
       try {
-        final channelsFuture = _ctrl.getChannels(pkg);
-        final enabledChannelsFuture = _ctrl.getEnabledChannels(pkg);
-        final channels = await channelsFuture;
-        final enabledChannels = await enabledChannelsFuture;
+        final channels = await _ctrl.getChannels(pkg);
+        final enabledChannels = await _ctrl.getEnabledChannels(pkg);
         final ids = enabledChannels.isEmpty
             ? channels.map((c) => c.id).toList()
             : enabledChannels.toList();
@@ -214,227 +184,207 @@ class WhitelistPageState extends State<WhitelistPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final apps = _ctrl.filteredApps;
-    final enabledCount = _ctrl.enabledPackages.length;
-    final allSelected =
-        apps.isNotEmpty &&
-        apps.every((a) => _selectedPackages.contains(a.packageName));
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      floatingActionButton: AnimatedScale(
-        scale: _showBackToTop ? 1 : 0,
-        duration: const Duration(milliseconds: 180),
-        child: AnimatedOpacity(
-          opacity: _showBackToTop ? 1 : 0,
-          duration: const Duration(milliseconds: 180),
-          child: FloatingActionButton.small(
-            onPressed: InteractionHaptics.interceptButton(_scrollToTop),
-            child: const Icon(Icons.keyboard_arrow_up_rounded),
+    return ListenableBuilder(
+      listenable: _ctrl,
+      builder: (context, _) {
+        final apps = _ctrl.filteredApps;
+        final enabledCount = _ctrl.enabledPackages.length;
+        final allSelected =
+            apps.isNotEmpty &&
+            apps.every((a) => _selectedPackages.contains(a.packageName));
+
+        return Scaffold(
+          backgroundColor: cs.surface,
+          appBar: AppBar(
+            backgroundColor: cs.surface,
+            scrolledUnderElevation: 0,
+            automaticallyImplyLeading: !_selectionMode,
+            leading: _selectionMode
+                ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _clearSelection,
+                    tooltip: l10n.cancelSelection,
+                  )
+                : null,
+            title: _selectionMode
+                ? Text(l10n.selectedAppsCount(_selectedPackages.length))
+                : Text(
+                    l10n.appAdaptation,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+            actions: _selectionMode
+                ? [
+                    IconButton(
+                      icon: Icon(
+                        allSelected ? Icons.deselect : Icons.select_all,
+                      ),
+                      tooltip: allSelected ? l10n.deselectAll : l10n.selectAll,
+                      onPressed: allSelected ? _deselectAll : _selectAll,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.tune),
+                      tooltip: l10n.batchChannelSettings,
+                      onPressed: _selectedPackages.isNotEmpty
+                          ? _batchApplySelected
+                          : null,
+                    ),
+                    AppBarOverflowMenuButton(
+                      onSelected: (value) async {
+                        switch (value) {
+                          case _selectEnabledAction:
+                            _selectEnabled();
+                          case _enableAction:
+                            await _setSelectedEnabled(true);
+                          case _disableAction:
+                            await _setSelectedEnabled(false);
+                        }
+                      },
+                      itemBuilder: (ctx) {
+                        final ml = AppLocalizations.of(ctx)!;
+                        return [
+                          buildAppPopupMenuItem(
+                            value: _selectEnabledAction,
+                            icon: Icons.playlist_add_check_circle_rounded,
+                            label: ml.selectEnabledApps,
+                          ),
+                          const PopupMenuDivider(height: 8),
+                          buildAppPopupMenuItem(
+                            value: _enableAction,
+                            icon: Icons.done_all_rounded,
+                            label: ml.batchEnable,
+                            enabled: _selectedPackages.isNotEmpty,
+                          ),
+                          buildAppPopupMenuItem(
+                            value: _disableAction,
+                            icon: Icons.block_rounded,
+                            label: ml.batchDisable,
+                            enabled: _selectedPackages.isNotEmpty,
+                          ),
+                        ];
+                      },
+                    ),
+                  ]
+                : [
+                    IconButton(
+                      icon: const Icon(Icons.checklist_outlined),
+                      tooltip: l10n.multiSelect,
+                      onPressed: _ctrl.loading ? null : _enterSelectionMode,
+                    ),
+                    AppBarOverflowMenuButton(
+                      onSelected: (value) => handleAppListOverflowMenuSelection(
+                        value: value,
+                        onToggleSystemApps: () {
+                          _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
+                        },
+                        onRefresh: _ctrl.refresh,
+                        onEnableAll: _ctrl.enableAll,
+                        onDisableAll: _ctrl.disableAll,
+                      ),
+                      itemBuilder: (ctx) {
+                        final ml = AppLocalizations.of(ctx)!;
+                        return buildAppListOverflowMenuItems(
+                          context: ctx,
+                          showSystemApps: _ctrl.showSystemApps,
+                          showSystemAppsLabel: ml.showSystemApps,
+                          refreshLabel: ml.refreshList,
+                          enableAllLabel: ml.enableAll,
+                          disableAllLabel: ml.disableAll,
+                        );
+                      },
+                    ),
+                  ],
           ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _ctrl.refresh,
-        edgeOffset: 300.0,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar.large(
-              backgroundColor: cs.surface,
-              centerTitle: false,
-              automaticallyImplyLeading: !_selectionMode,
-              leading: _selectionMode
-                  ? IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: InteractionHaptics.interceptButton(
-                        _clearSelection,
-                      ),
-                      tooltip: l10n.cancelSelection,
-                    )
-                  : null,
-              title: _selectionMode
-                  ? Text(l10n.selectedAppsCount(_selectedPackages.length))
-                  : Text(l10n.appAdaptation),
-              actions: _selectionMode
-                  ? [
-                      // 全选 / 全不选
-                      IconButton(
-                        icon: Icon(
-                          allSelected ? Icons.deselect : Icons.select_all,
-                        ),
-                        tooltip: allSelected
-                            ? l10n.deselectAll
-                            : l10n.selectAll,
-                        onPressed: InteractionHaptics.interceptButton(
-                          allSelected ? _deselectAll : _selectAll,
-                        ),
-                      ),
-                      // 批量设置渠道配置
-                      IconButton(
-                        icon: const Icon(Icons.tune),
-                        tooltip: l10n.batchChannelSettings,
-                        onPressed: _selectedPackages.isNotEmpty
-                            ? InteractionHaptics.interceptButton(
-                                _batchApplySelected,
-                              )
-                            : null,
-                      ),
-                      // 批量操作菜单
-                      AppBarOverflowMenuButton(
-                        onSelected: (value) async {
-                          switch (value) {
-                            case _selectEnabledAction:
-                              _selectEnabled();
-                            case _enableAction:
-                              await _setSelectedEnabled(true);
-                            case _disableAction:
-                              await _setSelectedEnabled(false);
-                          }
-                        },
-                        itemBuilder: (ctx) {
-                          final ml = AppLocalizations.of(ctx)!;
-                          return [
-                            buildAppPopupMenuItem(
-                              value: _selectEnabledAction,
-                              icon: Icons.playlist_add_check_circle_rounded,
-                              label: ml.selectEnabledApps,
-                            ),
-                            const PopupMenuDivider(height: 8),
-                            buildAppPopupMenuItem(
-                              value: _enableAction,
-                              icon: Icons.done_all_rounded,
-                              label: ml.batchEnable,
-                              enabled: _selectedPackages.isNotEmpty,
-                            ),
-                            buildAppPopupMenuItem(
-                              value: _disableAction,
-                              icon: Icons.block_rounded,
-                              label: ml.batchDisable,
-                              enabled: _selectedPackages.isNotEmpty,
-                            ),
-                          ];
-                        },
-                      ),
-                    ]
-                  : [
-                      // 进入多选模式
-                      IconButton(
-                        icon: const Icon(Icons.checklist_outlined),
-                        tooltip: l10n.multiSelect,
-                        onPressed: _ctrl.loading
-                            ? null
-                            : InteractionHaptics.interceptButton(
-                                _enterSelectionMode,
-                              ),
-                      ),
-                      AppBarOverflowMenuButton(
-                        onSelected: (value) =>
-                            handleAppListOverflowMenuSelection(
-                              value: value,
-                              onToggleSystemApps: () {
-                                _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
-                              },
-                              onRefresh: _ctrl.refresh,
-                              onEnableAll: _ctrl.enableAll,
-                              onDisableAll: _ctrl.disableAll,
-                            ),
-                        itemBuilder: (ctx) {
-                          final ml = AppLocalizations.of(ctx)!;
-                          return buildAppListOverflowMenuItems(
-                            context: ctx,
-                            showSystemApps: _ctrl.showSystemApps,
-                            showSystemAppsLabel: ml.showSystemApps,
-                            refreshLabel: ml.refreshList,
-                            enableAllLabel: ml.enableAll,
-                            disableAllLabel: ml.disableAll,
-                          );
-                        },
-                      ),
-                    ],
-            ),
-
-            // 说明 + 搜索栏
-            SliverToBoxAdapter(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: AppListSearchHeader(
-                  countText: _ctrl.showSystemApps
-                      ? l10n.enabledAppsCountWithSystem(enabledCount)
-                      : l10n.enabledAppsCount(enabledCount),
-                  showCountText: true,
-                  searchController: _searchCtrl,
-                  searchFocusNode: _searchFocus,
-                  hintText: l10n.searchApps,
-                  onChanged: _ctrl.setSearch,
-                  onClear: _clearSearch,
-                ),
-              ),
-            ),
-
-            // 内容区
-            if (_ctrl.loading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (apps.isEmpty)
-              SliverFillRemaining(
-                child: Center(
-                  child: Text(
-                    _searchCtrl.text.isEmpty
-                        ? l10n.noAppsFound
-                        : l10n.noMatchingApps,
-                    style: TextStyle(color: cs.onSurfaceVariant),
-                    textAlign: TextAlign.center,
+          floatingActionButton: BackToTopButton(
+            scrollController: _scrollController,
+          ),
+          body: RefreshIndicator(
+            onRefresh: _ctrl.refresh,
+            edgeOffset: 80.0,
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: AppListSearchHeader(
+                      countText: _ctrl.showSystemApps
+                          ? l10n.enabledAppsCountWithSystem(enabledCount)
+                          : l10n.enabledAppsCount(enabledCount),
+                      showCountText: true,
+                      searchController: _searchCtrl,
+                      searchFocusNode: _searchFocus,
+                      hintText: l10n.searchApps,
+                      onChanged: _ctrl.setSearch,
+                      onClear: _clearSearch,
+                    ),
                   ),
                 ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                sliver: SliverList.separated(
-                  itemCount: apps.length,
-                  addAutomaticKeepAlives: false,
-                  separatorBuilder: (_, __) => const SizedBox(height: 2),
-                  itemBuilder: (context, index) {
-                    final app = apps[index];
-                    final pkg = app.packageName;
-                    return _AppTile(
-                      key: ValueKey(pkg),
-                      app: app,
-                      enabled: _ctrl.enabledPackages.contains(pkg),
-                      onChanged: _selectionMode
-                          ? null
-                          : (v) => _ctrl.setEnabled(pkg, v),
-                      onTap: _selectionMode
-                          ? () => _toggleSelection(pkg)
-                          : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AppChannelsPage(
-                                  app: app,
-                                  controller: _ctrl,
-                                  appEnabled: _ctrl.enabledPackages.contains(
-                                    pkg,
+                if (_ctrl.loading)
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (apps.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        _searchCtrl.text.isEmpty
+                            ? l10n.noAppsFound
+                            : l10n.noMatchingApps,
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                    sliver: SliverList.separated(
+                      itemCount: apps.length,
+                      addAutomaticKeepAlives: false,
+                      separatorBuilder: (_, __) => const SizedBox(height: 2),
+                      itemBuilder: (context, index) {
+                        final app = apps[index];
+                        final pkg = app.packageName;
+                        return _AppTile(
+                          key: ValueKey(pkg),
+                          app: app,
+                          enabled: _ctrl.enabledPackages.contains(pkg),
+                          onChanged: _selectionMode
+                              ? null
+                              : (v) => _ctrl.setEnabled(pkg, v),
+                          onTap: _selectionMode
+                              ? () => _toggleSelection(pkg)
+                              : () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AppChannelsPage(
+                                      app: app,
+                                      controller: _ctrl,
+                                      appEnabled: _ctrl.enabledPackages
+                                          .contains(pkg),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                      onLongPress: _selectionMode
-                          ? null
-                          : () => _enterSelectionMode(pkg),
-                      isSelected: _selectedPackages.contains(pkg),
-                      selectionMode: _selectionMode,
-                      isFirst: index == 0,
-                      isLast: index == apps.length - 1,
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
+                          onLongPress: _selectionMode
+                              ? null
+                              : () => _enterSelectionMode(pkg),
+                          isSelected: _selectedPackages.contains(pkg),
+                          selectionMode: _selectionMode,
+                          isFirst: index == 0,
+                          isLast: index == apps.length - 1,
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -469,23 +419,17 @@ class _AppTile extends StatelessWidget {
 
     return AppListItemFrame(
       app: app,
-      onTap: selectionMode ? InteractionHaptics.interceptButton(onTap)! : onTap,
-      onLongPress: InteractionHaptics.interceptButton(onLongPress),
+      onTap: onTap,
+      onLongPress: onLongPress,
       selected: isSelected,
       isFirst: isFirst,
       isLast: isLast,
       trailing: selectionMode
-          ? Checkbox(
-              value: isSelected,
-              onChanged: InteractionHaptics.interceptCheckbox((_) => onTap()),
-            )
+          ? Checkbox(value: isSelected, onChanged: (_) => onTap())
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Switch(
-                  value: enabled,
-                  onChanged: InteractionHaptics.interceptToggle(onChanged),
-                ),
+                Switch(value: enabled, onChanged: onChanged),
                 const SizedBox(width: 4),
                 Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 20),
               ],
@@ -493,8 +437,6 @@ class _AppTile extends StatelessWidget {
     );
   }
 }
-
-// ── 全局批量进度对话框 ────────────────────────────────────────────────────────
 
 class _GlobalBatchProgressDialog extends StatelessWidget {
   const _GlobalBatchProgressDialog({

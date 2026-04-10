@@ -6,28 +6,19 @@ import '../services/app_cache_service.dart';
 
 const _channel = MethodChannel('io.github.hyperisland/test');
 const kPrefGenericWhitelist = 'pref_generic_whitelist';
-
-/// 可用的灵动岛通知模板标识符。
 const kTemplateGenericProgress = 'generic_progress';
 const kTemplateNotificationIsland = 'notification_island';
 const kTemplateDownload = 'download';
 const kTemplateDownloadLite = 'download_lite';
 const kTemplateNotificationIslandLite = 'notification_island_lite';
-const kTemplateAiNotificationIsland = 'ai_notification_island';
-
-/// 可用的灵动岛渲染器（样式）标识符。
 const kRendererImageTextWithButtons4 = 'image_text_with_buttons_4';
 const kRendererImageTextWithButtons4Wrap = 'image_text_with_buttons_4_wrap';
 const kRendererImageTextWithRightTextButton =
     'image_text_with_right_text_button';
-
-// 图标模式选项（图标样式 & 焦点图标共用）
 const kIconModeAuto = 'auto';
 const kIconModeNotifSmall = 'notif_small';
 const kIconModeNotifLarge = 'notif_large';
 const kIconModeAppIcon = 'app_icon';
-
-// 三态选项（焦点通知 / 初次展开 / 更新展开）
 const kTriOptDefault = 'default';
 const kTriOptOn = 'on';
 const kTriOptOff = 'off';
@@ -48,7 +39,6 @@ class ChannelInfo {
 
 class WhitelistController extends ChangeNotifier {
   List<AppInfo> _allApps = [];
-  // 稳定列表：切换开关时不重排，仅 _resort() 时更新
   List<AppInfo> _sortedApps = [];
   List<AppInfo> _filteredApps = [];
   Set<String> enabledPackages = {};
@@ -167,7 +157,6 @@ class WhitelistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 批量开启或关闭指定包，仅保存一次 prefs。
   Future<void> setEnabledBatch(List<String> packages, bool enabled) async {
     var changed = false;
     for (final pkg in packages) {
@@ -189,10 +178,6 @@ class WhitelistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── 渠道管理 ──────────────────────────────────────────────────────────────
-
-  /// 获取指定包的通知渠道列表（调用原生）。
-  /// 若读取失败（ROOT权限不足），抛出 [PlatformException]，code 为 'ROOT_REQUIRED'。
   Future<List<ChannelInfo>> getChannels(String packageName) async {
     try {
       final rawList =
@@ -218,14 +203,12 @@ class WhitelistController extends ChangeNotifier {
     }
   }
 
-  /// 读取已保存的启用渠道 ID 集合。空集合表示对全部渠道生效。
   Future<Set<String>> getEnabledChannels(String packageName) async {
     final prefs = await SharedPreferences.getInstance();
     final csv = prefs.getString('pref_channels_$packageName') ?? '';
     return csv.isEmpty ? {} : csv.split(',').where((s) => s.isNotEmpty).toSet();
   }
 
-  /// 保存启用渠道 ID 集合。空集合表示对全部渠道生效。
   Future<void> setEnabledChannels(
     String packageName,
     Set<String> channelIds,
@@ -234,16 +217,13 @@ class WhitelistController extends ChangeNotifier {
     await prefs.setString('pref_channels_$packageName', channelIds.join(','));
   }
 
-  /// 返回所有可用模板的 id → 显示名称 映射（从 ARB 本地化字符串构建）。
   Map<String, String> getTemplates(AppLocalizations l10n) => {
     kTemplateGenericProgress: l10n.templateDownloadName,
     kTemplateNotificationIsland: l10n.templateNotificationIslandName,
     kTemplateNotificationIslandLite: l10n.templateNotificationIslandLiteName,
     kTemplateDownloadLite: l10n.templateDownloadLiteName,
-    kTemplateAiNotificationIsland: l10n.templateAiNotificationIslandName,
   };
 
-  /// 返回所有可用渲染器（样式）的 id → 显示名称 映射。
   Map<String, String> getRenderers(AppLocalizations l10n) => {
     kRendererImageTextWithButtons4: l10n.rendererImageTextWithButtons4Name,
     kRendererImageTextWithButtons4Wrap: l10n.rendererCoverInfoName,
@@ -251,7 +231,6 @@ class WhitelistController extends ChangeNotifier {
         l10n.rendererImageTextWithRightTextButtonName,
   };
 
-  /// 批量读取指定包内各渠道的模板设置，返回 channelId → template 映射。
   Future<Map<String, String>> getChannelTemplates(
     String packageName,
     List<String> channelIds,
@@ -267,7 +246,6 @@ class WhitelistController extends ChangeNotifier {
     );
   }
 
-  /// 保存指定渠道的模板设置。
   Future<void> setChannelTemplate(
     String packageName,
     String channelId,
@@ -280,9 +258,6 @@ class WhitelistController extends ChangeNotifier {
     );
   }
 
-  // ── 渠道级额外设置（图标、焦点通知、初次展开、更新展开）────────────────────
-
-  /// 批量读取各渠道的额外设置，返回 channelId → {icon, focus_icon, focus, preserve_small_icon, first_float, enable_float, timeout, marquee, highlight_color, dynamic_highlight_color, outer_glow}。
   Future<Map<String, Map<String, String>>> getChannelExtraSettings(
     String packageName,
     List<String> channelIds,
@@ -334,6 +309,9 @@ class WhitelistController extends ChangeNotifier {
                 'pref_channel_dynamic_highlight_color_${packageName}_$id',
               ) ??
               kTriOptDefault,
+          'outer_glow':
+              prefs.getString('pref_channel_outer_glow_${packageName}_$id') ??
+              kTriOptDefault,
           'show_left_highlight':
               prefs.getString(
                 'pref_channel_show_left_highlight_${packageName}_$id',
@@ -344,19 +322,6 @@ class WhitelistController extends ChangeNotifier {
                 'pref_channel_show_right_highlight_${packageName}_$id',
               ) ??
               kTriOptOff,
-          'show_left_narrow_font':
-              prefs.getString(
-                'pref_channel_show_left_narrow_font_${packageName}_$id',
-              ) ??
-              kTriOptOff,
-          'show_right_narrow_font':
-              prefs.getString(
-                'pref_channel_show_right_narrow_font_${packageName}_$id',
-              ) ??
-              kTriOptOff,
-          'outer_glow':
-              prefs.getString('pref_channel_outer_glow_${packageName}_$id') ??
-              kTriOptDefault,
         }),
       ),
     );
@@ -497,12 +462,10 @@ class WhitelistController extends ChangeNotifier {
     String value,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = 'pref_channel_highlight_color_${packageName}_$channelId';
-    if (value.isEmpty) {
-      await prefs.remove(key);
-    } else {
-      await prefs.setString(key, value);
-    }
+    await prefs.setString(
+      'pref_channel_highlight_color_${packageName}_$channelId',
+      value,
+    );
   }
 
   Future<void> setChannelDynamicHighlightColor(
@@ -513,6 +476,18 @@ class WhitelistController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       'pref_channel_dynamic_highlight_color_${packageName}_$channelId',
+      value,
+    );
+  }
+
+  Future<void> setChannelOuterGlow(
+    String packageName,
+    String channelId,
+    String value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'pref_channel_outer_glow_${packageName}_$channelId',
       value,
     );
   }
@@ -541,44 +516,6 @@ class WhitelistController extends ChangeNotifier {
     );
   }
 
-  Future<void> setChannelShowLeftNarrowFont(
-    String packageName,
-    String channelId,
-    String value,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'pref_channel_show_left_narrow_font_${packageName}_$channelId',
-      value,
-    );
-  }
-
-  Future<void> setChannelShowRightNarrowFont(
-    String packageName,
-    String channelId,
-    String value,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'pref_channel_show_right_narrow_font_${packageName}_$channelId',
-      value,
-    );
-  }
-
-  Future<void> setChannelOuterGlow(
-    String packageName,
-    String channelId,
-    String value,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'pref_channel_outer_glow_${packageName}_$channelId',
-      value,
-    );
-  }
-
-  /// 批量应用渠道配置到指定渠道列表。
-  /// [settings] 中 null 值的 key 表示不更改该项。
   Future<void> batchApplyChannelSettings(
     String packageName,
     List<String> channelIds,
@@ -601,11 +538,9 @@ class WhitelistController extends ChangeNotifier {
       'restore_lockscreen': 'pref_channel_restore_lockscreen',
       'highlight_color': 'pref_channel_highlight_color',
       'dynamic_highlight_color': 'pref_channel_dynamic_highlight_color',
+      'outer_glow': 'pref_channel_outer_glow',
       'show_left_highlight': 'pref_channel_show_left_highlight',
       'show_right_highlight': 'pref_channel_show_right_highlight',
-      'show_left_narrow_font': 'pref_channel_show_left_narrow_font',
-      'show_right_narrow_font': 'pref_channel_show_right_narrow_font',
-      'outer_glow': 'pref_channel_outer_glow',
     };
     final futures = <Future<bool>>[];
     for (final id in channelIds) {
@@ -621,10 +556,6 @@ class WhitelistController extends ChangeNotifier {
     await Future.wait(futures);
   }
 
-  /// 对全部已启用应用的所有渠道批量应用配置。
-  ///
-  /// 逐包获取渠道列表（需要 ROOT），跳过无法读取的包。
-  /// [onProgress] 每处理一个包后回调，参数为已处理数量与总数。
   Future<void> batchApplyToAllEnabledApps(
     Map<String, String?> settings, {
     void Function(int done, int total)? onProgress,
@@ -643,9 +574,7 @@ class WhitelistController extends ChangeNotifier {
         if (ids.isNotEmpty) {
           await batchApplyChannelSettings(pkg, ids, settings);
         }
-      } catch (_) {
-        // ROOT 不足或其他原因无法读取时跳过该应用
-      }
+      } catch (_) {}
       onProgress?.call(i + 1, total);
     }
   }

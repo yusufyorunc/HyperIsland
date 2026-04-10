@@ -46,6 +46,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String lsposedApiVersion(int version) {
+    return 'LSPosed API Version: $version';
+  }
+
+  @override
   String get later => 'Later';
 
   @override
@@ -56,9 +61,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sponsorAuthor => 'Sponsor';
-
-  @override
-  String get documentation => 'Documentation';
 
   @override
   String get restartScope => 'Restart Scope';
@@ -95,11 +97,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enableInLSPosed => 'Please enable this module in LSPosed';
-
-  @override
-  String lsposedApiVersion(int version) {
-    return 'LSPosed API Version: $version';
-  }
 
   @override
   String get updateLSPosedRequired => 'Please update LSPosed version';
@@ -189,13 +186,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Display welcome information on Island when the app starts';
 
   @override
-  String get interactionHapticsTitle => 'Interaction Haptics';
-
-  @override
-  String get interactionHapticsSubtitle =>
-      'Enable Hyper custom haptic feedback for switches, sliders, and buttons';
-
-  @override
   String get checkUpdate => 'Check for updates';
 
   @override
@@ -226,18 +216,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bigIslandMaxWidthTitle => 'Modify Super Island Max Width';
-
-  @override
-  String bigIslandMaxWidthLabel(int width) {
-    return '$width dp';
-  }
-
-  @override
-  String get bigIslandMaxWidthSubtitle =>
-      'Enable to modify the maximum width of super island';
-
-  @override
   String get themeModeTitle => 'Color mode';
 
   @override
@@ -248,6 +226,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeModeDark => 'Dark';
+
+  @override
+  String get themeSeedColorTitle => 'Theme color';
+
+  @override
+  String get themeSeedColorSubtitle => 'Current preset';
+
+  @override
+  String get pureBlackThemeTitle => 'Pure black dark mode';
+
+  @override
+  String get pureBlackThemeSubtitle =>
+      'Use true black surfaces when dark mode is active';
 
   @override
   String get languageTitle => 'Language';
@@ -280,12 +271,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportToClipboardSubtitle => 'Copy configuration as JSON text';
 
   @override
-  String get exportConfig => 'Export Configuration';
-
-  @override
-  String get exportConfigSubtitle => 'Choose to export to file or clipboard';
-
-  @override
   String get importFromFile => 'Import from file';
 
   @override
@@ -297,6 +282,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get importFromClipboardSubtitle =>
       'Restore configuration from JSON text in clipboard';
+
+  @override
+  String get exportConfig => 'Export Configuration';
+
+  @override
+  String get exportConfigSubtitle => 'Choose to export to file or clipboard';
 
   @override
   String get importConfig => 'Import Configuration';
@@ -527,13 +518,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandIcon => 'Island icon';
 
   @override
-  String get islandIconLabel => 'Large island icon';
-
-  @override
-  String get islandIconLabelSubtitle =>
-      'Show the large icon of the island when enabled (small island not affected)';
-
-  @override
   String get focusIconLabel => 'Focus icon';
 
   @override
@@ -543,11 +527,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preserveStatusBarSmallIconLabel => 'Status bar icon';
 
   @override
-  String get restoreLockscreenTitle => 'Restore Lockscreen Notification';
+  String get islandIconLabel => 'Large island icon';
 
   @override
-  String get restoreLockscreenSubtitle =>
-      'Skip focus notification processing on lockscreen, keep original privacy behavior';
+  String get islandIconLabelSubtitle =>
+      'Show the large icon of the island when enabled (small island not affected)';
 
   @override
   String get firstFloatLabel => 'First float';
@@ -569,7 +553,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dynamicHighlightColorLabelSubtitle =>
-      'Use icon-based dynamic color by default';
+      'When a channel uses Default, use icon-based dynamic highlight color.';
 
   @override
   String get dynamicHighlightModeDark => 'Dark';
@@ -585,9 +569,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get textHighlightLabel => 'Text highlight';
-
-  @override
-  String get narrowFontLabel => 'Narrow font';
 
   @override
   String get showLeftHighlightLabel => 'Left text highlight';
@@ -668,14 +649,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Block focus notification float or hide for specific apps';
 
   @override
-  String get presetGamesTitle => 'Quick Filter Popular Games';
-
-  @override
-  String presetGamesSuccess(int count) {
-    return 'Added $count installed games to blacklist from preset';
-  }
-
-  @override
   String blacklistedAppsCount(int count) {
     return 'Blocked focus notifications for $count apps';
   }
@@ -706,176 +679,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Whether to force keep status bar icon when focus notification is displayed';
 
   @override
-  String get aiConfigSection => 'AI Enhancement';
-
-  @override
-  String get aiConfigTitle => 'AI Notification Summary';
-
-  @override
-  String get aiConfigSubtitleEnabled =>
-      'Enabled · Tap to configure AI parameters';
-
-  @override
-  String get aiConfigSubtitleDisabled => 'Disabled · Tap to configure';
-
-  @override
-  String get aiEnabledTitle => 'Enable AI Summary';
-
-  @override
-  String get aiEnabledSubtitle =>
-      'AI generates Island left/right text, falls back on timeout or error';
-
-  @override
-  String get aiApiSection => 'API Parameters';
-
-  @override
-  String get aiUrlLabel => 'API URL';
-
-  @override
-  String get aiUrlHint => 'https://api.openai.com/v1/chat/completions';
-
-  @override
-  String get aiApiKeyLabel => 'API Key';
-
-  @override
-  String get aiApiKeyHint => 'sk-...';
-
-  @override
-  String get aiModelLabel => 'Model';
-
-  @override
-  String get aiModelHint => 'gpt-4o-mini';
-
-  @override
-  String get aiPromptLabel => 'Custom Prompt';
-
-  @override
-  String get aiPromptHint =>
-      'Leave empty to use default: Extract key info, left and right each no more than 6 words or 12 characters';
-
-  @override
-  String get aiPromptInUserTitle => 'Put prompt in user message';
-
-  @override
-  String get aiPromptInUserSubtitle =>
-      'Some models do not support system instructions; enable to put prompt in user message';
-
-  @override
-  String get aiTimeoutTitle => 'AI Response Timeout';
-
-  @override
-  String aiTimeoutLabel(int seconds) {
-    return 'AI Response Timeout';
-  }
-
-  @override
-  String get aiTemperatureTitle => 'Sampling Temperature';
-
-  @override
-  String get aiTemperatureSubtitle =>
-      'Control the randomness of responses. 0 is precise, 1 is more creative';
-
-  @override
-  String get aiMaxTokensTitle => 'Max Tokens';
-
-  @override
-  String get aiMaxTokensSubtitle =>
-      'Limit the maximum length of AI-generated responses';
-
-  @override
-  String get aiDefaultPromptFull =>
-      'Leave empty to use default prompt: Extract key info from notification, no more than 6 words or 12 characters for left and right sides';
-
-  @override
-  String get aiTestButton => 'Test Connection';
-
-  @override
-  String get aiTestUrlEmpty => 'Please enter an API URL first';
-
-  @override
-  String get aiLastLogTitle => 'Recent AI Request Log';
-
-  @override
-  String get aiLastLogSubtitle =>
-      'AI requests triggered by connection tests or notifications are displayed here';
-
-  @override
-  String get aiLastLogEmpty => 'No AI request logs to display yet';
-
-  @override
-  String get aiLastLogSourceLabel => 'Source';
-
-  @override
-  String get aiLastLogTimeLabel => 'Time';
-
-  @override
-  String get aiLastLogStatusLabel => 'Status';
-
-  @override
-  String get aiLastLogDurationLabel => 'Duration';
-
-  @override
-  String get aiLastLogSourceNotification => 'Notification Trigger';
-
-  @override
-  String get aiLastLogSourceSettingsTest => 'Settings Test';
-
-  @override
-  String get aiLastLogRendered => 'Rendered';
-
-  @override
-  String get aiLastLogRaw => 'Raw';
-
-  @override
-  String get aiLastLogCopy => 'Copy Log';
-
-  @override
-  String get aiLastLogCopied => 'AI request log copied';
-
-  @override
-  String get aiLastLogRequest => 'Request';
-
-  @override
-  String get aiLastLogResponse => 'Response';
-
-  @override
-  String get aiLastLogUsage => 'Token Usage';
-
-  @override
-  String get aiLastLogMessages => 'Messages';
-
-  @override
-  String get aiLastLogError => 'Error';
-
-  @override
-  String get aiLastLogHttpCode => 'HTTP Status';
-
-  @override
-  String get aiLastLogLeftText => 'Left Text';
-
-  @override
-  String get aiLastLogRightText => 'Right Text';
-
-  @override
-  String get aiLastLogAssistantContent => 'Model Response Content';
-
-  @override
-  String get aiConfigSaveButton => 'Save';
-
-  @override
-  String get aiConfigSaved => 'AI configuration saved';
-
-  @override
-  String get aiConfigTips =>
-      'AI receives the app package, title, and content of each notification, and returns short left (source) and right (content) text. Compatible with OpenAI-format APIs (e.g. DeepSeek, Claude). Falls back to default logic if no response.';
-
-  @override
-  String get templateAiNotificationIslandName => 'AI Notification Island';
-
-  @override
   String get hideDesktopIconTitle => 'Hide Desktop Icon';
 
   @override
   String get hideDesktopIconSubtitle =>
       'Hide the app icon from launcher. Open via LSPosed Manager after hiding';
+
+  @override
+  String get restoreLockscreenTitle => 'Restore Lockscreen Notification';
+
+  @override
+  String get restoreLockscreenSubtitle =>
+      'Skip focus notification processing on lockscreen, keep original privacy behavior';
 }

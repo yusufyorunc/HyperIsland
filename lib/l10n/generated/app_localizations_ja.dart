@@ -46,6 +46,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String lsposedApiVersion(int version) {
+    return 'LSPosed API バージョン: $version';
+  }
+
+  @override
   String get later => '後で';
 
   @override
@@ -56,9 +61,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sponsorAuthor => 'スポンサー';
-
-  @override
-  String get documentation => '文档';
 
   @override
   String get restartScope => 'スコープを再起動';
@@ -95,11 +97,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get enableInLSPosed => 'LSPosed でこのモジュールを有効化してください';
-
-  @override
-  String lsposedApiVersion(int version) {
-    return 'LSPosed API バージョン: $version';
-  }
 
   @override
   String get updateLSPosedRequired => 'LSPosed バージョンを更新してください';
@@ -182,13 +179,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get showWelcomeSubtitle => 'アプリ起動時に Island にウェルカム情報を表示します';
 
   @override
-  String get interactionHapticsTitle => 'インタラクションの触覚フィードバック';
-
-  @override
-  String get interactionHapticsSubtitle =>
-      'スイッチ、スライダー、ボタンに Hyper カスタム振動フィードバックを有効にします';
-
-  @override
   String get checkUpdate => '更新を確認';
 
   @override
@@ -218,17 +208,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get bigIslandMaxWidthTitle => '修改超级岛最大宽度';
-
-  @override
-  String bigIslandMaxWidthLabel(int width) {
-    return '$width dp';
-  }
-
-  @override
-  String get bigIslandMaxWidthSubtitle => '开启后修改超级岛的最大宽度';
-
-  @override
   String get themeModeTitle => 'カラーモード';
 
   @override
@@ -239,6 +218,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themeModeDark => 'ダーク';
+
+  @override
+  String get themeSeedColorTitle => 'テーマカラー';
+
+  @override
+  String get themeSeedColorSubtitle => '現在のプリセット';
+
+  @override
+  String get pureBlackThemeTitle => 'ピュアブラックのダークテーマ';
+
+  @override
+  String get pureBlackThemeSubtitle => 'ダークモード時に背景を純粋な黒で表示します';
 
   @override
   String get languageTitle => '言語';
@@ -271,12 +262,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get exportToClipboardSubtitle => '構成の JSON テキストをクリップボードにコピーします';
 
   @override
-  String get exportConfig => '構成をエクスポート';
-
-  @override
-  String get exportConfigSubtitle => 'ファイルまたはクリップボードへのエクスポートを選択します';
-
-  @override
   String get importFromFile => 'ファイルからインポート';
 
   @override
@@ -287,6 +272,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get importFromClipboardSubtitle => 'クリップボードの JSON テキストから構成を復元します';
+
+  @override
+  String get exportConfig => '構成をエクスポート';
+
+  @override
+  String get exportConfigSubtitle => 'ファイルまたはクリップボードへのエクスポートを選択します';
 
   @override
   String get importConfig => '構成をインポート';
@@ -511,13 +502,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get islandIcon => 'Island のアイコン';
 
   @override
-  String get islandIconLabel => '大きな Island アイコン';
-
-  @override
-  String get islandIconLabelSubtitle =>
-      '有効にすると Island に大きなアイコンを表示します (小さな Island は影響を受けません)';
-
-  @override
   String get focusIconLabel => 'フォーカスアイコン';
 
   @override
@@ -527,11 +511,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get preserveStatusBarSmallIconLabel => 'ステータスバーアイコン';
 
   @override
-  String get restoreLockscreenTitle => 'ロック画面の通知を復元する';
+  String get islandIconLabel => '大きな Island アイコン';
 
   @override
-  String get restoreLockscreenSubtitle =>
-      'ロック画面でのフォーカス通知処理をスキップし、元のプライバシーに適切な動作を保持します';
+  String get islandIconLabelSubtitle =>
+      '有効にすると Island に大きなアイコンを表示します (小さな Island は影響を受けません)';
 
   @override
   String get firstFloatLabel => '最初にフロート表示';
@@ -552,7 +536,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dynamicHighlightColorLabel => 'ハイライトの動的色取得';
 
   @override
-  String get dynamicHighlightColorLabelSubtitle => '有効時はデフォルトでアイコンから動的に色を取得します';
+  String get dynamicHighlightColorLabelSubtitle =>
+      'チャンネルがデフォルト設定のとき、アイコンから動的にハイライト色を取得します。';
 
   @override
   String get dynamicHighlightModeDark => '暗め';
@@ -568,9 +553,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get textHighlightLabel => 'テキストハイライト';
-
-  @override
-  String get narrowFontLabel => 'ナローフォント';
 
   @override
   String get showLeftHighlightLabel => '左テキストハイライト';
@@ -650,14 +632,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navBlacklistSubtitle => '特定のアプリでのフォーカス通知をブロック、フローティングまたは非表示にします';
 
   @override
-  String get presetGamesTitle => '人気のゲームをクイックでフィルター';
-
-  @override
-  String presetGamesSuccess(int count) {
-    return '$count 個のインストールしたゲームをブラックリストに追加しました';
-  }
-
-  @override
   String blacklistedAppsCount(int count) {
     return '$count 個のアプリのフォーカス通知をブロックしました';
   }
@@ -685,172 +659,16 @@ class AppLocalizationsJa extends AppLocalizations {
       'フォーカス通知を表示時にステータスバーアイコンを強制的に保持します';
 
   @override
-  String get aiConfigSection => 'AI エンハンスメント';
-
-  @override
-  String get aiConfigTitle => 'AI 通知の概要';
-
-  @override
-  String get aiConfigSubtitleEnabled => '有効 · タップで AI パラメータを構成';
-
-  @override
-  String get aiConfigSubtitleDisabled => '無効 · タップで構成';
-
-  @override
-  String get aiEnabledTitle => 'AI の概要を有効化';
-
-  @override
-  String get aiEnabledSubtitle =>
-      'AI が Island の左右のテキストを生成します。タイムアウトまたはエラーの発生時はフォールバックします。';
-
-  @override
-  String get aiApiSection => 'API パラメータ';
-
-  @override
-  String get aiUrlLabel => 'API URL';
-
-  @override
-  String get aiUrlHint => 'https://api.openai.com/v1/chat/completions';
-
-  @override
-  String get aiApiKeyLabel => 'API キー';
-
-  @override
-  String get aiApiKeyHint => 'sk-...';
-
-  @override
-  String get aiModelLabel => 'モデル';
-
-  @override
-  String get aiModelHint => 'gpt-4o-mini';
-
-  @override
-  String get aiPromptLabel => 'カスタムプロンプト';
-
-  @override
-  String get aiPromptHint =>
-      'デフォルトを使用する場合は空欄: 左右それぞれ 6 単語または 12 文字以内の重要な情報を抽出します';
-
-  @override
-  String get aiPromptInUserTitle => 'ユーザーメッセージにプロンプトを表示する';
-
-  @override
-  String get aiPromptInUserSubtitle =>
-      '一部のモデルではシステム命令がサポートされていないため、有効にするとユーザーメッセージにプロンプ​​トを表示させます';
-
-  @override
-  String get aiTimeoutTitle => 'AI レスポンスのタイムアウト';
-
-  @override
-  String aiTimeoutLabel(int seconds) {
-    return 'AI レスポンスのタイムアウト';
-  }
-
-  @override
-  String get aiTemperatureTitle => 'サンプリング温度';
-
-  @override
-  String get aiTemperatureSubtitle => '回答のランダム性を制御します。0 は正確、1 はより独創的になります';
-
-  @override
-  String get aiMaxTokensTitle => '最大トークン数';
-
-  @override
-  String get aiMaxTokensSubtitle => 'AI が生成する回答の最大長を制限します';
-
-  @override
-  String get aiDefaultPromptFull =>
-      '空欄でデフォルトを使用：通知から重要な情報を抽出します。左右それぞれ 6 漢字 12 文字以内とします。';
-
-  @override
-  String get aiTestButton => 'テスト接続';
-
-  @override
-  String get aiTestUrlEmpty => '始めに API URL を入力してください';
-
-  @override
-  String get aiLastLogTitle => '最近の AI リクエストログ';
-
-  @override
-  String get aiLastLogSubtitle => 'テスト接続や通知によってトリガーされた AI リクエストがここに表示されます';
-
-  @override
-  String get aiLastLogEmpty => '表示できる AI リクエストログがまだありません';
-
-  @override
-  String get aiLastLogSourceLabel => 'ソース';
-
-  @override
-  String get aiLastLogTimeLabel => '時間';
-
-  @override
-  String get aiLastLogStatusLabel => 'ステータス';
-
-  @override
-  String get aiLastLogDurationLabel => '実行時間';
-
-  @override
-  String get aiLastLogSourceNotification => '通知トリガー';
-
-  @override
-  String get aiLastLogSourceSettingsTest => '設定テスト';
-
-  @override
-  String get aiLastLogRendered => 'レンダリング済み';
-
-  @override
-  String get aiLastLogRaw => 'オリジナル';
-
-  @override
-  String get aiLastLogCopy => 'ログをコピー';
-
-  @override
-  String get aiLastLogCopied => 'AI リクエストログをコピーしました';
-
-  @override
-  String get aiLastLogRequest => 'リクエスト';
-
-  @override
-  String get aiLastLogResponse => 'レスポンス';
-
-  @override
-  String get aiLastLogUsage => 'トークン使用量';
-
-  @override
-  String get aiLastLogMessages => 'メッセージ';
-
-  @override
-  String get aiLastLogError => 'エラー';
-
-  @override
-  String get aiLastLogHttpCode => 'HTTP ステータス';
-
-  @override
-  String get aiLastLogLeftText => '左側のテキスト';
-
-  @override
-  String get aiLastLogRightText => '右側のテキスト';
-
-  @override
-  String get aiLastLogAssistantContent => 'モデルのレスポンスコンテンツ';
-
-  @override
-  String get aiConfigSaveButton => '保存';
-
-  @override
-  String get aiConfigSaved => 'AI の構成を保存しました';
-
-  @override
-  String get aiConfigTips =>
-      'AI は各通知のアプリパッケージ、タイトル、コンテンツを受信し、短い左側 (ソース) と右側 (コンテンツ) のテキストを返します。OpenAI 形式の API (DeepSeek、Claude など) と互換性があります。レスポンスがない場合は、デフォルトのロジックにフォールバックします。';
-
-  @override
-  String get templateAiNotificationIslandName => 'AI Notification Island';
-
-  @override
   String get hideDesktopIconTitle => 'デスクトップアイコンを非表示にする';
 
   @override
   String get hideDesktopIconSubtitle =>
       'アプリのアイコンをランチャーから非表示にします。非表示後は、LSPosed Manager 経由で開くことができます。';
+
+  @override
+  String get restoreLockscreenTitle => 'ロック画面の通知を復元する';
+
+  @override
+  String get restoreLockscreenSubtitle =>
+      'ロック画面でのフォーカス通知処理をスキップし、元のプライバシーに適切な動作を保持します';
 }

@@ -1,34 +1,31 @@
-package io.github.hyperisland.xposed.renderer
+package io.github.hyperisland.xposed.template.renderer
 
 import android.app.Notification
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import io.github.hyperisland.xposed.template.core.models.IslandViewModel
+import io.github.hyperisland.xposed.template.IslandViewModel
+import org.json.JSONObject
 
-/**
- * 灵动岛渲染器接口。
- *
- * 消费 [IslandViewModel]，将 HyperOS 超级岛 JSON 写入 extras。
- * 新增渲染器步骤：实现此接口，在模板的 inject() 中引用即可。
- */
 interface IslandRenderer {
     val id: String
     fun render(context: Context, extras: Bundle, vm: IslandViewModel)
 }
 
-// ── 共享工具函数 ──────────────────────────────────────────────────────────────
+private inline fun mutateParamV2(
+    jsonParam: String,
+    mutation: (pv2: JSONObject) -> Unit,
+): String = try {
+    val json = JSONObject(jsonParam)
+    val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutation(pv2)
+    json.toString()
+} catch (_: Exception) {
+    jsonParam
+}
 
-/**
- * 修正 textButton 字段：新库输出 "actionIntent"+"actionIntentType"，
- * HyperOS V3 协议只认 "action"，否则按钮点击无响应。
- *
- * 注意：仅处理按钮字段，不包含任何布局变换逻辑。
- */
 fun fixTextButtonJson(jsonParam: String): String =
-    try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutateParamV2(jsonParam) { pv2 ->
         val btns = pv2.optJSONArray("textButton")
         if (btns != null) {
             for (i in 0 until btns.length()) {
@@ -39,21 +36,11 @@ fun fixTextButtonJson(jsonParam: String): String =
                 btn.remove("actionIntentType")
             }
         }
-        json.toString()
-    } catch (_: Exception) {
-        jsonParam
     }
 
-/**
- * 长文本折行样式：将 iconTextInfo 转为 coverInfo，
- * 把超长内容拆为上下两行（content + subContent）显示。
- *
- * 此函数是独立的视觉样式变换，由 [ImageTextWithButtonsWrapRenderer] 调用，
- * 不应混入 [fixTextButtonJson] 或基础渲染器中。
- */
 fun wrapLongTextJson(jsonParam: String): String =
     try {
-        val json = org.json.JSONObject(jsonParam)
+        val json = JSONObject(jsonParam)
         val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
         val iconTextInfo = pv2.optJSONObject("iconTextInfo") ?: return jsonParam
         val content = iconTextInfo.optString("content", "")
@@ -70,7 +57,7 @@ fun wrapLongTextJson(jsonParam: String): String =
         val subContent = content.substring(splitIdx)
         if (subContent.all { it == '.' || it == '…' || it.isWhitespace() }) return jsonParam
 
-        val coverInfo = org.json.JSONObject()
+        val coverInfo = JSONObject()
         val animIcon = iconTextInfo.optJSONObject("animIconInfo")
         if (animIcon != null) coverInfo.put("picCover", animIcon.optString("src", ""))
         coverInfo.put("title", iconTextInfo.optString("title", ""))
@@ -83,31 +70,28 @@ fun wrapLongTextJson(jsonParam: String): String =
         jsonParam
     }
 
-/** 注入 param_v2.updatable 字段。 */
 fun injectUpdatable(jsonParam: String, updatable: Boolean): String =
-    try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+    mutateParamV2(jsonParam) { pv2 ->
         pv2.put("updatable", updatable)
-        json.toString()
-    } catch (_: Exception) {
-        jsonParam
     }
 
-/** 将 highlightColor 注入到 param_v2.param_island 子对象。 */
-fun injectHighlightColor(jsonParam: String, highlightColor: String?): String {
-    if (highlightColor == null) return jsonParam
-    return try {
-        val json = org.json.JSONObject(jsonParam)
-        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
-        val paramIsland = pv2.optJSONObject("param_island") ?: org.json.JSONObject()
-        paramIsland.put("highlightColor", highlightColor)
+fun injectIslandAppearance(
+    jsonParam: String,
+    highlightColor: String?,
+    dismissIsland: Boolean = false,
+): String {
+    if (highlightColor == null && !dismissIsland) return jsonParam
+    return mutateParamV2(jsonParam) { pv2 ->
+        val paramIsland = pv2.optJSONObject("param_island") ?: JSONObject()
+        highlightColor?.let { paramIsland.put("highlightColor", it) }
+        if (dismissIsland) paramIsland.put("dismissIsland", true)
         pv2.put("param_island", paramIsland)
-        json.toString()
-    } catch (_: Exception) { jsonParam }
+    }
 }
 
-/** 将 outerGlow 注入到 param_v2.outEffectSrc。 */
+fun injectHighlightColor(jsonParam: String, highlightColor: String?): String =
+    injectIslandAppearance(jsonParam, highlightColor, dismissIsland = false)
+
 fun injectOuterGlow(jsonParam: String, outerGlow: Boolean): String {
     if (!outerGlow) return jsonParam
     return try {
@@ -115,27 +99,29 @@ fun injectOuterGlow(jsonParam: String, outerGlow: Boolean): String {
         val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
         pv2.put("outEffectSrc", "outer_glow")
         json.toString()
-    } catch (_: Exception) { jsonParam }
+    } catch (_: Exception) {
+        jsonParam
+    }
 }
 
-/**
- * 根据渲染器 ID 返回对应的 [IslandRenderer] 实例，未匹配时回退到默认渲染器。
- * 新增渲染器只需在此处注册，所有模板无需修改。
- */
 fun resolveRenderer(id: String): IslandRenderer = when (id) {
     ImageTextWithButtonsWrapRenderer.RENDERER_ID -> ImageTextWithButtonsWrapRenderer
     ImageTextWithRightTextButtonRenderer.RENDERER_ID -> ImageTextWithRightTextButtonRenderer
     else -> ImageTextWithButtonsRenderer
 }
 
-/** 将 buildResourceBundle() 里嵌套的 "miui.focus.actions" 展开到 extras 顶层。 */
 fun flattenActionsToExtras(resourceBundle: Bundle, extras: Bundle) {
     val nested = resourceBundle.getBundle("miui.focus.actions") ?: return
+    if (Build.VERSION.SDK_INT >= 33) {
+        for (key in nested.keySet()) {
+            val action = nested.getParcelable(key, Notification.Action::class.java)
+            if (action != null) extras.putParcelable(key, action)
+        }
+        return
+    }
     for (key in nested.keySet()) {
-        val action: Notification.Action? = if (Build.VERSION.SDK_INT >= 33)
-            nested.getParcelable(key, Notification.Action::class.java)
-        else
-            @Suppress("DEPRECATION") nested.getParcelable(key)
+        @Suppress("DEPRECATION")
+        val action = nested.getParcelable(key) as? Notification.Action
         if (action != null) extras.putParcelable(key, action)
     }
 }

@@ -1,5 +1,6 @@
-package io.github.hyperisland.xposed
+package io.github.hyperisland.xposed.DownloadManager
 
+import android.Manifest
 import android.app.DownloadManager
 import android.app.Notification
 import android.app.NotificationManager
@@ -9,43 +10,61 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
-import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.Process
+import androidx.core.net.toUri
+import io.github.hyperisland.R
+import io.github.hyperisland.xposed.ConfigManager
+import io.github.hyperisland.xposed.log
+import io.github.hyperisland.xposed.logError
+import io.github.hyperisland.xposed.logWarn
+import io.github.hyperisland.xposed.template.moduleContext
 import io.github.libxposed.api.XposedModule
+import java.util.UUID
 
-/**
- * 进程内下载控制器。
- * 不硬编码类名，从 getSystemService 的运行时类直接反射。
- * pause/resume 完全复刻 MiuiDownloadManager 的 ContentProvider 逻辑。
- */
 object InProcessController {
 
     private const val TAG = "HyperIsland[InProcessController]"
 
-    private const val ACTION          = "io.github.hyperisland.INTERNAL_CTRL"
-    private const val EXTRA_CMD       = "cmd"
-    private const val EXTRA_ID        = "dlId"
-    private const val EXTRA_NOTIF_ID  = "notifId"
+    private const val ACTION = "io.github.hyperisland.INTERNAL_CTRL"
+    private const val EXTRA_CMD = "cmd"
+    private const val EXTRA_ID = "dlId"
+    private const val EXTRA_TOKEN = "token"
+    private const val EXTRA_NOTIF_ID = "notifId"
     private const val EXTRA_NOTIF_TAG = "notifTag"
 
-    const val CMD_PAUSE   = "pause"
-    const val CMD_RESUME  = "resume"
-    const val CMD_CANCEL  = "cancel"
+    const val CMD_PAUSE = "pause"
+    const val CMD_RESUME = "resume"
+    const val CMD_CANCEL = "cancel"
     const val CMD_DISMISS = "dismiss"
 
-    private const val STATUS_PENDING       = 190
-    private const val STATUS_RUNNING       = 192
+    private const val STATUS_PENDING = 190
+    private const val STATUS_RUNNING = 192
     private const val STATUS_PAUSED_BY_APP = 193
-    private const val CONTROL_RUN          = 0
-    private const val CONTROL_PAUSED       = 1
+    private const val CONTROL_RUN = 0
+    private const val CONTROL_PAUSED = 1
 
-    private val DOWNLOADS_URI     = Uri.parse("content://downloads/my_downloads")
-    private val DOWNLOADS_URI_ALL = Uri.parse("content://downloads/all_downloads")
+    private val DOWNLOADS_URI = "content://downloads/my_downloads".toUri()
+    private val DOWNLOADS_URI_ALL = "content://downloads/all_downloads".toUri()
 
-    @Volatile private var registered = false
-    @Volatile private var resumeNotificationEnabled = true
-    @Volatile private var module: XposedModule? = null
+    @Volatile
+    private var registered = false
+
+    @Volatile
+    private var resumeNotificationEnabled = true
+
+    @Volatile
+    var useHookAppIconEnabled = true
+
+    @Volatile
+    private var module: XposedModule? = null
+
+    @Volatile
+    private var commandToken: String = ""
 
     data class DownloadNotifSnapshot(
         val notifId: Int,
@@ -55,21 +74,24 @@ object InProcessController {
         val progress: Int,
         val downloadId: Long,
         val isMultiFile: Boolean,
-        val packageName: String
+        val packageName: String,
     )
 
-    @Volatile var lastDownloadSnapshot: DownloadNotifSnapshot? = null
+    @Volatile
+    var lastDownloadSnapshot: DownloadNotifSnapshot? = null
     private const val PAUSED_OVERLAY_ID = 0x48594F01
 
     private fun loadSettings() {
         resumeNotificationEnabled = ConfigManager.getBoolean("pref_resume_notification", true)
-        module?.log("$TAG: settings loaded — resumeNotification=$resumeNotificationEnabled")
+        useHookAppIconEnabled = ConfigManager.getBoolean("pref_use_hook_app_icon", true)
+        module?.log("$TAG: settings loaded — resumeNotification=$resumeNotificationEnabled useHookAppIcon=$useHookAppIconEnabled")
     }
 
     fun ensureRegistered(context: Context, xposedModule: XposedModule) {
         if (registered) return
         val appCtx = context.applicationContext ?: context
         module = xposedModule
+        ensureCommandToken()
 
         ConfigManager.init(xposedModule)
         loadSettings()
@@ -77,29 +99,37 @@ object InProcessController {
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
+                if (!isTrustedControlIntent(intent)) {
+                    module?.logWarn("$TAG: ignored unauthorized control broadcast")
+                    return
+                }
                 val id = intent.getLongExtra(EXTRA_ID, -1L)
                 val cmd = intent.getStringExtra(EXTRA_CMD)
                 when (cmd) {
                     CMD_PAUSE -> {
                         val isAll = id <= 0
                         if (isAll) pauseAll(appCtx) else pause(appCtx, id)
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        Handler(Looper.getMainLooper()).postDelayed({
                             postPausedOverlay(appCtx, isAll)
                         }, 300)
                     }
+
                     CMD_RESUME -> {
                         if (id > 0) resume(appCtx, id) else resumeAll(appCtx)
                         cancelPausedOverlay(appCtx)
                     }
+
                     CMD_CANCEL -> {
                         if (id > 0) cancel(appCtx, id) else cancelAll(appCtx)
                         cancelPausedOverlay(appCtx)
                     }
+
                     CMD_DISMISS -> {
-                        val notifId  = intent.getIntExtra(EXTRA_NOTIF_ID, -1)
+                        val notifId = intent.getIntExtra(EXTRA_NOTIF_ID, -1)
                         val notifTag = intent.getStringExtra(EXTRA_NOTIF_TAG)
                         if (notifId > 0) {
-                            val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                            val nm =
+                                ctx.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                             nm?.cancel(notifTag, notifId)
                         }
                     }
@@ -109,19 +139,15 @@ object InProcessController {
 
         val filter = IntentFilter(ACTION)
         if (Build.VERSION.SDK_INT >= 33) {
-            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            appCtx.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             appCtx.registerReceiver(receiver, filter)
         }
         registered = true
-        xposedModule.log("$TAG: registered in pid=${android.os.Process.myPid()}")
+        xposedModule.log("$TAG: registered in pid=${Process.myPid()}")
     }
 
-    /**
-     * Hook MiuiDownloadManager 方法（仅用于日志/调试）。
-     * 在 com.xiaomi.android.app.downloadmanager 进程中调用。
-     */
     fun hookMiuiDownloadManager(module: XposedModule, classLoader: ClassLoader) {
         val candidates = listOf(
             "com.xiaomi.android.app.downloadmanager.MiuiDownloadManager",
@@ -141,25 +167,32 @@ object InProcessController {
                 }
                 module.log("$TAG: Hooked pauseDownload in $className")
                 break
-            } catch (_: Throwable) {}
+            } catch (_: Throwable) {
+            }
         }
     }
 
-    // ── PendingIntent 工厂 ────────────────────────────────────────────────────
+    fun pauseIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_PAUSE, downloadId, reqCode(downloadId, 0))
 
-    fun pauseIntent(context: Context, downloadId: Long)  = makeIntent(context, CMD_PAUSE,  downloadId, reqCode(downloadId, 0))
-    fun resumeIntent(context: Context, downloadId: Long) = makeIntent(context, CMD_RESUME, downloadId, reqCode(downloadId, 1))
-    fun cancelIntent(context: Context, downloadId: Long) = makeIntent(context, CMD_CANCEL, downloadId, reqCode(downloadId, 2))
+    fun resumeIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_RESUME, downloadId, reqCode(downloadId, 1))
 
-    fun pauseAllIntent(context: Context)  = makeIntent(context, CMD_PAUSE,  -1L, 9000001)
+    fun cancelIntent(context: Context, downloadId: Long) =
+        makeIntent(context, CMD_CANCEL, downloadId, reqCode(downloadId, 2))
+
+    fun pauseAllIntent(context: Context) = makeIntent(context, CMD_PAUSE, -1L, 9000001)
     fun cancelAllIntent(context: Context) = makeIntent(context, CMD_CANCEL, -1L, 9000002)
     fun resumeAllIntent(context: Context) = makeIntent(context, CMD_RESUME, -1L, 9000003)
 
     fun dismissIntent(context: Context, notifId: Int, notifTag: String?): PendingIntent {
+        val token = ensureCommandToken()
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, CMD_DISMISS)
             putExtra(EXTRA_NOTIF_ID, notifId)
             if (notifTag != null) putExtra(EXTRA_NOTIF_TAG, notifTag)
+            putExtra(EXTRA_TOKEN, token)
         }
         return PendingIntent.getBroadcast(
             context, notifId + 100000, intent,
@@ -169,10 +202,18 @@ object InProcessController {
 
     private fun reqCode(id: Long, offset: Int) = ((id and 0xFFFFF) * 3 + offset).toInt()
 
-    private fun makeIntent(context: Context, cmd: String, downloadId: Long, requestCode: Int): PendingIntent {
+    private fun makeIntent(
+        context: Context,
+        cmd: String,
+        downloadId: Long,
+        requestCode: Int,
+    ): PendingIntent {
+        val token = ensureCommandToken()
         val intent = Intent(ACTION).apply {
+            setPackage(context.packageName)
             putExtra(EXTRA_CMD, cmd)
             putExtra(EXTRA_ID, downloadId)
+            putExtra(EXTRA_TOKEN, token)
         }
         return PendingIntent.getBroadcast(
             context, requestCode, intent,
@@ -180,82 +221,107 @@ object InProcessController {
         )
     }
 
-    // ── 控制逻辑 ──────────────────────────────────────────────────────────────
-
-    private fun pause(context: Context, downloadId: Long) {
-        val realIds = queryActiveIds(context)
-        val idsToTry = (listOf(downloadId) + realIds).distinct()
-        val values = ContentValues().apply {
-            put("status",  STATUS_PAUSED_BY_APP)
-            put("control", CONTROL_PAUSED)
+    private fun ensureCommandToken(): String {
+        if (commandToken.isBlank()) {
+            commandToken = UUID.randomUUID().toString()
         }
-        for (id in idsToTry) {
-            for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
-                try {
-                    val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
-                    if (rows > 0) return
-                } catch (e: Exception) {
-                    module?.logError("$TAG: pause id=$id uri=$uri err=${e.message}")
-                }
+        return commandToken
+    }
+
+    private fun isTrustedControlIntent(intent: Intent): Boolean {
+        val token = intent.getStringExtra(EXTRA_TOKEN)
+        return !token.isNullOrBlank() && token == commandToken
+    }
+
+    private fun pausedByAppValues(): ContentValues = ContentValues().apply {
+        put("status", STATUS_PAUSED_BY_APP)
+        put("control", CONTROL_PAUSED)
+    }
+
+    private fun runningValues(): ContentValues = ContentValues().apply {
+        put("status", STATUS_RUNNING)
+        put("control", CONTROL_RUN)
+    }
+
+    private fun queryIdsByStatus(context: Context, statusMask: Int, errorOp: String): List<Long> {
+        return try {
+            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            val cursor = dm?.query(DownloadManager.Query().setFilterByStatus(statusMask))
+            val ids = mutableListOf<Long>()
+            cursor?.use {
+                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
+                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
+            }
+            ids
+        } catch (e: Exception) {
+            module?.logError("$TAG: $errorOp err=${e.message}")
+            emptyList()
+        }
+    }
+
+    private fun updateDownloadById(context: Context, id: Long, values: ContentValues): Boolean {
+        for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
+            try {
+                val rows =
+                    context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
+                if (rows > 0) return true
+            } catch (e: Exception) {
+                module?.logError("$TAG: update id=$id uri=$uri err=${e.message}")
             }
         }
-        pauseAll(context)
+        return false
+    }
+
+    private fun pause(context: Context, downloadId: Long) {
+        if (downloadId <= 0L) {
+            pauseAll(context)
+            return
+        }
+        val values = pausedByAppValues()
+        if (updateDownloadById(context, downloadId, values)) return
+
+        val fallbackIds = queryActiveIds(context).filter { it != downloadId }
+        if (fallbackIds.size == 1) {
+            val remappedId = fallbackIds.first()
+            if (updateDownloadById(context, remappedId, values)) {
+                module?.logWarn("$TAG: pause remapped id=$downloadId -> $remappedId")
+                return
+            }
+        }
+
+        module?.logWarn("$TAG: pause target not found id=$downloadId")
     }
 
     private fun resume(context: Context, downloadId: Long) {
-        val realIds = queryPausedIds(context)
-        val idsToTry = (listOf(downloadId) + realIds).distinct()
-        val values = ContentValues().apply {
-            put("status",  STATUS_RUNNING)
-            put("control", CONTROL_RUN)
+        if (downloadId <= 0L) {
+            resumeAll(context)
+            return
         }
-        for (id in idsToTry) {
-            for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
-                try {
-                    val rows = context.contentResolver.update(uri, values, "_id = ?", arrayOf(id.toString()))
-                    if (rows > 0) return
-                } catch (e: Exception) {
-                    module?.logError("$TAG: resume id=$id uri=$uri err=${e.message}")
-                }
+        val values = runningValues()
+        if (updateDownloadById(context, downloadId, values)) return
+
+        val fallbackIds = queryPausedIds(context).filter { it != downloadId }
+        if (fallbackIds.size == 1) {
+            val remappedId = fallbackIds.first()
+            if (updateDownloadById(context, remappedId, values)) {
+                module?.logWarn("$TAG: resume remapped id=$downloadId -> $remappedId")
+                return
             }
         }
-        resumeAll(context)
+
+        module?.logWarn("$TAG: resume target not found id=$downloadId")
     }
 
     private fun queryActiveIds(context: Context): List<Long> {
-        return try {
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val cursor = dm?.query(
-                DownloadManager.Query().setFilterByStatus(
-                    DownloadManager.STATUS_RUNNING or DownloadManager.STATUS_PENDING
-                )
-            )
-            val ids = mutableListOf<Long>()
-            cursor?.use {
-                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
-                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
-            }
-            ids
-        } catch (e: Exception) {
-            module?.logError("$TAG: queryActiveIds err=${e.message}")
-            emptyList()
-        }
+        return queryIdsByStatus(
+            context,
+            DownloadManager.STATUS_RUNNING or DownloadManager.STATUS_PENDING,
+            "queryActiveIds"
+        )
     }
 
     private fun queryPausedIds(context: Context): List<Long> {
-        return try {
-            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-            val cursor = dm?.query(DownloadManager.Query().setFilterByStatus(DownloadManager.STATUS_PAUSED))
-            val ids = mutableListOf<Long>()
-            cursor?.use {
-                val col = it.getColumnIndex(DownloadManager.COLUMN_ID)
-                while (it.moveToNext()) if (col >= 0) ids.add(it.getLong(col))
-            }
-            ids
-        } catch (e: Exception) {
-            module?.logError("$TAG: queryPausedIds err=${e.message}")
-            emptyList()
-        }
+        return queryIdsByStatus(context, DownloadManager.STATUS_PAUSED, "queryPausedIds")
     }
 
     private fun cancel(context: Context, downloadId: Long) {
@@ -270,10 +336,7 @@ object InProcessController {
     }
 
     private fun pauseAll(context: Context) {
-        val values = ContentValues().apply {
-            put("status",  STATUS_PAUSED_BY_APP)
-            put("control", CONTROL_PAUSED)
-        }
+        val values = pausedByAppValues()
         for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
             try {
                 val rows = context.contentResolver.update(
@@ -289,16 +352,16 @@ object InProcessController {
     }
 
     private fun resumeAll(context: Context) {
-        try {
-            val values = ContentValues().apply {
-                put("status",  STATUS_RUNNING)
-                put("control", CONTROL_RUN)
+        val values = runningValues()
+        for (uri in listOf(DOWNLOADS_URI_ALL, DOWNLOADS_URI)) {
+            try {
+                val rows = context.contentResolver.update(
+                    uri, values, "status = ?", arrayOf(STATUS_PAUSED_BY_APP.toString())
+                )
+                if (rows > 0) return
+            } catch (e: Exception) {
+                module?.logError("$TAG: resumeAll uri=$uri err=${e.message}")
             }
-            context.contentResolver.update(
-                DOWNLOADS_URI, values, "status = ?", arrayOf(STATUS_PAUSED_BY_APP.toString())
-            )
-        } catch (e: Exception) {
-            module?.logError("$TAG: resumeAll failed: ${e.message}")
         }
     }
 
@@ -318,14 +381,12 @@ object InProcessController {
         }
     }
 
-    // ── 暂停覆盖通知 ──────────────────────────────────────────────────────────
-
     private fun postPausedOverlay(context: Context, isAll: Boolean) {
         if (!resumeNotificationEnabled) return
         val snap = lastDownloadSnapshot ?: return
         val overlaySnap = snap.copy(
-            notifId    = PAUSED_OVERLAY_ID,
-            notifTag   = null,
+            notifId = PAUSED_OVERLAY_ID,
+            notifTag = null,
             isMultiFile = isAll || snap.isMultiFile
         )
         repostAsPaused(context, overlaySnap)
@@ -333,18 +394,35 @@ object InProcessController {
 
     private fun repostAsPaused(context: Context, snapshot: DownloadNotifSnapshot) {
         try {
+            val mc = context.moduleContext()
+            val pausedTitle = mc.getString(R.string.island_download_paused)
             val notif = Notification.Builder(context, snapshot.channelId)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(if (snapshot.isMultiFile) "${snapshot.fileName} 已暂停" else "已暂停")
+                .setContentTitle(if (snapshot.isMultiFile) "${snapshot.fileName} $pausedTitle" else pausedTitle)
                 .setContentText(snapshot.fileName)
+                .setDeleteIntent(dismissIntent(context, snapshot.notifId, snapshot.notifTag))
                 .setOngoing(false)
                 .setAutoCancel(false)
                 .build()
 
-            val resumeIntent = if (snapshot.isMultiFile) resumeAllIntent(context) else resumeIntent(context, snapshot.downloadId)
-            val cancelIntent = if (snapshot.isMultiFile) cancelAllIntent(context) else cancelIntent(context, snapshot.downloadId)
-            val resumeLabel = if (snapshot.isMultiFile) "全部恢复" else "恢复"
-            val cancelLabel = if (snapshot.isMultiFile) "全部取消" else "取消"
+            val resumeIntent = if (snapshot.isMultiFile) resumeAllIntent(context) else resumeIntent(
+                context,
+                snapshot.downloadId
+            )
+            val cancelIntent = if (snapshot.isMultiFile) cancelAllIntent(context) else cancelIntent(
+                context,
+                snapshot.downloadId
+            )
+            val resumeLabel = if (snapshot.isMultiFile) {
+                mc.getString(R.string.island_action_resume_all)
+            } else {
+                mc.getString(R.string.island_action_resume)
+            }
+            val cancelLabel = if (snapshot.isMultiFile) {
+                mc.getString(R.string.island_action_cancel_all)
+            } else {
+                mc.getString(R.string.island_action_cancel)
+            }
 
             notif.actions = arrayOf(
                 Notification.Action.Builder(
@@ -358,6 +436,12 @@ object InProcessController {
             )
 
             val nm = context.getSystemService(NotificationManager::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) {
+                module?.logWarn("$TAG: skip paused overlay notify, POST_NOTIFICATIONS not granted")
+                return
+            }
             nm?.notify(null, snapshot.notifId, notif)
         } catch (e: Exception) {
             module?.logError("$TAG: repostAsPaused failed: ${e.message}")

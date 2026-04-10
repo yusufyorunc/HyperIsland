@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
+
 import '../controllers/config_io_controller.dart';
 import '../controllers/settings_controller.dart';
 import '../controllers/update_controller.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../services/interaction_haptics.dart';
-import '../widgets/section_label.dart';
-import '../widgets/modern_slider.dart';
-import 'ai_config_page.dart';
+import '../widgets/settings_widgets.dart';
+import '../widgets/animated_settings_tab_bar.dart';
 import 'blacklist_page.dart';
+
+const _themeColorPresets = <Color>[
+  Color(0xFF6750A4),
+  Color(0xFF006A6A),
+  Color(0xFF1565C0),
+  Color(0xFF2E7D32),
+  Color(0xFFEF6C00),
+  Color(0xFFB3261E),
+];
+
+String _seedColorHex(Color color) {
+  final rgb = color.toARGB32() & 0x00FFFFFF;
+  return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
+}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -19,127 +32,21 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
   final _ctrl = SettingsController.instance;
-  bool _checkingUpdate = false;
-  late int _marqueeSpeedDraft;
-  late int _bigIslandMaxWidthDraft;
-  late int _uiStateHash;
-
-  int _buildUiStateHash() => Object.hashAll([
-    _ctrl.loading,
-    _ctrl.aiEnabled,
-    _ctrl.resumeNotification,
-    _ctrl.unlockAllFocus,
-    _ctrl.unlockFocusAuth,
-    _ctrl.checkUpdateOnLaunch,
-    _ctrl.hideDesktopIcon,
-    _ctrl.defaultFirstFloat,
-    _ctrl.defaultEnableFloat,
-    _ctrl.defaultMarquee,
-    _ctrl.defaultDynamicHighlightColor,
-    _ctrl.defaultOuterGlow,
-    _ctrl.defaultFocusNotif,
-    _ctrl.defaultPreserveSmallIcon,
-    _ctrl.defaultRestoreLockscreen,
-    _ctrl.defaultShowIslandIcon,
-    _ctrl.roundIcon,
-    _ctrl.marqueeSpeed,
-    _ctrl.bigIslandMaxWidthEnabled,
-    _ctrl.bigIslandMaxWidth,
-    _ctrl.themeMode,
-    _ctrl.locale,
-    _ctrl.interactionHaptics,
-    _ctrl.showWelcome,
-    _ctrl.useHookAppIcon,
-  ]);
-
-  void _onChanged() {
-    if (!mounted) return;
-    final nextHash = _buildUiStateHash();
-    final nextMarquee = _ctrl.marqueeSpeed;
-    final nextMaxWidth = _ctrl.bigIslandMaxWidth;
-    if (nextHash == _uiStateHash &&
-        nextMarquee == _marqueeSpeedDraft &&
-        nextMaxWidth == _bigIslandMaxWidthDraft) {
-      return;
-    }
-    setState(() {
-      _uiStateHash = nextHash;
-      _marqueeSpeedDraft = nextMarquee;
-      _bigIslandMaxWidthDraft = nextMaxWidth;
-    });
-  }
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _marqueeSpeedDraft = _ctrl.marqueeSpeed;
-    _bigIslandMaxWidthDraft = _ctrl.bigIslandMaxWidth;
-    _uiStateHash = _buildUiStateHash();
-    _ctrl.addListener(_onChanged);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
   void dispose() {
-    _ctrl.removeListener(_onChanged);
+    _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _onResumeNotificationChanged(bool value) async {
-    await _ctrl.setResumeNotification(value);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.restartScopeApp),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
-  Future<void> _onUseHookAppIconChanged(bool value) async {
-    await _ctrl.setUseHookAppIcon(value);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.restartScopeApp),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
-  Future<void> _onRoundIconChanged(bool value) async {
-    await _ctrl.setRoundIcon(value);
-  }
-
-  Future<void> _onHideDesktopIconChanged(bool value) async {
-    await _ctrl.setHideDesktopIcon(value);
-  }
-
-  void _onMarqueeSpeedChanged(double value) {
-    final next = value.round();
-    if (_marqueeSpeedDraft == next) return;
-    setState(() => _marqueeSpeedDraft = next);
-  }
-
-  void _onBigIslandMaxWidthChanged(double value) {
-    final next = value.round();
-    if (_bigIslandMaxWidthDraft == next) return;
-    setState(() => _bigIslandMaxWidthDraft = next);
-  }
-
-  Future<void> _persistMarqueeSpeed(double value) async {
-    final next = value.round();
-    if (_ctrl.marqueeSpeed == next) return;
-    await _ctrl.setMarqueeSpeed(next);
-  }
-
-  Future<void> _persistBigIslandMaxWidth(double value) async {
-    final next = value.round();
-    if (_ctrl.bigIslandMaxWidth == next) return;
-    await _ctrl.setBigIslandMaxWidth(next);
   }
 
   void _showSnack(String msg) {
@@ -149,15 +56,25 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  String _localizeConfigIOError(AppLocalizations l10n, ConfigIOError error) {
-    return switch (error) {
-      ConfigIOError.invalidFormat => l10n.errorInvalidFormat,
-      ConfigIOError.noStorageDirectory => l10n.errorNoStorageDir,
-      ConfigIOError.noFileSelected => l10n.errorNoFileSelected,
-      ConfigIOError.noFilePath => l10n.errorNoFilePath,
-      ConfigIOError.emptyClipboard => l10n.errorEmptyClipboard,
-    };
+  void _showRestartSnack() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.restartScopeApp),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
+  String _localizeConfigIOError(AppLocalizations l10n, ConfigIOError error) =>
+      switch (error) {
+        ConfigIOError.invalidFormat => l10n.errorInvalidFormat,
+        ConfigIOError.noStorageDirectory => l10n.errorNoStorageDir,
+        ConfigIOError.noFileSelected => l10n.errorNoFileSelected,
+        ConfigIOError.noFilePath => l10n.errorNoFilePath,
+        ConfigIOError.emptyClipboard => l10n.errorEmptyClipboard,
+      };
 
   Future<void> _exportToFile() async {
     final l10n = AppLocalizations.of(context)!;
@@ -207,22 +124,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _doCheckUpdate() async {
-    setState(() => _checkingUpdate = true);
-    try {
-      final info = await PackageInfo.fromPlatform();
-      if (mounted) {
-        await UpdateController.checkAndShow(
-          context,
-          info.version,
-          showUpToDate: true,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _checkingUpdate = false);
-    }
-  }
-
   String _themeModeLabel(AppLocalizations l10n) => switch (_ctrl.themeMode) {
     ThemeMode.light => l10n.themeModeLight,
     ThemeMode.dark => l10n.themeModeDark,
@@ -253,19 +154,25 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _RadioOption<ThemeMode>(l10n.themeModeSystem, ThemeMode.system),
-                _RadioOption<ThemeMode>(l10n.themeModeLight, ThemeMode.light),
-                _RadioOption<ThemeMode>(l10n.themeModeDark, ThemeMode.dark),
+                SettingsRadioOption<ThemeMode>(
+                  l10n.themeModeSystem,
+                  ThemeMode.system,
+                ),
+                SettingsRadioOption<ThemeMode>(
+                  l10n.themeModeLight,
+                  ThemeMode.light,
+                ),
+                SettingsRadioOption<ThemeMode>(
+                  l10n.themeModeDark,
+                  ThemeMode.dark,
+                ),
               ],
             ),
           ),
         ],
       ),
     );
-    if (result != null) {
-      if (!mounted) return;
-      _ctrl.setThemeMode(result);
-    }
+    if (result != null) _ctrl.setThemeMode(result);
   }
 
   Future<void> _showLanguageDialog(AppLocalizations l10n) async {
@@ -281,20 +188,84 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _RadioOption<Locale?>(l10n.languageAuto, null),
-                _RadioOption<Locale?>(l10n.languageZh, const Locale('zh')),
-                _RadioOption<Locale?>(l10n.languageEn, const Locale('en')),
-                _RadioOption<Locale?>(l10n.languageJa, const Locale('ja')),
-                _RadioOption<Locale?>(l10n.languageTr, const Locale('tr')),
+                SettingsRadioOption<Locale?>(l10n.languageAuto, null),
+                SettingsRadioOption<Locale?>(
+                  l10n.languageZh,
+                  const Locale('zh'),
+                ),
+                SettingsRadioOption<Locale?>(
+                  l10n.languageEn,
+                  const Locale('en'),
+                ),
+                SettingsRadioOption<Locale?>(
+                  l10n.languageJa,
+                  const Locale('ja'),
+                ),
+                SettingsRadioOption<Locale?>(
+                  l10n.languageTr,
+                  const Locale('tr'),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
-    if (result != _ctrl.locale) {
-      if (!mounted) return;
-      _ctrl.setLocale(result);
+    if (result != _ctrl.locale) _ctrl.setLocale(result);
+  }
+
+  List<Color> _themeColorChoices() {
+    final current = _ctrl.themeSeedColor;
+    final hasCurrent = _themeColorPresets.any(
+      (color) => color.toARGB32() == current.toARGB32(),
+    );
+    if (hasCurrent) return _themeColorPresets;
+    return [current, ..._themeColorPresets];
+  }
+
+  Future<void> _showThemeSeedDialog(AppLocalizations l10n) async {
+    if (!mounted) return;
+    final choices = _themeColorChoices();
+    final current = choices.firstWhere(
+      (color) => color.toARGB32() == _ctrl.themeSeedColor.toARGB32(),
+      orElse: () => choices.first,
+    );
+
+    final result = await showDialog<Color>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.themeSeedColorTitle),
+        children: [
+          RadioGroup<Color>(
+            groupValue: current,
+            onChanged: (value) => Navigator.of(ctx).pop(value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final color in choices)
+                  RadioListTile<Color>(
+                    value: color,
+                    title: Text(_seedColorHex(color)),
+                    secondary: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(ctx).colorScheme.outlineVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      await _ctrl.setThemeSeedColor(result);
     }
   }
 
@@ -302,816 +273,460 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final titleStyle = Theme.of(context).textTheme.titleMedium;
+
+    final tabs = [
+      (Icons.tune_rounded, l10n.behaviorSection),
+      (Icons.palette_outlined, l10n.appearanceSection),
+      (Icons.settings_applications_outlined, l10n.defaultConfigSection),
+      (Icons.sync_alt_rounded, l10n.configSection),
+      (Icons.info_outline_rounded, l10n.aboutSection),
+    ];
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          SliverAppBar.large(
-            backgroundColor: cs.surface,
-            title: Text(l10n.navSettings),
-          ),
-          if (_ctrl.loading)
-            const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18, top: 8),
-                      child: SectionLabel(l10n.aiConfigSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        leading: const Icon(Icons.psychology_outlined),
-                        title: Text(l10n.aiConfigTitle, style: titleStyle),
-                        subtitle: Text(
-                          _ctrl.aiEnabled
-                              ? l10n.aiConfigSubtitleEnabled
-                              : l10n.aiConfigSubtitleDisabled,
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AiConfigPage(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.navBlacklist),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                        ),
-                        leading: const Icon(Icons.block),
-                        title: Text(l10n.navBlacklist, style: titleStyle),
-                        subtitle: Text(l10n.navBlacklistSubtitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const BlacklistPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.behaviorSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.interactionHapticsTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.interactionHapticsSubtitle),
-                            value: _ctrl.interactionHaptics,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setInteractionHaptics(value),
-                              force: true,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.keepFocusNotifTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.keepFocusNotifSubtitle),
-                            value: _ctrl.resumeNotification,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              _onResumeNotificationChanged,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.unlockAllFocusTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.unlockAllFocusSubtitle),
-                            value: _ctrl.unlockAllFocus,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setUnlockAllFocus(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.unlockFocusAuthTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.unlockFocusAuthSubtitle),
-                            value: _ctrl.unlockFocusAuth,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setUnlockFocusAuth(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.showWelcomeTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.showWelcomeSubtitle),
-                            value: _ctrl.showWelcome,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setShowWelcome(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.hideDesktopIconTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.hideDesktopIconSubtitle),
-                            value: _ctrl.hideDesktopIcon,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              _onHideDesktopIconChanged,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.checkUpdateOnLaunchTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
-                            value: _ctrl.checkUpdateOnLaunch,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setCheckUpdateOnLaunch(value),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.defaultConfigSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.firstFloatLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.firstFloatLabelSubtitle),
-                            value: _ctrl.defaultFirstFloat,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultFirstFloat(value),
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.updateFloatLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.updateFloatLabelSubtitle),
-                            value: _ctrl.defaultEnableFloat,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultEnableFloat(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.marqueeChannelTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.marqueeChannelTitleSubtitle),
-                            value: _ctrl.defaultMarquee,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultMarquee(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.dynamicHighlightColorLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(
-                              l10n.dynamicHighlightColorLabelSubtitle,
-                            ),
-                            value: _ctrl.defaultDynamicHighlightColor,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) =>
-                                  _ctrl.setDefaultDynamicHighlightColor(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.outerGlowLabel, style: titleStyle),
-                            value: _ctrl.defaultOuterGlow,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultOuterGlow(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.focusNotificationLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.focusNotificationLabelSubtitle),
-                            value: _ctrl.defaultFocusNotif,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultFocusNotif(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.restoreLockscreenTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.restoreLockscreenSubtitle),
-                            value: _ctrl.defaultRestoreLockscreen,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) =>
-                                  _ctrl.setDefaultRestoreLockscreen(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.islandIconLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.islandIconLabelSubtitle),
-                            value: _ctrl.defaultShowIslandIcon,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) => _ctrl.setDefaultShowIslandIcon(value),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.preserveStatusBarSmallIconLabel,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(
-                              l10n.preserveStatusBarSmallIconLabelSubtitle,
-                            ),
-                            value: _ctrl.defaultPreserveSmallIcon,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) =>
-                                  _ctrl.setDefaultPreserveSmallIcon(value),
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.appearanceSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(
-                              l10n.useAppIconTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.useAppIconSubtitle),
-                            value: _ctrl.useHookAppIcon,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              _onUseHookAppIconChanged,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.roundIconTitle, style: titleStyle),
-                            subtitle: Text(l10n.roundIconSubtitle),
-                            value: _ctrl.roundIcon,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              _onRoundIconChanged,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 2,
-                            ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l10n.marqueeChannelTitle,
-                                    style: titleStyle,
-                                  ),
-                                ),
-                                Text(
-                                  l10n.marqueeSpeedLabel(_marqueeSpeedDraft),
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                if (_marqueeSpeedDraft != 100)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.refresh, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed:
-                                          InteractionHaptics.interceptButton(
-                                            () {
-                                              setState(
-                                                () => _marqueeSpeedDraft = 100,
-                                              );
-                                              _ctrl.setMarqueeSpeed(100);
-                                            },
-                                          ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            subtitle: Row(
-                              children: [
-                                Text(
-                                  l10n.marqueeSpeedTitle,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                                Expanded(
-                                  child: SliderTheme(
-                                    data: ModernSliderTheme.theme(context),
-                                    child: Slider(
-                                      value: _marqueeSpeedDraft.toDouble(),
-                                      min: 20,
-                                      max: 500,
-                                      divisions: 48,
-                                      onChanged:
-                                          InteractionHaptics.interceptSlider(
-                                            _onMarqueeSpeedChanged,
-                                          ),
-                                      onChangeEnd: _persistMarqueeSpeed,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 2,
-                            ),
-                            title: Text(
-                              l10n.bigIslandMaxWidthTitle,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(
-                              l10n.bigIslandMaxWidthSubtitle,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                            value: _ctrl.bigIslandMaxWidthEnabled,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (value) =>
-                                  _ctrl.setBigIslandMaxWidthEnabled(value),
-                            ),
-                          ),
-                          if (_ctrl.bigIslandMaxWidthEnabled)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    l10n.bigIslandMaxWidthLabel(
-                                      _bigIslandMaxWidthDraft,
-                                    ),
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: cs.onSurfaceVariant),
-                                  ),
-                                  if (_bigIslandMaxWidthDraft != 200)
-                                    SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.refresh,
-                                          size: 18,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed:
-                                            InteractionHaptics.interceptButton(
-                                              () {
-                                                setState(
-                                                  () =>
-                                                      _bigIslandMaxWidthDraft =
-                                                          200,
-                                                );
-                                                _ctrl.setBigIslandMaxWidth(200);
-                                              },
-                                            ),
-                                      ),
-                                    ),
-                                  Expanded(
-                                    child: SliderTheme(
-                                      data: ModernSliderTheme.theme(context),
-                                      child: Slider(
-                                        value: _bigIslandMaxWidthDraft
-                                            .toDouble(),
-                                        min: 50,
-                                        max: 500,
-                                        divisions: 54,
-                                        onChanged:
-                                            InteractionHaptics.interceptSlider(
-                                              _onBigIslandMaxWidthChanged,
-                                            ),
-                                        onChangeEnd: _persistBigIslandMaxWidth,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.themeModeTitle, style: titleStyle),
-                            subtitle: Text(_themeModeLabel(l10n)),
-                            onTap: InteractionHaptics.interceptButton(
-                              () => _showThemeModeDialog(l10n),
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.languageTitle, style: titleStyle),
-                            subtitle: Text(_localeLabel(l10n)),
-                            onTap: InteractionHaptics.interceptButton(
-                              () => _showLanguageDialog(l10n),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.configSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                            ),
-                            leading: const Icon(Icons.upload_file_outlined),
-                            title: Text(l10n.exportToFile, style: titleStyle),
-                            subtitle: Text(l10n.exportToFileSubtitle),
-                            onTap: InteractionHaptics.interceptButton(
-                              _exportToFile,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            leading: const Icon(Icons.copy_outlined),
-                            title: Text(
-                              l10n.exportToClipboard,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.exportToClipboardSubtitle),
-                            onTap: InteractionHaptics.interceptButton(
-                              _exportToClipboard,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            leading: const Icon(Icons.download_outlined),
-                            title: Text(l10n.importFromFile, style: titleStyle),
-                            subtitle: Text(l10n.importFromFileSubtitle),
-                            onTap: InteractionHaptics.interceptButton(
-                              _importFromFile,
-                            ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                            ),
-                            leading: const Icon(Icons.paste_outlined),
-                            title: Text(
-                              l10n.importFromClipboard,
-                              style: titleStyle,
-                            ),
-                            subtitle: Text(l10n.importFromClipboardSubtitle),
-                            onTap: InteractionHaptics.interceptButton(
-                              _importFromClipboard,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: SectionLabel(l10n.aboutSection),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 0,
-                      color: cs.surfaceContainerHighest,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.system_update_outlined),
-                            title: Text(l10n.checkUpdate, style: titleStyle),
-                            trailing: _checkingUpdate
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : null,
-                            onTap: _checkingUpdate
-                                ? null
-                                : InteractionHaptics.interceptButton(
-                                    _doCheckUpdate,
-                                  ),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                            ),
-                            leading: const Icon(Icons.code),
-                            title: Text('GitHub', style: titleStyle),
-                            subtitle: const Text('1812z/HyperIsland'),
-                            trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: InteractionHaptics.interceptButton(() async {
-                              await launchUrl(
-                                Uri.parse(
-                                  'https://github.com/1812z/HyperIsland',
-                                ),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }),
-                          ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                            ),
-                            leading: const Icon(Icons.group_outlined),
-                            title: Text(l10n.qqGroup, style: titleStyle),
-                            subtitle: const Text('1045114341'),
-                            trailing: const Icon(Icons.copy, size: 18),
-                            onTap: InteractionHaptics.interceptButton(() async {
-                              Clipboard.setData(
-                                const ClipboardData(text: '1045114341'),
-                              );
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.groupNumberCopied),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                  addAutomaticKeepAlives: false,
-                  addSemanticIndexes: true,
-                ),
+      appBar: AppBar(
+        backgroundColor: cs.surface,
+        scrolledUnderElevation: 0,
+        title: Text(
+          l10n.navSettings,
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        bottom: AnimatedSettingsTabBar(controller: _tabController, tabs: tabs),
+      ),
+      body: ListenableBuilder(
+        listenable: _ctrl,
+        builder: (context, _) {
+          if (_ctrl.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _BehaviorTab(
+                ctrl: _ctrl,
+                l10n: l10n,
+                onRestartSnack: _showRestartSnack,
               ),
-            ),
-        ],
+              _AppearanceTab(
+                ctrl: _ctrl,
+                l10n: l10n,
+                onRestartSnack: _showRestartSnack,
+                onShowThemeSeedDialog: () => _showThemeSeedDialog(l10n),
+                onShowThemeDialog: () => _showThemeModeDialog(l10n),
+                onShowLanguageDialog: () => _showLanguageDialog(l10n),
+                themeSeedColorLabel:
+                    '${l10n.themeSeedColorSubtitle}: ${_seedColorHex(_ctrl.themeSeedColor)}',
+                themeModeLabel: _themeModeLabel(l10n),
+                localeLabel: _localeLabel(l10n),
+              ),
+              _DefaultConfigTab(ctrl: _ctrl, l10n: l10n),
+              _BackupTab(
+                l10n: l10n,
+                onExportFile: _exportToFile,
+                onExportClipboard: _exportToClipboard,
+                onImportFile: _importFromFile,
+                onImportClipboard: _importFromClipboard,
+              ),
+              _AboutTab(l10n: l10n, onShowSnack: _showSnack),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _RadioOption<T> extends StatelessWidget {
-  const _RadioOption(this.label, this.value, {super.key});
+class _TabScrollView extends StatelessWidget {
+  final List<Widget> children;
 
-  final String label;
-  final T value;
+  const _TabScrollView({required this.children});
 
   @override
   Widget build(BuildContext context) {
-    return RadioListTile<T>(title: Text(label), value: value);
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: children,
+    );
+  }
+}
+
+class _BehaviorTab extends StatelessWidget {
+  final SettingsController ctrl;
+  final AppLocalizations l10n;
+  final VoidCallback onRestartSnack;
+
+  const _BehaviorTab({
+    required this.ctrl,
+    required this.l10n,
+    required this.onRestartSnack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _TabScrollView(
+      children: [
+        SettingsSection(
+          title: l10n.navBlacklist,
+          children: [
+            SettingsItem(
+              icon: Icons.block_rounded,
+              title: l10n.navBlacklist,
+              subtitle: l10n.navBlacklistSubtitle,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BlacklistPage()),
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: l10n.behaviorSection,
+          children: [
+            SettingsSwitch(
+              title: l10n.keepFocusNotifTitle,
+              subtitle: l10n.keepFocusNotifSubtitle,
+              value: ctrl.resumeNotification,
+              onChanged: (v) async {
+                await ctrl.setResumeNotification(v);
+                onRestartSnack();
+              },
+            ),
+            SettingsSwitch(
+              title: l10n.unlockAllFocusTitle,
+              subtitle: l10n.unlockAllFocusSubtitle,
+              value: ctrl.unlockAllFocus,
+              onChanged: ctrl.setUnlockAllFocus,
+            ),
+            SettingsSwitch(
+              title: l10n.unlockFocusAuthTitle,
+              subtitle: l10n.unlockFocusAuthSubtitle,
+              value: ctrl.unlockFocusAuth,
+              onChanged: ctrl.setUnlockFocusAuth,
+            ),
+            SettingsSwitch(
+              title: l10n.showWelcomeTitle,
+              subtitle: l10n.showWelcomeSubtitle,
+              value: ctrl.showWelcome,
+              onChanged: ctrl.setShowWelcome,
+            ),
+            SettingsSwitch(
+              title: l10n.hideDesktopIconTitle,
+              subtitle: l10n.hideDesktopIconSubtitle,
+              value: ctrl.hideDesktopIcon,
+              onChanged: ctrl.setHideDesktopIcon,
+            ),
+            SettingsSwitch(
+              title: l10n.checkUpdateOnLaunchTitle,
+              subtitle: l10n.checkUpdateOnLaunchSubtitle,
+              value: ctrl.checkUpdateOnLaunch,
+              onChanged: ctrl.setCheckUpdateOnLaunch,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _AppearanceTab extends StatelessWidget {
+  final SettingsController ctrl;
+  final AppLocalizations l10n;
+  final VoidCallback onRestartSnack;
+  final VoidCallback onShowThemeSeedDialog;
+  final VoidCallback onShowThemeDialog;
+  final VoidCallback onShowLanguageDialog;
+  final String themeSeedColorLabel;
+  final String themeModeLabel;
+  final String localeLabel;
+
+  const _AppearanceTab({
+    required this.ctrl,
+    required this.l10n,
+    required this.onRestartSnack,
+    required this.onShowThemeSeedDialog,
+    required this.onShowThemeDialog,
+    required this.onShowLanguageDialog,
+    required this.themeSeedColorLabel,
+    required this.themeModeLabel,
+    required this.localeLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _TabScrollView(
+      children: [
+        SettingsSection(
+          title: l10n.appearanceSection,
+          children: [
+            SettingsSwitch(
+              title: l10n.useAppIconTitle,
+              subtitle: l10n.useAppIconSubtitle,
+              value: ctrl.useHookAppIcon,
+              onChanged: (v) async {
+                await ctrl.setUseHookAppIcon(v);
+                onRestartSnack();
+              },
+            ),
+            SettingsSwitch(
+              title: l10n.roundIconTitle,
+              subtitle: l10n.roundIconSubtitle,
+              value: ctrl.roundIcon,
+              onChanged: ctrl.setRoundIcon,
+            ),
+            MarqueeSpeedTile(
+              l10n: l10n,
+              initialValue: ctrl.marqueeSpeed,
+              onChanged: ctrl.setMarqueeSpeed,
+            ),
+            SettingsItem(
+              icon: Icons.color_lens_outlined,
+              title: l10n.themeSeedColorTitle,
+              subtitle: themeSeedColorLabel,
+              onTap: onShowThemeSeedDialog,
+            ),
+            SettingsSwitch(
+              title: l10n.pureBlackThemeTitle,
+              subtitle: l10n.pureBlackThemeSubtitle,
+              value: ctrl.pureBlackTheme,
+              onChanged: ctrl.setPureBlackTheme,
+            ),
+            SettingsItem(
+              icon: Icons.palette_outlined,
+              title: l10n.themeModeTitle,
+              subtitle: themeModeLabel,
+              onTap: onShowThemeDialog,
+            ),
+            SettingsItem(
+              icon: Icons.language_rounded,
+              title: l10n.languageTitle,
+              subtitle: localeLabel,
+              onTap: onShowLanguageDialog,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _DefaultConfigTab extends StatelessWidget {
+  final SettingsController ctrl;
+  final AppLocalizations l10n;
+
+  const _DefaultConfigTab({required this.ctrl, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    return _TabScrollView(
+      children: [
+        SettingsSection(
+          title: l10n.defaultConfigSection,
+          children: [
+            SettingsSwitch(
+              title: l10n.firstFloatLabel,
+              subtitle: l10n.firstFloatLabelSubtitle,
+              value: ctrl.defaultFirstFloat,
+              onChanged: ctrl.setDefaultFirstFloat,
+            ),
+            SettingsSwitch(
+              title: l10n.updateFloatLabel,
+              subtitle: l10n.updateFloatLabelSubtitle,
+              value: ctrl.defaultEnableFloat,
+              onChanged: ctrl.setDefaultEnableFloat,
+            ),
+            SettingsSwitch(
+              title: l10n.marqueeChannelTitle,
+              subtitle: l10n.marqueeChannelTitleSubtitle,
+              value: ctrl.defaultMarquee,
+              onChanged: ctrl.setDefaultMarquee,
+            ),
+            SettingsSwitch(
+              title: l10n.focusNotificationLabel,
+              subtitle: l10n.focusNotificationLabelSubtitle,
+              value: ctrl.defaultFocusNotif,
+              onChanged: ctrl.setDefaultFocusNotif,
+            ),
+            SettingsSwitch(
+              title: l10n.restoreLockscreenTitle,
+              subtitle: l10n.restoreLockscreenSubtitle,
+              value: ctrl.defaultRestoreLockscreen,
+              onChanged: ctrl.setDefaultRestoreLockscreen,
+            ),
+            SettingsSwitch(
+              title: l10n.islandIconLabel,
+              subtitle: l10n.islandIconLabelSubtitle,
+              value: ctrl.defaultShowIslandIcon,
+              onChanged: ctrl.setDefaultShowIslandIcon,
+            ),
+            SettingsSwitch(
+              title: l10n.preserveStatusBarSmallIconLabel,
+              subtitle: l10n.preserveStatusBarSmallIconLabelSubtitle,
+              value: ctrl.defaultPreserveSmallIcon,
+              onChanged: ctrl.setDefaultPreserveSmallIcon,
+            ),
+            SettingsSwitch(
+              title: l10n.dynamicHighlightColorLabel,
+              subtitle: l10n.dynamicHighlightColorLabelSubtitle,
+              value: ctrl.defaultDynamicHighlightColor,
+              onChanged: ctrl.setDefaultDynamicHighlightColor,
+            ),
+            SettingsSwitch(
+              title: l10n.outerGlowLabel,
+              subtitle: l10n.outerGlowLabel,
+              value: ctrl.defaultOuterGlow,
+              onChanged: ctrl.setDefaultOuterGlow,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _BackupTab extends StatelessWidget {
+  final AppLocalizations l10n;
+  final VoidCallback onExportFile;
+  final VoidCallback onExportClipboard;
+  final VoidCallback onImportFile;
+  final VoidCallback onImportClipboard;
+
+  const _BackupTab({
+    required this.l10n,
+    required this.onExportFile,
+    required this.onExportClipboard,
+    required this.onImportFile,
+    required this.onImportClipboard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _TabScrollView(
+      children: [
+        SettingsSection(
+          title: l10n.exportConfig,
+          children: [
+            SettingsItem(
+              icon: Icons.upload_file_outlined,
+              title: l10n.exportToFile,
+              subtitle: l10n.exportToFileSubtitle,
+              onTap: onExportFile,
+              showTrailingIcon: false,
+            ),
+            SettingsItem(
+              icon: Icons.copy_outlined,
+              title: l10n.exportToClipboard,
+              subtitle: l10n.exportToClipboardSubtitle,
+              onTap: onExportClipboard,
+              showTrailingIcon: false,
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: l10n.importConfig,
+          children: [
+            SettingsItem(
+              icon: Icons.download_outlined,
+              title: l10n.importFromFile,
+              subtitle: l10n.importFromFileSubtitle,
+              onTap: onImportFile,
+              showTrailingIcon: false,
+            ),
+            SettingsItem(
+              icon: Icons.paste_outlined,
+              title: l10n.importFromClipboard,
+              subtitle: l10n.importFromClipboardSubtitle,
+              onTap: onImportClipboard,
+              showTrailingIcon: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _AboutTab extends StatefulWidget {
+  final AppLocalizations l10n;
+  final void Function(String) onShowSnack;
+
+  const _AboutTab({required this.l10n, required this.onShowSnack});
+
+  @override
+  State<_AboutTab> createState() => _AboutTabState();
+}
+
+class _AboutTabState extends State<_AboutTab> {
+  bool _checkingUpdate = false;
+
+  Future<void> _doCheckUpdate() async {
+    setState(() => _checkingUpdate = true);
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        await UpdateController.checkAndShow(
+          context,
+          info.version,
+          showUpToDate: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+
+    return _TabScrollView(
+      children: [
+        SettingsSection(
+          title: l10n.aboutSection,
+          children: [
+            SettingsItem(
+              icon: Icons.system_update_outlined,
+              title: l10n.checkUpdate,
+              onTap: _checkingUpdate ? null : _doCheckUpdate,
+              trailing: _checkingUpdate
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+            ),
+            SettingsItem(
+              icon: Icons.code_rounded,
+              title: 'GitHub',
+              subtitle: 'yusufyorunc/HyperIsland',
+              showTrailingIcon: false,
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => launchUrl(
+                Uri.parse('https://github.com/yusufyorunc/HyperIsland'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+            SettingsItem(
+              icon: Icons.group_outlined,
+              title: l10n.qqGroup,
+              subtitle: '1045114341',
+              showTrailingIcon: false,
+              trailing: const Icon(Icons.copy, size: 18),
+              onTap: () {
+                Clipboard.setData(const ClipboardData(text: '1045114341'));
+                widget.onShowSnack(l10n.groupNumberCopied);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
   }
 }

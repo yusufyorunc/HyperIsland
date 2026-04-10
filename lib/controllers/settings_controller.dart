@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,15 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 const kPrefShowWelcome = 'pref_show_welcome';
 const kPrefResumeNotification = 'pref_resume_notification';
 const kPrefUseHookAppIcon = 'pref_use_hook_app_icon';
-const kPrefInteractionHaptics = 'pref_interaction_haptics';
 const kPrefRoundIcon = 'pref_round_icon';
 const kPrefMarqueeFeature = 'pref_marquee_feature';
 const kPrefMarqueeSpeed = 'pref_marquee_speed';
-const kPrefBigIslandMaxWidthEnabled = 'pref_big_island_max_width_enabled';
-const kPrefBigIslandMaxWidth = 'pref_big_island_max_width';
 const kPrefUnlockAllFocus = 'pref_unlock_all_focus';
 const kPrefUnlockFocusAuth = 'pref_unlock_focus_auth';
 const kPrefThemeMode = 'pref_theme_mode';
+const kPrefThemeSeedColor = 'pref_theme_seed_color';
+const kPrefPureBlackTheme = 'pref_pure_black_theme';
 const kPrefLocale = 'pref_locale';
 const kPrefCheckUpdateOnLaunch = 'pref_check_update_on_launch';
 const kPrefDefaultFirstFloat = 'pref_default_first_float';
@@ -23,74 +20,12 @@ const kPrefDefaultEnableFloat = 'pref_default_enable_float';
 const kPrefDefaultShowIslandIcon = 'pref_default_show_island_icon';
 const kPrefDefaultMarquee = 'pref_default_marquee';
 const kPrefDefaultFocusNotif = 'pref_default_focus_notif';
+const kPrefDefaultRestoreLockscreen = 'pref_default_restore_lockscreen';
+const kPrefDefaultPreserveSmallIcon = 'pref_default_preserve_small_icon';
 const kPrefDefaultDynamicHighlightColor =
     'pref_default_dynamic_highlight_color';
 const kPrefDefaultOuterGlow = 'pref_default_outer_glow';
-const kPrefDefaultRestoreLockscreen = 'pref_default_restore_lockscreen';
-const kPrefDefaultPreserveSmallIcon = 'pref_default_preserve_small_icon';
 const kPrefHideDesktopIcon = 'pref_hide_desktop_icon';
-const kPrefAiEnabled = 'pref_ai_enabled';
-const kPrefAiUrl = 'pref_ai_url';
-const kPrefAiApiKey = 'pref_ai_api_key';
-const kPrefAiModel = 'pref_ai_model';
-const kPrefAiPrompt = 'pref_ai_prompt';
-const kPrefAiPromptInUser = 'pref_ai_prompt_in_user';
-const kPrefAiTimeout = 'pref_ai_timeout';
-const kPrefAiTemperature = 'pref_ai_temperature';
-const kPrefAiMaxTokens = 'pref_ai_max_tokens';
-const kPrefAiLastLogJson = 'pref_ai_last_log_json';
-
-class AiLogEntry {
-  const AiLogEntry({
-    required this.timestamp,
-    required this.source,
-    required this.url,
-    required this.model,
-    required this.requestBody,
-    required this.responseBody,
-    required this.error,
-    required this.statusCode,
-    required this.durationMs,
-  });
-
-  final DateTime timestamp;
-  final String source;
-  final String url;
-  final String model;
-  final String requestBody;
-  final String responseBody;
-  final String error;
-  final int? statusCode;
-  final int? durationMs;
-
-  Map<String, dynamic> toJson() => {
-    'timestamp': timestamp.toIso8601String(),
-    'source': source,
-    'url': url,
-    'model': model,
-    'requestBody': requestBody,
-    'responseBody': responseBody,
-    'error': error,
-    'statusCode': statusCode,
-    'durationMs': durationMs,
-  };
-
-  factory AiLogEntry.fromJson(Map<String, dynamic> json) {
-    return AiLogEntry(
-      timestamp:
-          DateTime.tryParse(json['timestamp'] as String? ?? '')?.toLocal() ??
-          DateTime.fromMillisecondsSinceEpoch(0),
-      source: json['source'] as String? ?? '',
-      url: json['url'] as String? ?? '',
-      model: json['model'] as String? ?? '',
-      requestBody: json['requestBody'] as String? ?? '',
-      responseBody: json['responseBody'] as String? ?? '',
-      error: json['error'] as String? ?? '',
-      statusCode: (json['statusCode'] as num?)?.toInt(),
-      durationMs: (json['durationMs'] as num?)?.toInt(),
-    );
-  }
-}
 
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
@@ -103,12 +38,9 @@ class SettingsController extends ChangeNotifier {
   bool showWelcome = true;
   bool resumeNotification = true;
   bool useHookAppIcon = true;
-  bool interactionHaptics = true;
   bool roundIcon = true;
   bool marqueeFeature = false;
   int marqueeSpeed = 100;
-  bool bigIslandMaxWidthEnabled = false;
-  int bigIslandMaxWidth = 200;
   bool unlockAllFocus = false;
   bool unlockFocusAuth = false;
   bool checkUpdateOnLaunch = true;
@@ -117,21 +49,13 @@ class SettingsController extends ChangeNotifier {
   bool defaultShowIslandIcon = true;
   bool defaultMarquee = false;
   bool defaultFocusNotif = true;
-  bool defaultDynamicHighlightColor = false;
-  bool defaultOuterGlow = false;
   bool hideDesktopIcon = false;
   bool defaultRestoreLockscreen = false;
   bool defaultPreserveSmallIcon = false;
-  bool aiEnabled = false;
-  String aiUrl = '';
-  String aiApiKey = '';
-  String aiModel = '';
-  String aiPrompt = '';
-  bool aiPromptInUser = false;
-  int aiTimeout = 3;
-  double aiTemperature = 0.1;
-  int aiMaxTokens = 50;
-  AiLogEntry? aiLastLog;
+  bool defaultDynamicHighlightColor = false;
+  bool defaultOuterGlow = false;
+  Color themeSeedColor = const Color(0xFF6750A4);
+  bool pureBlackTheme = false;
   ThemeMode themeMode = ThemeMode.system;
   Locale? locale;
   bool loading = true;
@@ -149,13 +73,9 @@ class SettingsController extends ChangeNotifier {
     showWelcome = prefs.getBool(kPrefShowWelcome) ?? true;
     resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
     useHookAppIcon = prefs.getBool(kPrefUseHookAppIcon) ?? true;
-    interactionHaptics = prefs.getBool(kPrefInteractionHaptics) ?? true;
     roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
     marqueeFeature = prefs.getBool(kPrefMarqueeFeature) ?? false;
-    marqueeSpeed = prefs.getInt(kPrefMarqueeSpeed) ?? 100;
-    bigIslandMaxWidthEnabled =
-        prefs.getBool(kPrefBigIslandMaxWidthEnabled) ?? false;
-    bigIslandMaxWidth = prefs.getInt(kPrefBigIslandMaxWidth) ?? 200;
+    marqueeSpeed = (prefs.getInt(kPrefMarqueeSpeed) ?? 100).clamp(20, 500);
     unlockAllFocus = prefs.getBool(kPrefUnlockAllFocus) ?? false;
     unlockFocusAuth = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
     checkUpdateOnLaunch = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
@@ -164,25 +84,19 @@ class SettingsController extends ChangeNotifier {
     defaultShowIslandIcon = prefs.getBool(kPrefDefaultShowIslandIcon) ?? true;
     defaultMarquee = prefs.getBool(kPrefDefaultMarquee) ?? false;
     defaultFocusNotif = prefs.getBool(kPrefDefaultFocusNotif) ?? true;
-    defaultDynamicHighlightColor =
-        prefs.getBool(kPrefDefaultDynamicHighlightColor) ?? false;
-    defaultOuterGlow = prefs.getBool(kPrefDefaultOuterGlow) ?? false;
     hideDesktopIcon = prefs.getBool(kPrefHideDesktopIcon) ?? false;
     defaultShowIslandIcon = prefs.getBool(kPrefDefaultShowIslandIcon) ?? true;
     defaultRestoreLockscreen =
         prefs.getBool(kPrefDefaultRestoreLockscreen) ?? false;
     defaultPreserveSmallIcon =
         prefs.getBool(kPrefDefaultPreserveSmallIcon) ?? false;
-    aiEnabled = prefs.getBool(kPrefAiEnabled) ?? false;
-    aiUrl = prefs.getString(kPrefAiUrl) ?? '';
-    aiApiKey = prefs.getString(kPrefAiApiKey) ?? '';
-    aiModel = prefs.getString(kPrefAiModel) ?? '';
-    aiPrompt = prefs.getString(kPrefAiPrompt) ?? '';
-    aiPromptInUser = prefs.getBool(kPrefAiPromptInUser) ?? false;
-    aiTimeout = prefs.getInt(kPrefAiTimeout) ?? 3;
-    aiTemperature = prefs.getDouble(kPrefAiTemperature) ?? 0.1;
-    aiMaxTokens = prefs.getInt(kPrefAiMaxTokens) ?? 50;
-    aiLastLog = _parseAiLog(prefs.getString(kPrefAiLastLogJson));
+    defaultDynamicHighlightColor =
+        prefs.getBool(kPrefDefaultDynamicHighlightColor) ?? false;
+    defaultOuterGlow = prefs.getBool(kPrefDefaultOuterGlow) ?? false;
+    themeSeedColor = Color(
+      prefs.getInt(kPrefThemeSeedColor) ?? const Color(0xFF6750A4).toARGB32(),
+    );
+    pureBlackTheme = prefs.getBool(kPrefPureBlackTheme) ?? false;
     themeMode = switch (prefs.getString(kPrefThemeMode)) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
@@ -217,13 +131,6 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setInteractionHaptics(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kPrefInteractionHaptics, value);
-    interactionHaptics = value;
-    notifyListeners();
-  }
-
   Future<void> setRoundIcon(bool value) async {
     if (roundIcon == value) return;
     final prefs = await _getPrefs();
@@ -246,23 +153,6 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setInt(kPrefMarqueeSpeed, clamped);
     marqueeSpeed = clamped;
-    notifyListeners();
-  }
-
-  Future<void> setBigIslandMaxWidthEnabled(bool value) async {
-    if (bigIslandMaxWidthEnabled == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setBool(kPrefBigIslandMaxWidthEnabled, value);
-    bigIslandMaxWidthEnabled = value;
-    notifyListeners();
-  }
-
-  Future<void> setBigIslandMaxWidth(int value) async {
-    final clamped = value.clamp(50, 500);
-    if (bigIslandMaxWidth == clamped) return;
-    final prefs = await _getPrefs();
-    await prefs.setInt(kPrefBigIslandMaxWidth, clamped);
-    bigIslandMaxWidth = clamped;
     notifyListeners();
   }
 
@@ -330,6 +220,14 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setDefaultPreserveSmallIcon(bool value) async {
+    if (defaultPreserveSmallIcon == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefDefaultPreserveSmallIcon, value);
+    defaultPreserveSmallIcon = value;
+    notifyListeners();
+  }
+
   Future<void> setDefaultDynamicHighlightColor(bool value) async {
     if (defaultDynamicHighlightColor == value) return;
     final prefs = await _getPrefs();
@@ -343,14 +241,6 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefDefaultOuterGlow, value);
     defaultOuterGlow = value;
-    notifyListeners();
-  }
-
-  Future<void> setDefaultPreserveSmallIcon(bool value) async {
-    if (defaultPreserveSmallIcon == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setBool(kPrefDefaultPreserveSmallIcon, value);
-    defaultPreserveSmallIcon = value;
     notifyListeners();
   }
 
@@ -390,96 +280,6 @@ class SettingsController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> setAiEnabled(bool value) async {
-    if (aiEnabled == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setBool(kPrefAiEnabled, value);
-    aiEnabled = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiUrl(String value) async {
-    if (aiUrl == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setString(kPrefAiUrl, value);
-    aiUrl = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiApiKey(String value) async {
-    if (aiApiKey == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setString(kPrefAiApiKey, value);
-    aiApiKey = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiModel(String value) async {
-    if (aiModel == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setString(kPrefAiModel, value);
-    aiModel = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiPrompt(String value) async {
-    if (aiPrompt == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setString(kPrefAiPrompt, value);
-    aiPrompt = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiPromptInUser(bool value) async {
-    if (aiPromptInUser == value) return;
-    final prefs = await _getPrefs();
-    await prefs.setBool(kPrefAiPromptInUser, value);
-    aiPromptInUser = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiTimeout(int value) async {
-    final clamped = value.clamp(3, 15);
-    if (aiTimeout == clamped) return;
-    final prefs = await _getPrefs();
-    await prefs.setInt(kPrefAiTimeout, clamped);
-    aiTimeout = clamped;
-    notifyListeners();
-  }
-
-  Future<void> setAiTemperature(double value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(kPrefAiTemperature, value);
-    aiTemperature = value;
-    notifyListeners();
-  }
-
-  Future<void> setAiMaxTokens(int value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(kPrefAiMaxTokens, value);
-    aiMaxTokens = value;
-    notifyListeners();
-  }
-
-  Future<void> saveAiLastLog(AiLogEntry? entry) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (entry == null) {
-      await prefs.remove(kPrefAiLastLogJson);
-      aiLastLog = null;
-    } else {
-      await prefs.setString(kPrefAiLastLogJson, jsonEncode(entry.toJson()));
-      aiLastLog = entry;
-    }
-    notifyListeners();
-  }
-
-  Future<void> refreshAiLastLog() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    aiLastLog = _parseAiLog(prefs.getString(kPrefAiLastLogJson));
-    notifyListeners();
-  }
-
   Future<void> setThemeMode(ThemeMode mode) async {
     if (themeMode == mode) return;
     final prefs = await _getPrefs();
@@ -493,6 +293,23 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setThemeSeedColor(Color color) async {
+    final value = color.toARGB32();
+    if (themeSeedColor.toARGB32() == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setInt(kPrefThemeSeedColor, value);
+    themeSeedColor = Color(value);
+    notifyListeners();
+  }
+
+  Future<void> setPureBlackTheme(bool value) async {
+    if (pureBlackTheme == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefPureBlackTheme, value);
+    pureBlackTheme = value;
+    notifyListeners();
+  }
+
   Future<void> setLocale(Locale? loc) async {
     if (locale == loc) return;
     final prefs = await _getPrefs();
@@ -503,16 +320,5 @@ class SettingsController extends ChangeNotifier {
     }
     locale = loc;
     notifyListeners();
-  }
-
-  AiLogEntry? _parseAiLog(String? raw) {
-    if (raw == null || raw.isEmpty) return null;
-    try {
-      return AiLogEntry.fromJson(
-        Map<String, dynamic>.from(jsonDecode(raw) as Map),
-      );
-    } catch (_) {
-      return null;
-    }
   }
 }

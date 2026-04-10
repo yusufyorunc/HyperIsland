@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+pubspec.lock
 
 # Symbolication related
 app.*.symbols
@@ -48,6 +49,4 @@ release.jks
 /example/
 opencode.json
 /.workbuddy
-/docs/.vitepress/cache
-/node_modules
-/docs/.vitepress/dist
+raw/

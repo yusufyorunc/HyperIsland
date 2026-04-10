@@ -46,6 +46,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String lsposedApiVersion(int version) {
+    return 'LSPosed API Sürümü: $version';
+  }
+
+  @override
   String get later => 'Daha Sonra';
 
   @override
@@ -56,9 +61,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sponsorAuthor => 'Sponsor Ol';
-
-  @override
-  String get documentation => '文档';
 
   @override
   String get restartScope => 'Etki Alanını Yeniden Başlat';
@@ -95,11 +97,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get enableInLSPosed => 'Lütfen bu modülü LSPosed içinde etkinleştirin';
-
-  @override
-  String lsposedApiVersion(int version) {
-    return 'LSPosed API Sürümü: $version';
-  }
 
   @override
   String get updateLSPosedRequired => 'Lütfen LSPosed sürümünü güncelleyin';
@@ -141,7 +138,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get behaviorSection => 'Davranış';
 
   @override
-  String get defaultConfigSection => 'Uygulama Kanal Ayarları Varsayılanları';
+  String get defaultConfigSection => 'Bildirim Kanal Ayarları';
 
   @override
   String get appearanceSection => 'Görünüm';
@@ -189,13 +186,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulama başladığında Ada üzerinde karşılama bilgisini göster';
 
   @override
-  String get interactionHapticsTitle => 'Etkileşim haptikleri';
-
-  @override
-  String get interactionHapticsSubtitle =>
-      'Anahtarlar, kaydırıcılar ve düğmeler için Hyper özel dokunsal geri bildirimi etkinleştir';
-
-  @override
   String get checkUpdate => 'Güncellemeleri Denetle';
 
   @override
@@ -227,17 +217,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bigIslandMaxWidthTitle => '修改超级岛最大宽度';
-
-  @override
-  String bigIslandMaxWidthLabel(int width) {
-    return '$width dp';
-  }
-
-  @override
-  String get bigIslandMaxWidthSubtitle => '开启后修改超级岛的最大宽度';
-
-  @override
   String get themeModeTitle => 'Tema';
 
   @override
@@ -248,6 +227,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeModeDark => 'Koyu';
+
+  @override
+  String get themeSeedColorTitle => 'Tema rengi';
+
+  @override
+  String get themeSeedColorSubtitle => 'Seçili ön ayar';
+
+  @override
+  String get pureBlackThemeTitle => 'Saf siyah koyu tema';
+
+  @override
+  String get pureBlackThemeSubtitle =>
+      'Koyu moddayken gerçek siyah yüzeyler kullan';
 
   @override
   String get languageTitle => 'Dil';
@@ -282,13 +274,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yapılandırmayı JSON metni olarak panoya kopyalar.';
 
   @override
-  String get exportConfig => 'Yapılandırmayı Dışa Aktar';
-
-  @override
-  String get exportConfigSubtitle =>
-      'Dosyaya veya panoya dışa aktarma yöntemini seçin';
-
-  @override
   String get importFromFile => 'Dosyadan İçe Aktar';
 
   @override
@@ -301,6 +286,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get importFromClipboardSubtitle =>
       'Panodaki JSON metninden yapılandırmayı geri yükler.';
+
+  @override
+  String get exportConfig => 'Yapılandırmayı Dışa Aktar';
+
+  @override
+  String get exportConfigSubtitle =>
+      'Dosyaya veya panoya dışa aktarma yöntemini seçin';
 
   @override
   String get importConfig => 'Yapılandırmayı İçe Aktar';
@@ -503,10 +495,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get templateNotificationIslandName => 'Bildirim Süper Ada';
 
   @override
-  String get templateNotificationIslandLiteName => 'Bildirim Süper Ada|Lite';
+  String get templateNotificationIslandLiteName => 'Bildirim Süper Ada -Lite';
 
   @override
-  String get templateDownloadLiteName => 'İndirme|Lite';
+  String get templateDownloadLiteName => 'İndirme -Lite';
 
   @override
   String get islandSection => 'Ada';
@@ -519,24 +511,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rendererImageTextWithButtons4Name =>
-      'Görsel + Metin + Alt Metin Düğmeleri';
+      'Görsel + Metin + Alt Butonlar';
 
   @override
-  String get rendererCoverInfoName => 'Kapak Bilgisi + Otomatik Satır Kaydırma';
+  String get rendererCoverInfoName => 'Kapak Bilgisi + Otomatik Kaydırma';
 
   @override
   String get rendererImageTextWithRightTextButtonName =>
-      'Görsel + Metin + Sağ Metin Düğmesi';
+      'Görsel + Metin + Sağ Buton';
 
   @override
   String get islandIcon => 'Ada Simgesi';
-
-  @override
-  String get islandIconLabel => 'Büyük Ada Simgesini Göster';
-
-  @override
-  String get islandIconLabelSubtitle =>
-      'Bu ayar açık olduğunda büyük Ada simgesi gösterilir (küçük Ada etkilenmez).';
 
   @override
   String get focusIconLabel => 'Odak Simgesi';
@@ -546,14 +531,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get preserveStatusBarSmallIconLabel =>
-      'Durum Çubuğu Küçük Simgesini Koru';
+      'Durum Çubuğu Bildirim Simgesini Koru';
 
   @override
-  String get restoreLockscreenTitle => 'Kilit Ekranı Bildirimini Geri Yükle';
+  String get islandIconLabel => 'Büyük Ada Simgesini Göster';
 
   @override
-  String get restoreLockscreenSubtitle =>
-      'Kilit ekranında odak bildirimi işlemini atlayın, özgün gizlilik davranışını koruyun';
+  String get islandIconLabelSubtitle =>
+      'Bu ayar açık olduğunda büyük Ada simgesi gösterilir (küçük Ada etkilenmez).';
 
   @override
   String get firstFloatLabel => 'İlk Bildirimde Genişlet';
@@ -575,7 +560,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dynamicHighlightColorLabelSubtitle =>
-      'Varsayılan olarak simgeden dinamik renk kullan';
+      'Bu ayar açık olduğunda, simgenin dinamik vurgu rengini kullanır.';
 
   @override
   String get dynamicHighlightModeDark => 'Koyu';
@@ -584,7 +569,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dynamicHighlightModeDarker => 'Daha koyu';
 
   @override
-  String get outerGlowLabel => 'Dış parlama';
+  String get outerGlowLabel => 'Çerçeve parlaması';
 
   @override
   String get highlightColorHint =>
@@ -592,9 +577,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get textHighlightLabel => 'Metin vurgusu';
-
-  @override
-  String get narrowFontLabel => 'Dar yazı tipi';
 
   @override
   String get showLeftHighlightLabel => 'Sol metin vurgusu';
@@ -675,14 +657,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kara listedeki bir uygulama açıldığında odak bildiriminin otomatik genişletilmesi devre dışı kalır';
 
   @override
-  String get presetGamesTitle => 'Popüler Oyunları Tek Dokunuşla Filtrele';
-
-  @override
-  String presetGamesSuccess(int count) {
-    return 'Ön ayardan $count yüklü oyun kara listeye eklendi';
-  }
-
-  @override
   String blacklistedAppsCount(int count) {
     return '$count uygulamanın odak bildirimi engellendi';
   }
@@ -713,176 +687,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu ayar açık olduğunda odak bildirimi sırasında durum çubuğu küçük simgesi görünür kalır.';
 
   @override
-  String get aiConfigSection => 'AI Geliştirmeleri';
-
-  @override
-  String get aiConfigTitle => 'AI Bildirim Özeti';
-
-  @override
-  String get aiConfigSubtitleEnabled =>
-      'Etkin · AI parametrelerini yapılandırmak için dokunun';
-
-  @override
-  String get aiConfigSubtitleDisabled => 'Kapalı · Yapılandırmak için dokunun';
-
-  @override
-  String get aiEnabledTitle => 'AI Özetini Etkinleştir';
-
-  @override
-  String get aiEnabledSubtitle =>
-      'Ada\'nın sol ve sağ metni AI tarafından üretilir; zaman aşımı veya hata durumunda otomatik geri dönüş yapılır';
-
-  @override
-  String get aiApiSection => 'API Parametreleri';
-
-  @override
-  String get aiUrlLabel => 'API Adresi';
-
-  @override
-  String get aiUrlHint => 'https://api.openai.com/v1/chat/completions';
-
-  @override
-  String get aiApiKeyLabel => 'API Anahtarı';
-
-  @override
-  String get aiApiKeyHint => 'sk-...';
-
-  @override
-  String get aiModelLabel => 'Model';
-
-  @override
-  String get aiModelHint => 'gpt-4o-mini';
-
-  @override
-  String get aiPromptLabel => 'Özel Prompt';
-
-  @override
-  String get aiPromptHint =>
-      'Boş bırakırsanız varsayılan prompt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ metin ayrı ayrı en fazla 6 kelime veya 12 karakter olsun';
-
-  @override
-  String get aiPromptInUserTitle => 'Prompt\'u kullanıcı mesajına yerleştir';
-
-  @override
-  String get aiPromptInUserSubtitle =>
-      'Bazı modeller sistem talimatlarını desteklemez; etkinleştirilirse prompt kullanıcı mesajına eklenir';
-
-  @override
-  String get aiTimeoutTitle => 'AI Yanıt Zaman Aşımı';
-
-  @override
-  String aiTimeoutLabel(int seconds) {
-    return 'AI Yanıt Zaman Aşımı';
-  }
-
-  @override
-  String get aiTemperatureTitle => 'Örnekleme Sıcaklığı';
-
-  @override
-  String get aiTemperatureSubtitle =>
-      'Yanıtların rastgeleliğini kontrol eder. 0 daha kesin, 1 daha yaratıcıdır';
-
-  @override
-  String get aiMaxTokensTitle => 'Maksimum Token';
-
-  @override
-  String get aiMaxTokensSubtitle =>
-      'AI tarafından üretilen yanıtların en fazla uzunluğunu sınırlar';
-
-  @override
-  String get aiDefaultPromptFull =>
-      'Boş bırakırsanız varsayılan prompt kullanılır: Bildirimden ana bilgiyi çıkarın; sol ve sağ taraf için en fazla 6 kelime veya 12 karakter';
-
-  @override
-  String get aiTestButton => 'Bağlantıyı Dene';
-
-  @override
-  String get aiTestUrlEmpty => 'Lütfen önce API adresini girin';
-
-  @override
-  String get aiLastLogTitle => 'Son AI İstek Günlüğü';
-
-  @override
-  String get aiLastLogSubtitle =>
-      'Bağlantı testi veya bildirimler tarafından tetiklenen AI istekleri burada gösterilir';
-
-  @override
-  String get aiLastLogEmpty => 'Henüz gösterilecek AI istek günlüğü yok';
-
-  @override
-  String get aiLastLogSourceLabel => 'Kaynak';
-
-  @override
-  String get aiLastLogTimeLabel => 'Zaman';
-
-  @override
-  String get aiLastLogStatusLabel => 'Durum';
-
-  @override
-  String get aiLastLogDurationLabel => 'Süre';
-
-  @override
-  String get aiLastLogSourceNotification => 'Bildirim Tetiklemesi';
-
-  @override
-  String get aiLastLogSourceSettingsTest => 'Ayar Testi';
-
-  @override
-  String get aiLastLogRendered => 'İşlenmiş';
-
-  @override
-  String get aiLastLogRaw => 'Ham';
-
-  @override
-  String get aiLastLogCopy => 'Günlüğü Kopyala';
-
-  @override
-  String get aiLastLogCopied => 'AI istek günlüğü kopyalandı';
-
-  @override
-  String get aiLastLogRequest => 'İstek';
-
-  @override
-  String get aiLastLogResponse => 'Yanıt';
-
-  @override
-  String get aiLastLogUsage => 'Token Kullanımı';
-
-  @override
-  String get aiLastLogMessages => 'Mesajlar';
-
-  @override
-  String get aiLastLogError => 'Hata';
-
-  @override
-  String get aiLastLogHttpCode => 'HTTP Durum Kodu';
-
-  @override
-  String get aiLastLogLeftText => 'Sol Metin';
-
-  @override
-  String get aiLastLogRightText => 'Sağ Metin';
-
-  @override
-  String get aiLastLogAssistantContent => 'Model Yanıt İçeriği';
-
-  @override
-  String get aiConfigSaveButton => 'Kaydet';
-
-  @override
-  String get aiConfigSaved => 'AI yapılandırması kaydedildi';
-
-  @override
-  String get aiConfigTips =>
-      'AI, bildirimdeki uygulama paket adını, başlığı ve metni alır; solda (kaynak) ve sağda (içerik) kısa metin üretir. OpenAI formatı ile uyumlu API\'leri destekler (DeepSeek, Claude vb.). Yanıt gelmezse varsayılan mantığa geri döner.';
-
-  @override
-  String get templateAiNotificationIslandName => 'AI Bildirim Süper Ada';
-
-  @override
   String get hideDesktopIconTitle => 'Ana Ekran Simgesini Gizle';
 
   @override
   String get hideDesktopIconSubtitle =>
       'Uygulama simgesini başlatıcıdan gizler. Gizledikten sonra LSPosed Manager üzerinden açın';
+
+  @override
+  String get restoreLockscreenTitle => 'Kilit Ekranı Bildirimini Geri Yükle';
+
+  @override
+  String get restoreLockscreenSubtitle =>
+      'Kilit ekranında odak bildirimi işlemini atlayın, özgün gizlilik davranışını koruyun';
 }

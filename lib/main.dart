@@ -4,6 +4,7 @@ import 'controllers/settings_controller.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'pages/main_page.dart';
 import 'services/app_cache_service.dart';
+import 'theme/app_theme_builder.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +22,16 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _ctrl = SettingsController.instance;
   late ThemeMode _themeMode;
+  late Color _themeSeedColor;
+  late bool _pureBlackTheme;
   Locale? _locale;
 
   @override
   void initState() {
     super.initState();
     _themeMode = _ctrl.themeMode;
+    _themeSeedColor = _ctrl.themeSeedColor;
+    _pureBlackTheme = _ctrl.pureBlackTheme;
     _locale = _ctrl.locale;
     _ctrl.addListener(_onSettingsChanged);
   }
@@ -39,11 +44,20 @@ class _MyAppState extends State<MyApp> {
 
   void _onSettingsChanged() {
     final nextThemeMode = _ctrl.themeMode;
+    final nextThemeSeedColor = _ctrl.themeSeedColor;
+    final nextPureBlackTheme = _ctrl.pureBlackTheme;
     final nextLocale = _ctrl.locale;
-    if (nextThemeMode == _themeMode && nextLocale == _locale) return;
+    if (nextThemeMode == _themeMode &&
+        nextThemeSeedColor == _themeSeedColor &&
+        nextPureBlackTheme == _pureBlackTheme &&
+        nextLocale == _locale) {
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _themeMode = nextThemeMode;
+      _themeSeedColor = nextThemeSeedColor;
+      _pureBlackTheme = nextPureBlackTheme;
       _locale = nextLocale;
     });
   }
@@ -60,20 +74,8 @@ class _MyAppState extends State<MyApp> {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       locale: _locale,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6750A4),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6750A4),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: buildLightTheme(_themeSeedColor),
+      darkTheme: buildDarkTheme(_themeSeedColor, pureBlack: _pureBlackTheme),
       themeMode: _themeMode,
       home: const MainPage(),
     );
