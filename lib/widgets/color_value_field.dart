@@ -74,38 +74,15 @@ class ColorValueField extends StatelessWidget {
         SizedBox(
           width: 48,
           height: 48,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: canEdit ? onPickColor : null,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: previewColor ?? previewFallbackColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: cs.outline),
-                    ),
-                  ),
-                ),
+          child: GestureDetector(
+            onTap: canEdit ? onPickColor : null,
+            child: Container(
+              decoration: BoxDecoration(
+                color: previewColor ?? previewFallbackColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.outline),
               ),
-              if (canEdit && controller.text.isNotEmpty && onClear != null)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: Material(
-                    color: Colors.black54,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onClear,
-                      child: const Padding(
-                        padding: EdgeInsets.all(2),
-                        child: Icon(Icons.close, size: 12, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ],
