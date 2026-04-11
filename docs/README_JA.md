@@ -7,13 +7,13 @@
 **LSPosed と HyperOS 3 の環境で Dynamic Island スタイルの進捗通知を表示します**
 
 [![GitHub Release](https://img.shields.io/github/v/release/yusufyorunc/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/yusufyorunc/HyperIsland/releases)
-[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](LICENSE)
+[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](../LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=flat-square&logo=android)](https://android.com)
 [![LSPosed](https://img.shields.io/badge/Framework-LSPosed-blueviolet?style=flat-square)](https://github.com/LSPosed/LSPosed)
 [![HyperOS](https://img.shields.io/badge/ROM-HyperOS3-orange?style=flat-square)](https://hyperos.mi.com)
 [![Build](https://img.shields.io/badge/Build-Flutter-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 
-**[English](README_EN.md)** | **[简体中文](README.md)** | **日本語** | **[Türkçe](README_TR.md)**
+**[English](../README.md)** | **[简体中文](README_ZH.md)** | **日本語** | **[Türkçe](README_TR.md)**
 
 Forked from [`1812z/HyperIsland`](https://github.com/1812z/HyperIsland), and added some interesting changes.
 
@@ -121,7 +121,7 @@ flutter build apk --target-platform=android-arm64
 
 ## 📄 ライセンス
 
-このプロジェクトは [MIT License](LICENSE) に基づき、オープンソースとして公開しています。Issue や Pull Request を歓迎します。
+このプロジェクトは [MIT License](../LICENSE) に基づき、オープンソースとして公開しています。Issue や Pull Request を歓迎します。
 
 <div align="center">
 

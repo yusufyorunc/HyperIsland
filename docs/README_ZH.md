@@ -8,13 +8,13 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/yusufyorunc/HyperIsland?style=flat-square&logo=github&color=black)](https://github.com/yusufyorunc/HyperIsland/releases)
 ![Downloads](https://img.shields.io/github/downloads/yusufyorunc/HyperIsland/total?style=flat-square)
-[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](LICENSE)
+[![License](https://img.shields.io/github/license/yusufyorunc/HyperIsland?style=flat-square&color=orange)](../LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=flat-square&logo=android)](https://android.com)
 [![LSPosed](https://img.shields.io/badge/Framework-LSPosed-blueviolet?style=flat-square)](https://github.com/LSPosed/LSPosed)
 [![HyperOS](https://img.shields.io/badge/ROM-澎湃OS3-orange?style=flat-square)](https://hyperos.mi.com)
 [![Build](https://img.shields.io/badge/Build-Flutter-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 
-**[English](README_EN.md)** | **简体中文** | **[日本語](README_JA.md)** | **[Türkçe](README_TR.md)**
+**[English](../README.md)** | **简体中文** | **[日本語](README_JA.md)** | **[Türkçe](README_TR.md)**
 
 基于 [`1812z/HyperIsland`](https://github.com/1812z/HyperIsland)，并添加了一些有趣的改动。
 
@@ -134,7 +134,7 @@ flutter build apk --target-platform=android-arm64
 
 ## 📄 许可证
 
-本项目基于 [MIT License](LICENSE) 开源，欢迎 Issue 与 PR。
+本项目基于 [MIT License](../LICENSE) 开源，欢迎 Issue 与 PR。
 
 <div align="center">
 
