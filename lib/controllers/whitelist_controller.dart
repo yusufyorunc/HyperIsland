@@ -48,7 +48,7 @@ class ChannelInfo {
 class WhitelistController extends ChangeNotifier {
   static String _normalizeTemplateId(String template) {
     switch (template) {
-      case 'notification_island_lite':
+      case 'notification_island':
         return kTemplateNotificationIsland;
       case 'download_lite':
         return kTemplateGenericProgress;
