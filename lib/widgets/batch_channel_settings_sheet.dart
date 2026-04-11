@@ -1457,42 +1457,6 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                     ],
                     onChanged: (v) => setState(() => _outerGlow = v),
                   ),
-                  SizedBox(height: rowGap),
-                  _SettingField(
-                    label: l10n.outEffectColorLabel,
-                    child: ColorValueField(
-                      controller: _outEffectColorController,
-                      decoration: _fieldDecoration(
-                        context,
-                        hintText: _isSingle
-                            ? l10n.highlightColorHint
-                            : l10n.noChange,
-                      ),
-                      previewColor: _parseColor(_outEffectColor),
-                      previewFallbackColor: cs.primary,
-                      onChanged: (v) {
-                        final trimmed = v.trim();
-                        setState(() {
-                          _outEffectColor = trimmed.isNotEmpty ? trimmed : null;
-                        });
-                      },
-                      onClear: () {
-                        _outEffectColorController.clear();
-                        setState(() => _outEffectColor = null);
-                      },
-                      onPickColor: () async {
-                        final color = await _showColorPicker(
-                          context,
-                          initialHex: _outEffectColor,
-                        );
-                        if (color != null) {
-                          final hex = _toHexColor(color);
-                          _outEffectColorController.text = hex;
-                          setState(() => _outEffectColor = hex);
-                        }
-                      },
-                    ),
-                  ),
                   if (_isSingle) ...[
                     SizedBox(height: rowGap),
                     _SectionLabel(l10n.focusExpressionCustomizationSection),
