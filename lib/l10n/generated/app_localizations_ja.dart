@@ -1254,4 +1254,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get islandBgDefault => 'デフォルト';
+
+  @override
+  String get keepIslandTitle => '常時ダイナミックアイランド';
+
+  @override
+  String get keepIslandSubtitle => '空白通知を投稿してアイランドを常に表示、システムUIの再起動が必要';
 }

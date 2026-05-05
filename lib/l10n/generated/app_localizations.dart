@@ -2423,6 +2423,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'默认'**
   String get islandBgDefault;
+
+  /// No description provided for @keepIslandTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'常驻灵动岛'**
+  String get keepIslandTitle;
+
+  /// No description provided for @keepIslandSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示一条空白通知使岛始终可见，重启系统界面生效'**
+  String get keepIslandSubtitle;
 }
 
 class _AppLocalizationsDelegate

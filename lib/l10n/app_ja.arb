@@ -383,5 +383,7 @@
 "islandBgBrightnessLabel": "明るさ",
 "islandBgOpacityLabel": "不透明度",
 "islandBgOff": "オフ",
-"islandBgDefault": "デフォルト"
+"islandBgDefault": "デフォルト",
+"keepIslandTitle": "常時ダイナミックアイランド",
+"keepIslandSubtitle": "空白通知を投稿してアイランドを常に表示、システムUIの再起動が必要"
 }

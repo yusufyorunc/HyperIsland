@@ -491,5 +491,7 @@
 "islandBgBrightnessLabel": "Parlaklık",
 "islandBgOpacityLabel": "Opaklık",
 "islandBgOff": "Kapalı",
-"islandBgDefault": "Varsayılan"
+"islandBgDefault": "Varsayılan",
+"keepIslandTitle": "Adayı Sürekli Göster",
+"keepIslandSubtitle": "Adayı sürekli görünür tutmak için boş bir bildirim gönder, SystemUI'yi yeniden başlat"
 }

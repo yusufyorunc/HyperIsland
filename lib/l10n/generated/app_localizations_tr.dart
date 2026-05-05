@@ -1295,4 +1295,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get islandBgDefault => 'Varsayılan';
+
+  @override
+  String get keepIslandTitle => 'Adayı Sürekli Göster';
+
+  @override
+  String get keepIslandSubtitle =>
+      'Adayı sürekli görünür tutmak için boş bir bildirim gönder, SystemUI\'yi yeniden başlat';
 }

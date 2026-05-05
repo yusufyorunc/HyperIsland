@@ -1296,4 +1296,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get islandBgDefault => 'Default';
+
+  @override
+  String get keepIslandTitle => 'Keep Island Visible';
+
+  @override
+  String get keepIslandSubtitle =>
+      'Post a blank notification to keep the island always visible, restart SystemUI to apply';
 }

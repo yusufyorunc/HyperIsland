@@ -641,5 +641,7 @@
   "islandBgBrightnessLabel": "亮度",
   "islandBgOpacityLabel": "不透明度",
   "islandBgOff": "关",
-  "islandBgDefault": "默认"
+  "islandBgDefault": "默认",
+  "keepIslandTitle": "常驻灵动岛",
+  "keepIslandSubtitle": "显示一条空白通知使岛始终可见，重启系统界面生效"
 }

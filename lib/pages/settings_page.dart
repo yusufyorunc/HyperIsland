@@ -72,6 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _ctrl.islandBgBigPath,
     _ctrl.islandBgExpandPath,
     _ctrl.islandHeight,
+    _ctrl.keepIsland,
   ]);
 
   void _onChanged() {
@@ -790,6 +791,22 @@ class _SettingsPageState extends State<SettingsPage> {
                             value: _ctrl.resumeNotification,
                             onChanged: InteractionHaptics.interceptToggle(
                               _onResumeNotificationChanged,
+                            ),
+                          ),
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                          SwitchListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            title: Text(
+                              l10n.keepIslandTitle,
+                              style: titleStyle,
+                            ),
+                            subtitle: Text(l10n.keepIslandSubtitle),
+                            value: _ctrl.keepIsland,
+                            onChanged: InteractionHaptics.interceptToggle(
+                              (value) => _ctrl.setKeepIsland(value),
                             ),
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
