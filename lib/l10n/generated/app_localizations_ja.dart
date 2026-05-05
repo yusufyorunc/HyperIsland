@@ -1259,5 +1259,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get keepIslandTitle => '常時ダイナミックアイランド';
 
   @override
-  String get keepIslandSubtitle => '空白通知を投稿してアイランドを常に表示、システムUIの再起動が必要';
+  String get keepIslandSubtitle => '空白通知を投稿してアイランドを常に表示';
 }

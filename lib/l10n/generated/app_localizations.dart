@@ -2427,13 +2427,13 @@ abstract class AppLocalizations {
   /// No description provided for @keepIslandTitle.
   ///
   /// In zh, this message translates to:
-  /// **'常驻灵动岛'**
+  /// **'常驻超级岛'**
   String get keepIslandTitle;
 
   /// No description provided for @keepIslandSubtitle.
   ///
   /// In zh, this message translates to:
-  /// **'显示一条空白通知使岛始终可见，重启系统界面生效'**
+  /// **'显示一条空白通知使岛始终可见'**
   String get keepIslandSubtitle;
 }
 

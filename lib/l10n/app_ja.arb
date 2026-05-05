@@ -385,5 +385,5 @@
 "islandBgOff": "オフ",
 "islandBgDefault": "デフォルト",
 "keepIslandTitle": "常時ダイナミックアイランド",
-"keepIslandSubtitle": "空白通知を投稿してアイランドを常に表示、システムUIの再起動が必要"
+"keepIslandSubtitle": "空白通知を投稿してアイランドを常に表示"
 }

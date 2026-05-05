@@ -1242,8 +1242,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get islandBgDefault => '默认';
 
   @override
-  String get keepIslandTitle => '常驻灵动岛';
+  String get keepIslandTitle => '常驻超级岛';
 
   @override
-  String get keepIslandSubtitle => '显示一条空白通知使岛始终可见，重启系统界面生效';
+  String get keepIslandSubtitle => '显示一条空白通知使岛始终可见';
 }

@@ -1301,5 +1301,5 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get keepIslandSubtitle =>
-      'Adayı sürekli görünür tutmak için boş bir bildirim gönder, SystemUI\'yi yeniden başlat';
+      'Adayı sürekli görünür tutmak için boş bir bildirim gönder';
 }

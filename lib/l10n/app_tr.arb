@@ -493,5 +493,5 @@
 "islandBgOff": "Kapalı",
 "islandBgDefault": "Varsayılan",
 "keepIslandTitle": "Adayı Sürekli Göster",
-"keepIslandSubtitle": "Adayı sürekli görünür tutmak için boş bir bildirim gönder, SystemUI'yi yeniden başlat"
+"keepIslandSubtitle": "Adayı sürekli görünür tutmak için boş bir bildirim gönder"
 }
