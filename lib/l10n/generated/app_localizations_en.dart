@@ -1237,7 +1237,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandDimenHeight => 'Island Height';
 
   @override
-  String get islandDimenHeightHint => '0=follow system';
+  String get followSystem => 'Follow system';
 
   @override
   String get islandDimenMiniY => 'Vertical Position';
@@ -1335,4 +1335,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hookScopeXMSF => 'Xiaomi Service Framework (XMSF)';
+
+  @override
+  String get downloadManagerSection => 'Download Manager';
 }

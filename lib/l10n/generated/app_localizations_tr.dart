@@ -1237,7 +1237,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get islandDimenHeight => 'Ada Yüksekliği';
 
   @override
-  String get islandDimenHeightHint => '0=sistem varsayılanı';
+  String get followSystem => 'Sistem varsayılanı';
 
   @override
   String get islandDimenMiniY => 'Dikey Konum';
@@ -1335,4 +1335,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hookScopeXMSF => 'Xiaomi Servis Çerçevesi (XMSF)';
+
+  @override
+  String get downloadManagerSection => 'İndirme Yöneticisi';
 }

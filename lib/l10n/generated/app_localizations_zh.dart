@@ -1181,7 +1181,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get islandDimenHeight => '岛高度';
 
   @override
-  String get islandDimenHeightHint => '0=跟随系统';
+  String get followSystem => '跟随系统';
 
   @override
   String get islandDimenMiniY => '垂直位置';
@@ -1277,4 +1277,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hookScopeXMSF => '小米服务框架';
+
+  @override
+  String get downloadManagerSection => '下载管理程序';
 }

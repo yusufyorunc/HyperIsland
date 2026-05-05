@@ -462,7 +462,7 @@
 
 "islandDimenSection": "Ada Boyutları",
 "islandDimenHeight": "Ada Yüksekliği",
-"islandDimenHeightHint": "0=sistem varsayılanı",
+  "followSystem": "Sistem varsayılanı",
 "islandDimenMiniY": "Dikey Konum",
 "islandDimenMiniYHint": "0=sistem varsayılanı",
 
@@ -503,5 +503,6 @@
 "backupRestoreSection": "Yedekleme ve Geri Yükleme",
 "hookExtensionSection": "Hook Uzantısı",
   "hookScopeSystemUI": "Sistem UI",
-  "hookScopeXMSF": "Xiaomi Servis Çerçevesi (XMSF)"
+  "hookScopeXMSF": "Xiaomi Servis Çerçevesi (XMSF)",
+  "downloadManagerSection": "İndirme Yöneticisi"
 }

@@ -353,8 +353,8 @@
 "restoreLockscreenSubtitle": "ロック画面でのフォーカス通知処理をスキップし、元のプライバシーに適切な動作を保持します",
 
 "islandDimenSection": "アイランドサイズ設定",
-"islandDimenHeight": "アイランド高さ",
-"islandDimenHeightHint": "0=システムに従う",
+"islandDimenHeight": "島の高さ",
+  "followSystem": "システムに従う",
 "islandDimenMiniY": "垂直位置",
 "islandDimenMiniYHint": "0=システムに従う",
 
@@ -395,5 +395,6 @@
 "backupRestoreSection": "バックアップと復元",
 "hookExtensionSection": "Hook拡張",
   "hookScopeSystemUI": "システムUI",
-  "hookScopeXMSF": "Xiaomiサービスフレームワーク (XMSF)"
+  "hookScopeXMSF": "Xiaomiサービスフレームワーク (XMSF)",
+  "downloadManagerSection": "ダウンロードマネージャー"
 }

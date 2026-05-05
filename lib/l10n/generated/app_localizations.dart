@@ -2304,11 +2304,11 @@ abstract class AppLocalizations {
   /// **'岛高度'**
   String get islandDimenHeight;
 
-  /// No description provided for @islandDimenHeightHint.
+  /// No description provided for @followSystem.
   ///
   /// In zh, this message translates to:
-  /// **'0=跟随系统'**
-  String get islandDimenHeightHint;
+  /// **'跟随系统'**
+  String get followSystem;
 
   /// No description provided for @islandDimenMiniY.
   ///
@@ -2495,6 +2495,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'小米服务框架'**
   String get hookScopeXMSF;
+
+  /// No description provided for @downloadManagerSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载管理程序'**
+  String get downloadManagerSection;
 }
 
 class _AppLocalizationsDelegate

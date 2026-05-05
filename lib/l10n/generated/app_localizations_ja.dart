@@ -1192,10 +1192,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get islandDimenSection => 'アイランドサイズ設定';
 
   @override
-  String get islandDimenHeight => 'アイランド高さ';
+  String get islandDimenHeight => '島の高さ';
 
   @override
-  String get islandDimenHeightHint => '0=システムに従う';
+  String get followSystem => 'システムに従う';
 
   @override
   String get islandDimenMiniY => '垂直位置';
@@ -1292,4 +1292,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get hookScopeXMSF => 'Xiaomiサービスフレームワーク (XMSF)';
+
+  @override
+  String get downloadManagerSection => 'ダウンロードマネージャー';
 }

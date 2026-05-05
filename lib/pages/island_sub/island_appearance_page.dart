@@ -169,12 +169,12 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
                       children: [
                         _DimenTile(
                           title: l10n.islandDimenHeight,
-                          hint: l10n.islandDimenHeightHint,
                           value: _islandHeightDraft,
                           min: 0,
                           max: 200,
                           unit: 'dp',
                           defaultVal: 0,
+                          followSystemLabel: l10n.followSystem,
                           onChanged: (v) {
                             if (_islandHeightDraft == v) return;
                             setState(() => _islandHeightDraft = v);
@@ -202,7 +202,7 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
                               Text(
                                 _bigIslandMaxWidthDraft > 0
                                     ? l10n.bigIslandMaxWidthLabel(_bigIslandMaxWidthDraft)
-                                    : '-',
+                                    : l10n.followSystem,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(color: cs.onSurfaceVariant),
                               ),
@@ -265,7 +265,7 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
                               Text(
                                 _bigIslandMinWidthDraft > 0
                                     ? l10n.bigIslandMinWidthLabel(_bigIslandMinWidthDraft)
-                                    : '-',
+                                    : l10n.followSystem,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(color: cs.onSurfaceVariant),
                               ),
@@ -426,12 +426,12 @@ class _SectionLabel extends StatelessWidget {
 class _DimenTile extends StatelessWidget {
   const _DimenTile({
     required this.title,
-    required this.hint,
     required this.value,
     required this.min,
     required this.max,
     required this.unit,
     required this.defaultVal,
+    required this.followSystemLabel,
     required this.onChanged,
     required this.onPersist,
     this.isFirst = false,
@@ -439,12 +439,12 @@ class _DimenTile extends StatelessWidget {
   });
 
   final String title;
-  final String hint;
   final double value;
   final double min;
   final double max;
   final String unit;
   final double defaultVal;
+  final String followSystemLabel;
   final ValueChanged<double> onChanged;
   final ValueChanged<double> onPersist;
   final bool isFirst;
@@ -472,7 +472,7 @@ class _DimenTile extends StatelessWidget {
         children: [
           Expanded(child: Text(title, style: titleStyle)),
           Text(
-            value > 0 ? '${value.toStringAsFixed(1)} $unit' : '-',
+            value > 0 ? '${value.toStringAsFixed(1)} $unit' : followSystemLabel,
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -492,28 +492,17 @@ class _DimenTile extends StatelessWidget {
             ),
         ],
       ),
-      subtitle: Row(
-        children: [
-          Text(
-            hint,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          Expanded(
-            child: SliderTheme(
-              data: ModernSliderTheme.theme(context),
-              child: Slider(
-                value: value.clamp(min, max),
-                min: min,
-                max: max,
-                divisions: divisions > 100 ? 100 : divisions,
-                onChanged: InteractionHaptics.interceptSlider(onChanged),
-                onChangeEnd: onPersist,
-              ),
+      subtitle: SliderTheme(
+            data: ModernSliderTheme.theme(context),
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: divisions > 100 ? 100 : divisions,
+              onChanged: InteractionHaptics.interceptSlider(onChanged),
+              onChangeEnd: onPersist,
             ),
           ),
-        ],
-      ),
     );
   }
 }

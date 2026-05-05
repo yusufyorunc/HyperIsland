@@ -621,7 +621,7 @@
 
   "islandDimenSection": "岛尺寸设置",
   "islandDimenHeight": "岛高度",
-  "islandDimenHeightHint": "0=跟随系统",
+  "followSystem": "跟随系统",
   "islandDimenMiniY": "垂直位置",
   "islandDimenMiniYHint": "0=跟随系统",
 
@@ -662,5 +662,6 @@
   "backupRestoreSection": "备份与恢复",
   "hookExtensionSection": "Hook拓展",
   "hookScopeSystemUI": "系统界面",
-  "hookScopeXMSF": "小米服务框架"
+  "hookScopeXMSF": "小米服务框架",
+  "downloadManagerSection": "下载管理程序"
 }

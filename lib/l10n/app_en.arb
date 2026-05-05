@@ -454,7 +454,7 @@
 
   "islandDimenSection": "Island Dimensions",
   "islandDimenHeight": "Island Height",
-  "islandDimenHeightHint": "0=follow system",
+  "followSystem": "Follow system",
   "islandDimenMiniY": "Vertical Position",
   "islandDimenMiniYHint": "0=follow system",
 
@@ -495,5 +495,6 @@
   "backupRestoreSection": "Backup & Restore",
   "hookExtensionSection": "Hook Extension",
   "hookScopeSystemUI": "System UI",
-  "hookScopeXMSF": "Xiaomi Service Framework (XMSF)"
+  "hookScopeXMSF": "Xiaomi Service Framework (XMSF)",
+  "downloadManagerSection": "Download Manager"
 }
