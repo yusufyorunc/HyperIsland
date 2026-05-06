@@ -237,6 +237,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatically check for new versions when the app starts';
 
   @override
+  String get debugLogTitle => 'Show Debug Logs';
+
+  @override
+  String get debugLogSubtitle =>
+      'When enabled, Hook debug logs are output; when disabled, only warning and error logs are kept';
+
+  @override
   String get showWelcomeTitle => 'Show welcome message on launch';
 
   @override

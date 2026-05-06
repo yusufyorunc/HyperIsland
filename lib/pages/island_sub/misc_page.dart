@@ -20,6 +20,7 @@ class _MiscPageState extends State<MiscPage> {
         _ctrl.showWelcome,
         _ctrl.hideDesktopIcon,
         _ctrl.checkUpdateOnLaunch,
+        _ctrl.debugLog,
       ]);
 
   void _onChanged() {
@@ -128,6 +129,19 @@ class _MiscPageState extends State<MiscPage> {
                           value: _ctrl.checkUpdateOnLaunch,
                           onChanged: InteractionHaptics.interceptToggle(
                             (value) => _ctrl.setCheckUpdateOnLaunch(value),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          title: Text(l10n.debugLogTitle, style: titleStyle),
+                          subtitle: Text(l10n.debugLogSubtitle),
+                          value: _ctrl.debugLog,
+                          onChanged: InteractionHaptics.interceptToggle(
+                            (value) => _ctrl.setDebugLog(value),
                           ),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.vertical(

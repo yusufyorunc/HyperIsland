@@ -96,6 +96,8 @@
   "unlockFocusAuthSubtitle": "Allow all apps to send focus notifications to watch/bracelet, bypassing signature check (requires hooking XMSF)",
   "checkUpdateOnLaunchTitle": "Check for updates on launch",
   "checkUpdateOnLaunchSubtitle": "Automatically check for new versions when the app starts",
+  "debugLogTitle": "Show Debug Logs",
+  "debugLogSubtitle": "When enabled, Hook debug logs are output; when disabled, only warning and error logs are kept",
   "showWelcomeTitle": "Show welcome message on launch",
   "showWelcomeSubtitle": "Display welcome information on Island when the app starts",
   "interactionHapticsTitle": "Interaction Haptics",

@@ -94,6 +94,8 @@
   "unlockFocusAuthSubtitle": "署名検証のバイパスとすべてのアプリでフォーカス通知を時計/ブレスレットに送信可能な状態にします (XMSF のフックが必要です)",
   "checkUpdateOnLaunchTitle": "起動時に更新を確認する",
   "checkUpdateOnLaunchSubtitle": "アプリの起動時に最新のバージョンを自動で確認します",
+  "debugLogTitle": "デバッグログを表示",
+  "debugLogSubtitle": "有効にすると Hook デバッグログを出力し、無効にすると警告とエラーログのみ保持します",
   "showWelcomeTitle": "起動時のウェルカムメッセージを表示",
   "showWelcomeSubtitle": "アプリ起動時に Island にウェルカム情報を表示します",
   "interactionHapticsTitle": "インタラクションの触覚フィードバック",

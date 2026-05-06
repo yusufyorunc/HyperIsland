@@ -504,6 +504,18 @@ abstract class AppLocalizations {
   /// **'启动应用时自动检查是否有新版本'**
   String get checkUpdateOnLaunchSubtitle;
 
+  /// No description provided for @debugLogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示调试日志'**
+  String get debugLogTitle;
+
+  /// No description provided for @debugLogSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后输出 Hook 调试日志，关闭时仅保留警告和错误日志'**
+  String get debugLogSubtitle;
+
   /// No description provided for @showWelcomeTitle.
   ///
   /// In zh, this message translates to:

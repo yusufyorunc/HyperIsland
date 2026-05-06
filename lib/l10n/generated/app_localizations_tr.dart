@@ -238,6 +238,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulama açılırken yeni sürümleri otomatik denetler.';
 
   @override
+  String get debugLogTitle => 'Debug Loglarını Göster';
+
+  @override
+  String get debugLogSubtitle =>
+      'Etkinleştirildiğinde Hook debug logları çıktı olarak verilir; devre dışı bırakıldığında sadece uyarı ve hata logları tutulur';
+
+  @override
   String get showWelcomeTitle => 'Açılışta karşılama mesajını göster';
 
   @override

@@ -117,6 +117,8 @@ object ConfigManager {
     fun contains(key: String): Boolean =
         prefs?.contains(fk(key)) ?: false
 
+    fun isDebugLogEnabled(): Boolean = getBoolean("pref_debug_log", false)
+
     /** 供同进程内其他组件（如 template）获取 module 引用以写日志。 */
     fun module(): XposedModule? = module
 

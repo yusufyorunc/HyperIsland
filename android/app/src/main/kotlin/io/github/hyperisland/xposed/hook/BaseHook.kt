@@ -46,7 +46,8 @@ abstract class BaseHook {
      * 获取日志实例
      */
     protected fun log(module: XposedModule, message: String) {
-        module.log(Log.DEBUG, getTag(), message)
+        if (ConfigManager.isDebugLogEnabled())
+            module.log(Log.DEBUG, getTag(), message)
     }
 
     /**

@@ -101,6 +101,8 @@
   "unlockFocusAuthSubtitle": "İmza doğrulamasını atlayarak tüm uygulamaların saat/bilekliğe odak bildirimi göndermesine izin verir (XMSF hook gerekir).",
   "checkUpdateOnLaunchTitle": "Açılışta Güncellemeleri Denetle",
   "checkUpdateOnLaunchSubtitle": "Uygulama açılırken yeni sürümleri otomatik denetler.",
+  "debugLogTitle": "Debug Loglarını Göster",
+  "debugLogSubtitle": "Etkinleştirildiğinde Hook debug logları çıktı olarak verilir; devre dışı bırakıldığında sadece uyarı ve hata logları tutulur",
   "showWelcomeTitle": "Açılışta karşılama mesajını göster",
   "showWelcomeSubtitle": "Uygulama başladığında Ada üzerinde karşılama bilgisini göster",
   "interactionHapticsTitle": "Etkileşim haptikleri",

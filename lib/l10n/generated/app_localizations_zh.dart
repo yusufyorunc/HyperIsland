@@ -222,6 +222,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get checkUpdateOnLaunchSubtitle => '启动应用时自动检查是否有新版本';
 
   @override
+  String get debugLogTitle => '显示调试日志';
+
+  @override
+  String get debugLogSubtitle => '开启后输出 Hook 调试日志，关闭时仅保留警告和错误日志';
+
+  @override
   String get showWelcomeTitle => '显示启动欢迎语';
 
   @override

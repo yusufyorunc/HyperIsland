@@ -113,6 +113,8 @@
   "unlockFocusAuthSubtitle": "XMSF（小米服务框架）去除校验",
   "checkUpdateOnLaunchTitle": "启动时检查更新",
   "checkUpdateOnLaunchSubtitle": "启动应用时自动检查是否有新版本",
+  "debugLogTitle": "显示调试日志",
+  "debugLogSubtitle": "开启后输出 Hook 调试日志，关闭时仅保留警告和错误日志",
   "showWelcomeTitle": "显示启动欢迎语",
   "showWelcomeSubtitle": "应用启动时在超级岛显示欢迎信息",
   "interactionHapticsTitle": "交互触感",

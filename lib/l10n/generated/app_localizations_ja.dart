@@ -225,6 +225,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get checkUpdateOnLaunchSubtitle => 'アプリの起動時に最新のバージョンを自動で確認します';
 
   @override
+  String get debugLogTitle => 'デバッグログを表示';
+
+  @override
+  String get debugLogSubtitle => '有効にすると Hook デバッグログを出力し、無効にすると警告とエラーログのみ保持します';
+
+  @override
   String get showWelcomeTitle => '起動時のウェルカムメッセージを表示';
 
   @override

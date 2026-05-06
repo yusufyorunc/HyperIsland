@@ -55,6 +55,7 @@ const kPrefKeepIslandAutoHide = 'pref_keep_island_auto_hide';
 const kPrefKeepIslandHighlightColor = 'pref_keep_island_highlight_color';
 const kPrefThemeSeedColor = 'pref_theme_seed_color';
 const kPrefBlurBars = 'pref_blur_bars';
+const kPrefDebugLog = 'pref_debug_log';
 
 
 
@@ -167,6 +168,7 @@ class SettingsController extends ChangeNotifier {
   String keepIslandHighlightColor = '';
   int themeSeedColor = 0xFF6750A4;
   bool blurBars = true;
+  bool debugLog = false;
   Locale? locale;
   bool loading = true;
 
@@ -245,6 +247,7 @@ class SettingsController extends ChangeNotifier {
     keepIslandHighlightColor = prefs.getString(kPrefKeepIslandHighlightColor) ?? '';
     themeSeedColor = prefs.getInt(kPrefThemeSeedColor) ?? 0xFF6750A4;
     blurBars = prefs.getBool(kPrefBlurBars) ?? true;
+    debugLog = prefs.getBool(kPrefDebugLog) ?? false;
     loading = false;
     notifyListeners();
   }
@@ -719,6 +722,14 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefBlurBars, value);
     blurBars = value;
+    notifyListeners();
+  }
+
+  Future<void> setDebugLog(bool value) async {
+    if (debugLog == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefDebugLog, value);
+    debugLog = value;
     notifyListeners();
   }
 
