@@ -936,7 +936,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullscreenBehaviorSubtitle => '检测到横屏/全屏时的通知处理策略';
 
   @override
-  String get fullscreenBehaviorOff => '关闭';
+  String get fullscreenBehaviorOff => '默认';
 
   @override
   String get fullscreenBehaviorFallback => '回退普通通知';

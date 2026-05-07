@@ -979,7 +979,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notification strategy when landscape/fullscreen is detected';
 
   @override
-  String get fullscreenBehaviorOff => 'Off';
+  String get fullscreenBehaviorOff => 'Default';
 
   @override
   String get fullscreenBehaviorFallback => 'Fallback to normal notification';

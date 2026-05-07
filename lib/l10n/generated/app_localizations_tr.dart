@@ -985,7 +985,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yatay/tam ekran algılandığında bildirim stratejisi';
 
   @override
-  String get fullscreenBehaviorOff => 'Kapalı';
+  String get fullscreenBehaviorOff => 'Varsayılan';
 
   @override
   String get fullscreenBehaviorFallback => 'Normal bildirime dön';

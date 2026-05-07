@@ -288,7 +288,7 @@
   "focusNotificationLabelSubtitle": "通知をフォーカス通知に置き換えます (無効で元の通知が表示されます)",
   "fullscreenBehaviorTitle": "全画面時の動作",
   "fullscreenBehaviorSubtitle": "横画面/全画面を検出したときの通知処理方式",
-  "fullscreenBehaviorOff": "オフ",
+  "fullscreenBehaviorOff": "デフォルト",
   "fullscreenBehaviorFallback": "通常通知へフォールバック",
   "fullscreenBehaviorExpand": "通知を自動展開",
   "aiConfigSection": "AI エンハンスメント",

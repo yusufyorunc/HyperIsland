@@ -515,7 +515,7 @@
   "preserveStatusBarSmallIconLabelSubtitle": "焦点通知打开时，是否强制保留状态栏小图标",
   "fullscreenBehaviorTitle": "全屏时行为",
   "fullscreenBehaviorSubtitle": "检测到横屏/全屏时的通知处理策略",
-  "fullscreenBehaviorOff": "关闭",
+  "fullscreenBehaviorOff": "默认",
   "fullscreenBehaviorFallback": "回退普通通知",
   "fullscreenBehaviorExpand": "自动展开通知",
 

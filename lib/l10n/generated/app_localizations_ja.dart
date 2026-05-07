@@ -946,7 +946,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fullscreenBehaviorSubtitle => '横画面/全画面を検出したときの通知処理方式';
 
   @override
-  String get fullscreenBehaviorOff => 'オフ';
+  String get fullscreenBehaviorOff => 'デフォルト';
 
   @override
   String get fullscreenBehaviorFallback => '通常通知へフォールバック';

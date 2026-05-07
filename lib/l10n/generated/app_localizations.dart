@@ -1833,7 +1833,7 @@ abstract class AppLocalizations {
   /// No description provided for @fullscreenBehaviorOff.
   ///
   /// In zh, this message translates to:
-  /// **'关闭'**
+  /// **'默认'**
   String get fullscreenBehaviorOff;
 
   /// No description provided for @fullscreenBehaviorFallback.

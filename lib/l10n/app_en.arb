@@ -346,7 +346,7 @@
   "preserveStatusBarSmallIconLabelSubtitle": "Whether to force keep status bar icon when focus notification is displayed",
   "fullscreenBehaviorTitle": "Fullscreen behavior",
   "fullscreenBehaviorSubtitle": "Notification strategy when landscape/fullscreen is detected",
-  "fullscreenBehaviorOff": "Off",
+  "fullscreenBehaviorOff": "Default",
   "fullscreenBehaviorFallback": "Fallback to normal notification",
   "fullscreenBehaviorExpand": "Auto expand notification",
 
