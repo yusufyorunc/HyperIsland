@@ -1,9 +1,14 @@
 package io.github.hyperisland.xposed.hook
 
 import android.app.Application
+import android.app.ActivityManager
+import android.content.Context
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.service.notification.StatusBarNotification
+import android.view.View
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
 import io.github.hyperisland.xposed.islanddispatch.definition.IslandRequest
@@ -25,6 +30,8 @@ object KeepIslandHook : BaseHook() {
 
     private const val ANIMATION_CONTROLLER_CLASS =
         "miui.systemui.dynamicisland.anim.DynamicIslandAnimationController"
+    private const val CONTENT_VIEW_CONTROLLER_CLASS =
+        "miui.systemui.dynamicisland.window.content.DynamicIslandContentViewController"
 
     private const val KEEP_ISLAND_CHANNEL = "keep_island"
 
@@ -42,6 +49,9 @@ object KeepIslandHook : BaseHook() {
     private var restoreRunnable: Runnable? = null
 
     private val hookedAnimationClassLoaders = ConcurrentHashMap.newKeySet<Int>()
+    private val hookedContentControllerClassLoaders = ConcurrentHashMap.newKeySet<Int>()
+    @Volatile
+    private var contentControllerHooked = false
 
     override fun getTag() = TAG
 
@@ -61,6 +71,7 @@ object KeepIslandHook : BaseHook() {
         log(module, "onInit pkg=${param.packageName}")
         hookApplicationOnCreate(module, param)
         hookAnimationController(module, param.defaultClassLoader)
+        hookContentViewController(module, param.defaultClassLoader)
         hookDynamicClassLoaders(module)
     }
 
@@ -87,6 +98,35 @@ object KeepIslandHook : BaseHook() {
     private fun hookDynamicClassLoaders(module: XposedModule) {
         HookUtils.hookDynamicClassLoaders(module, ClassLoader.getSystemClassLoader()) { cl ->
             hookAnimationController(module, cl)
+            hookContentViewController(module, cl)
+        }
+    }
+
+    private fun hookContentViewController(module: XposedModule, classLoader: ClassLoader) {
+        val clId = System.identityHashCode(classLoader)
+        if (!hookedContentControllerClassLoaders.add(clId)) return
+        try {
+            val clazz = try {
+                classLoader.loadClass(CONTENT_VIEW_CONTROLLER_CLASS)
+            } catch (_: ClassNotFoundException) {
+                hookedContentControllerClassLoaders.remove(clId)
+                return
+            }
+            val methods = clazz.declaredMethods.filter {
+                it.name == "onPreDraw" && it.parameterCount == 0
+            }
+            methods.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    handleContentPreDraw(chain.thisObject)
+                    result
+                }
+            }
+            if (methods.isNotEmpty()) contentControllerHooked = true
+            log(module, "hooked content onPreDraw (cl=$clId, methods=${methods.size})")
+        } catch (e: Throwable) {
+            hookedContentControllerClassLoaders.remove(clId)
+            logError(module, "content onPreDraw hook failed cl=$clId: ${e.message}")
         }
     }
 
@@ -137,15 +177,18 @@ object KeepIslandHook : BaseHook() {
         val isOwnedByUs = sourceChannel == KEEP_ISLAND_CHANNEL
 
         val key = extractKeyFromState(stateObj)
+        val sourcePackage = extractSourcePackageFromState(stateObj, key)
 
         val isBigIsland = stateText.contains("BigIsland")
         val isExpanded = stateText.contains("Expand")
         val isDeleted = stateText.contains("Deleted")
 
         if (isOwnedByUs) return
+        if ((isBigIsland || isExpanded) && !isDeleted && sourcePackage == foregroundPackage(ctx)) return
 
         when {
             (isBigIsland || isExpanded) && !isDeleted -> {
+                if (contentControllerHooked) return
                 cancelPendingRestore()
                 if (key != null) activeRealKeys.add(key)
                 if (posted && !suppressed) {
@@ -160,6 +203,62 @@ object KeepIslandHook : BaseHook() {
                 }
             }
         }
+    }
+
+    private fun handleContentPreDraw(controllerObj: Any) {
+        val ctx = appContext ?: return
+        val enabled = ConfigManager.getBoolean(PREF_KEY, false)
+        if (!enabled) return
+
+        val autoHide = ConfigManager.getBoolean(PREF_KEY_AUTO_HIDE, true)
+        if (!autoHide) return
+
+        val view = invokeNoArg(controllerObj, "getView") as? View ?: return
+        val stateText = invokeNoArg(view, "getState")?.toString().orEmpty()
+        val isBigIsland = stateText.contains("BigIsland")
+        val isExpanded = stateText.contains("Expand")
+        val isDeleted = stateText.contains("Deleted")
+        val sbn = extractSbnFromController(controllerObj)
+        val key = (invokeNoArg(controllerObj, "getIslandKey") as? String)
+            ?: extractKeyFromState(view)
+            ?: sbn?.key
+            ?: return
+
+        if (isDeleted || (!isBigIsland && !isExpanded)) {
+            removeActiveRealKey(ctx, key)
+            return
+        }
+
+        val extras = sbn?.notification?.extras ?: extractExtrasFromState(view)
+        val isOwnedByUs = extras?.getString("hyperisland_source_channel") == KEEP_ISLAND_CHANNEL
+        if (isOwnedByUs || !isContentViewVisible(controllerObj, view)) {
+            removeActiveRealKey(ctx, key)
+            return
+        }
+
+        cancelPendingRestore()
+        activeRealKeys.add(key)
+        if (posted && !suppressed) {
+            cancelKeepIsland(ctx, suppress = true)
+        }
+    }
+
+    private fun removeActiveRealKey(ctx: Context, key: String) {
+        activeRealKeys.remove(key)
+        if (suppressed && activeRealKeys.isEmpty()) {
+            scheduleRestore(ctx)
+        }
+    }
+
+    private fun isContentViewVisible(controllerObj: Any, view: View): Boolean {
+        val currentIslandVisible = invokeNoArg(controllerObj, "currentIslandVisible") as? Boolean ?: false
+        if (!currentIslandVisible || !view.isShown) return false
+        val rect = Rect()
+        return view.getGlobalVisibleRect(rect) && rect.width() > 0 && rect.height() > 0
+    }
+
+    private fun extractSbnFromController(controllerObj: Any): StatusBarNotification? {
+        return invokeNoArg(controllerObj, "getIslandSbn") as? StatusBarNotification
     }
 
     private fun evaluateKeepIsland() {
@@ -243,6 +342,22 @@ object KeepIslandHook : BaseHook() {
         extras?.getString("key")?.let { return it }
         extras?.getString("miui.notif.key")?.let { return it }
         return null
+    }
+
+    private fun extractSourcePackageFromState(stateObj: Any, key: String?): String? {
+        val extras = extractExtrasFromState(stateObj)
+        extras?.getString("hyperisland_source_pkg")?.let { return it }
+        extras?.getString("android.packageName")?.let { return it }
+        extras?.getString("packageName")?.let { return it }
+        return key?.split('|')?.getOrNull(1)?.takeIf { it.contains('.') }
+    }
+
+    private fun foregroundPackage(context: Context): String {
+        return runCatching {
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            @Suppress("DEPRECATION")
+            am.getRunningTasks(1).firstOrNull()?.topActivity?.packageName.orEmpty()
+        }.getOrDefault("")
     }
 
     private fun readStateText(stateObj: Any?): String? {
