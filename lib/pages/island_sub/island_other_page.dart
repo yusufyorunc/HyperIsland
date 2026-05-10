@@ -344,11 +344,11 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
                                           ? null
                                           : _ctrl.keepIslandHighlightColor,
                                   title: l10n.keepIslandHighlightColorTitle,
-                                  enableAlpha: false,
+                                  enableAlpha: true,
                                 );
                                 if (color != null) {
                                   await _ctrl.setKeepIslandHighlightColor(
-                                      colorToHex(color));
+                                      colorToArgbHex(color));
                                 }
                               },
                             ),
