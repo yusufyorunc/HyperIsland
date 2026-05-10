@@ -201,6 +201,7 @@ $userPrompt
             .put("max_tokens", config.maxTokens)
             .put("temperature", config.temperature)
             .put("enable_thinking", false)
+            .put("thinking", JSONObject().put("type", "disabled"))
 
         return body.toString()
     }
