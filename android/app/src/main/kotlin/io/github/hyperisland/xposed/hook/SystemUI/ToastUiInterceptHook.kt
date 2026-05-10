@@ -7,7 +7,7 @@ import io.github.hyperisland.utils.resolveDynamicHighlightColor
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
 import io.github.hyperisland.xposed.islanddispatch.IslandRequest
-import io.github.hyperisland.xposed.utils.FullscreenBehavior
+import io.github.hyperisland.xposed.utils.SceneBehavior
 import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.hyperisland.xposed.utils.toRounded
 import io.github.libxposed.api.XposedModule
@@ -146,11 +146,6 @@ object ToastUiInterceptHook : BaseHook() {
             lastForwardAt[dedupeKey] = now
             val context = resolveContext(host, classLoader)
             if (context != null) {
-                val fullscreenMode = FullscreenBehavior.mode()
-                val fullscreenDetected = FullscreenBehavior.isFullscreenLike(context)
-                if (fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_FALLBACK) {
-                    return false
-                }
                 forwardAsIsland(context, pkg, normalizedText, rule, module)
             } else {
                 logWarn(module, "skip toast forward: context unavailable")
@@ -330,6 +325,13 @@ object ToastUiInterceptHook : BaseHook() {
                 else -> rule.islandOuterGlowColor
             }
 
+            val sceneDecision = SceneBehavior.resolve(
+                context = context,
+                surface = SceneBehavior.Surface.TOAST,
+                sourcePackage = pkg,
+            )
+            if (sceneDecision.shouldSuppress) return
+
             IslandDispatcher.post(
                 context,
                 IslandRequest(
@@ -337,14 +339,7 @@ object ToastUiInterceptHook : BaseHook() {
                     content = text,
                     icon = icon,
                     timeoutSecs = rule.timeoutSecs,
-                    firstFloat = if (
-                        FullscreenBehavior.isFullscreenLike(context) &&
-                        FullscreenBehavior.mode() == FullscreenBehavior.MODE_EXPAND
-                    ) {
-                        true
-                    } else {
-                        rule.firstFloat
-                    },
+                    firstFloat = sceneDecision.applyToBoolean(rule.firstFloat),
                     enableFloat = false,
                     showNotification = rule.showNotification,
                     showIslandIcon = rule.showIslandIcon,

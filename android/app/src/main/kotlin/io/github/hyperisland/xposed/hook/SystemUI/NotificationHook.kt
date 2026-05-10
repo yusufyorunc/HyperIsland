@@ -11,7 +11,7 @@ import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
 import io.github.hyperisland.xposed.template.core.TemplateRegistry
 import io.github.hyperisland.xposed.template.core.filters.KeywordFilter
 import io.github.hyperisland.xposed.template.core.models.NotifData
-import io.github.hyperisland.xposed.utils.FullscreenBehavior
+import io.github.hyperisland.xposed.utils.SceneBehavior
 import io.github.hyperisland.xposed.utils.toRounded
 import io.github.hyperisland.xposed.templates.NotificationIslandNotification
 import io.github.hyperisland.xposed.utils.HookUtils
@@ -218,16 +218,19 @@ object GenericProgressHook : BaseHook() {
                 sbn.notification?.channelId == IslandDispatcher.CHANNEL_ID) return
 
         val context = HookUtils.getContext(classLoader) ?: return
-        val fullscreenMode = FullscreenBehavior.mode()
-        val fullscreenDetected = FullscreenBehavior.isFullscreenLike(context)
-        if (fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_FALLBACK) {
-            return
-        }
 
         val allowedChannels = loadWhitelist(module)[pkg] ?: return
             val notif = sbn.notification ?: return
             val channelId = notif.channelId ?: ""
             if (allowedChannels.isNotEmpty() && channelId !in allowedChannels) return
+
+            val sceneDecision = SceneBehavior.resolve(
+                context = context,
+                surface = SceneBehavior.Surface.GENERIC_NOTIFICATION,
+                sourcePackage = pkg,
+                channelId = channelId,
+            )
+            if (sceneDecision.shouldSuppress) return
 
             val extras = notif.extras ?: return
             extras.putString("hyperisland_source_pkg", pkg)
@@ -324,20 +327,8 @@ object GenericProgressHook : BaseHook() {
                 loadChannelStringSetting("efloat:$pkg/$channelId", "pref_channel_enable_float_${pkg}_$channelId", "default"),
                 defaultEnableFloat
             )
-            val effectiveFirstFloat = if (
-                fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_EXPAND
-            ) {
-                "on"
-            } else {
-                firstFloat
-            }
-            val effectiveEnableFloat = if (
-                fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_EXPAND
-            ) {
-                "on"
-            } else {
-                enableFloatMode
-            }
+            val effectiveFirstFloat = sceneDecision.applyToTriOpt(firstFloat)
+            val effectiveEnableFloat = sceneDecision.applyToTriOpt(enableFloatMode)
             val islandTimeoutStr = loadChannelStringSetting(
                 "timeout:$pkg/$channelId", "pref_channel_timeout_${pkg}_$channelId", "5"
             )

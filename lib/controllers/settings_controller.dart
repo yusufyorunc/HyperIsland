@@ -34,6 +34,8 @@ const kPrefDefaultIslandOuterGlowColor = 'pref_default_island_outer_glow_color';
 const kPrefDefaultRestoreLockscreen = 'pref_default_restore_lockscreen';
 const kPrefDefaultPreserveSmallIcon = 'pref_default_preserve_small_icon';
 const kPrefFullscreenBehavior = 'pref_fullscreen_behavior';
+const kPrefLandscapeBehavior = 'pref_landscape_behavior';
+const kPrefDndBehavior = 'pref_scene_dnd';
 const kPrefHideDesktopIcon = 'pref_hide_desktop_icon';
 const kPrefAiEnabled = 'pref_ai_enabled';
 const kPrefAiUrl = 'pref_ai_url';
@@ -147,6 +149,8 @@ class SettingsController extends ChangeNotifier {
   String defaultOutEffectColor = '';
   String defaultIslandOuterGlowColor = '';
   String fullscreenBehavior = 'off';
+  String landscapeBehavior = 'off';
+  String dndBehavior = 'default';
   bool aiEnabled = false;
   String aiUrl = '';
   String aiApiKey = '';
@@ -219,7 +223,13 @@ class SettingsController extends ChangeNotifier {
     defaultOutEffectColor = prefs.getString(kPrefDefaultOutEffectColor) ?? '';
     defaultIslandOuterGlowColor =
         prefs.getString(kPrefDefaultIslandOuterGlowColor) ?? '';
-    fullscreenBehavior = prefs.getString(kPrefFullscreenBehavior) ?? 'off';
+    fullscreenBehavior = _normalizeSceneBehavior(
+      prefs.getString(kPrefFullscreenBehavior),
+    );
+    landscapeBehavior = _normalizeSceneBehavior(
+      prefs.getString(kPrefLandscapeBehavior),
+    );
+    dndBehavior = _normalizeDndBehavior(prefs.getString(kPrefDndBehavior));
     aiEnabled = prefs.getBool(kPrefAiEnabled) ?? false;
     aiUrl = prefs.getString(kPrefAiUrl) ?? '';
     aiApiKey = prefs.getString(kPrefAiApiKey) ?? '';
@@ -468,11 +478,51 @@ class SettingsController extends ChangeNotifier {
   }
 
   Future<void> setFullscreenBehavior(String value) async {
-    if (fullscreenBehavior == value) return;
+    final normalized = _normalizeSceneBehavior(value);
+    if (fullscreenBehavior == normalized) return;
     final prefs = await _getPrefs();
-    await prefs.setString(kPrefFullscreenBehavior, value);
-    fullscreenBehavior = value;
+    await prefs.setString(kPrefFullscreenBehavior, normalized);
+    fullscreenBehavior = normalized;
     notifyListeners();
+  }
+
+  Future<void> setLandscapeBehavior(String value) async {
+    final normalized = _normalizeSceneBehavior(value);
+    if (landscapeBehavior == normalized) return;
+    final prefs = await _getPrefs();
+    await prefs.setString(kPrefLandscapeBehavior, normalized);
+    landscapeBehavior = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setDndBehavior(String value) async {
+    final normalized = _normalizeDndBehavior(value);
+    if (dndBehavior == normalized) return;
+    final prefs = await _getPrefs();
+    if (normalized == 'default') {
+      await prefs.remove(kPrefDndBehavior);
+    } else {
+      await prefs.setString(kPrefDndBehavior, normalized);
+    }
+    dndBehavior = normalized;
+    notifyListeners();
+  }
+
+  String _normalizeDndBehavior(String? value) {
+    return switch (value) {
+      'fallback' => 'suppress',
+      'suppress' => 'suppress',
+      'small_only' => 'small_only',
+      _ => 'default',
+    };
+  }
+
+  String _normalizeSceneBehavior(String? value) {
+    return switch (value) {
+      'fallback' => 'fallback',
+      'expand' => 'expand',
+      _ => 'off',
+    };
   }
 
   Future<void> setHideDesktopIcon(bool value) async {

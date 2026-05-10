@@ -1,39 +1,25 @@
 package io.github.hyperisland.xposed.template.core.filters
 
-import android.app.ActivityManager
 import android.content.Context
-import android.util.Log
-import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.template.core.models.NotifData
+import io.github.hyperisland.xposed.utils.SceneBehavior
 
 /**
- * 应用黑名单过滤器。
- * 在通知进入模板前检查前台应用是否在黑名单中：
- *  - 命中 → 返回禁用浮动的 [NotifData] 副本（岛正常展示，不自动展开）
- *  - 未命中 → 返回原始 [NotifData]
+ * 兼容旧黑名单入口，并委托给统一场景规则。
  */
 object BlacklistFilter {
 
     fun applyTo(context: Context, data: NotifData): NotifData? {
-        val blacklistStr = ConfigManager.getString("pref_app_blacklist")
-
-        if (blacklistStr.isEmpty()) return data
-
-        val foregroundApp = try {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            @Suppress("DEPRECATION")
-            am.getRunningTasks(1).firstOrNull()?.topActivity?.packageName ?: ""
-        } catch (e: Exception) {
-            Log.d("HyperIsland", "HyperIsland[Blacklist]: getRunningTasks failed: ${e.message}")
-            ""
-        }
-
-        val isBlacklisted = foregroundApp.isNotEmpty() && blacklistStr.split(",").contains(foregroundApp)
-        Log.d("HyperIsland", "HyperIsland[Blacklist]: foreground=$foregroundApp, isBlacklisted=$isBlacklisted")
-
-        if (!isBlacklisted) return data
-
-        Log.d("HyperIsland", "HyperIsland[Blacklist]: $foregroundApp skipped float")
-        return data.copy(firstFloat = "off", enableFloatMode = "off")
+        val decision = SceneBehavior.resolve(
+            context = context,
+            surface = SceneBehavior.Surface.GENERIC_NOTIFICATION,
+            sourcePackage = data.pkg,
+            channelId = data.channelId,
+        )
+        if (decision.shouldSuppress) return null
+        return data.copy(
+            firstFloat = decision.applyToTriOpt(data.firstFloat),
+            enableFloatMode = decision.applyToTriOpt(data.enableFloatMode),
+        )
     }
 }

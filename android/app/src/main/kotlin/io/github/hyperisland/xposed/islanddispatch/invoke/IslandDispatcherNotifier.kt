@@ -22,7 +22,7 @@ import io.github.hyperisland.xposed.islanddispatch.definition.IslandDispatchCont
 import io.github.hyperisland.xposed.islanddispatch.definition.IslandRequest
 import io.github.hyperisland.xposed.log
 import io.github.hyperisland.xposed.logError
-import io.github.hyperisland.xposed.utils.FullscreenBehavior
+import io.github.hyperisland.xposed.utils.SceneBehavior
 import io.github.hyperisland.xposed.utils.toRounded
 
 internal object IslandDispatcherNotifier {
@@ -33,11 +33,15 @@ internal object IslandDispatcherNotifier {
 
     fun post(context: Context, request: IslandRequest) {
         try {
-            val fullscreenMode = FullscreenBehavior.mode()
-            val fullscreenDetected = FullscreenBehavior.isFullscreenLike(context)
-            if (fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_FALLBACK) {
+            val sceneDecision = SceneBehavior.resolve(
+                context = context,
+                surface = SceneBehavior.Surface.DISPATCHER,
+                sourcePackage = request.sourcePackage.orEmpty(),
+                channelId = request.sourceChannelId.orEmpty(),
+            )
+            if (sceneDecision.shouldSuppress) {
                 IslandDispatchState.module?.log(
-                    "${IslandDispatchContract.TAG}: skip dispatcher post in fullscreen fallback",
+                    "${IslandDispatchContract.TAG}: skip dispatcher post by scene rule",
                 )
                 return
             }
@@ -60,20 +64,8 @@ internal object IslandDispatcherNotifier {
                 title = request.title,
                 content = request.content,
             )
-            val effectiveFirstFloat = if (
-                fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_EXPAND
-            ) {
-                true
-            } else {
-                request.firstFloat
-            }
-            val effectiveEnableFloat = if (
-                fullscreenDetected && fullscreenMode == FullscreenBehavior.MODE_EXPAND
-            ) {
-                true
-            } else {
-                request.enableFloat
-            }
+            val effectiveFirstFloat = sceneDecision.applyToBoolean(request.firstFloat)
+            val effectiveEnableFloat = sceneDecision.applyToBoolean(request.enableFloat)
 
             islandBuilder.setIslandFirstFloat(effectiveFirstFloat)
             islandBuilder.setEnableFloat(effectiveEnableFloat)

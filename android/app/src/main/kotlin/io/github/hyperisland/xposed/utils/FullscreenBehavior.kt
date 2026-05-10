@@ -1,8 +1,6 @@
 package io.github.hyperisland.xposed.utils
 
 import android.content.Context
-import android.content.res.Configuration
-import android.provider.Settings
 import io.github.hyperisland.xposed.ConfigManager
 
 object FullscreenBehavior {
@@ -12,6 +10,7 @@ object FullscreenBehavior {
     const val MODE_EXPAND = "expand"
 
     private const val PREF_KEY = "pref_fullscreen_behavior"
+    private const val PREF_LANDSCAPE_KEY = "pref_landscape_behavior"
 
     fun mode(): String {
         return when (ConfigManager.getString(PREF_KEY, MODE_OFF).trim().lowercase()) {
@@ -21,17 +20,15 @@ object FullscreenBehavior {
         }
     }
 
-    fun isFullscreenLike(context: Context): Boolean {
-        val isLandscape =
-            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        if (isLandscape) return true
+    fun landscapeMode(): String {
+        return when (ConfigManager.getString(PREF_LANDSCAPE_KEY, MODE_OFF).trim().lowercase()) {
+            MODE_FALLBACK -> MODE_FALLBACK
+            MODE_EXPAND -> MODE_EXPAND
+            else -> MODE_OFF
+        }
+    }
 
-        val immersivePolicy = runCatching {
-            Settings.Global.getString(context.contentResolver, "policy_control")
-                ?.lowercase()
-                .orEmpty()
-        }.getOrDefault("")
-        return immersivePolicy.contains("immersive.full") ||
-            immersivePolicy.contains("immersive.status")
+    fun isFullscreenLike(context: Context): Boolean {
+        return SceneBehavior.readEnvironment(context).isFullscreenLike
     }
 }

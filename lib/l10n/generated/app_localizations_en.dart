@@ -988,6 +988,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullscreenBehaviorExpand => 'Auto expand notification';
 
   @override
+  String get filterRulesTitle => 'Filter rules';
+
+  @override
+  String get filterRulesOrderTitle => 'First matching rule wins';
+
+  @override
+  String get filterRuleDnd => 'DND';
+
+  @override
+  String get filterRuleFullscreen => 'Fullscreen';
+
+  @override
+  String get filterRuleLandscape => 'Landscape';
+
+  @override
+  String get dndBehaviorTitle => 'When DND';
+
+  @override
+  String get fullscreenRuleTitle => 'When fullscreen';
+
+  @override
+  String get landscapeRuleTitle => 'When landscape';
+
+  @override
+  String get behaviorPreviewDefault =>
+      'No override when matched; keep default behavior';
+
+  @override
+  String get behaviorPreviewSuppress =>
+      'Fallback to normal notification when matched';
+
+  @override
+  String get behaviorPreviewSmallOnly =>
+      'Show small island only; do not auto expand';
+
+  @override
+  String get behaviorPreviewExpand => 'Auto expand notification when matched';
+
+  @override
   String get aiConfigSection => 'AI Enhancement';
 
   @override

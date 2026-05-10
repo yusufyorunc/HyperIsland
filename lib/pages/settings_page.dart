@@ -175,8 +175,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         _MenuTile(
-                          icon: Icons.block,
-                          title: l10n.navBlacklist,
+                          icon: Icons.rule_folder_outlined,
+                          title: l10n.filterRulesSection,
                           onTap: InteractionHaptics.interceptButton(
                             () => Navigator.push(
                               context,

@@ -994,6 +994,44 @@ class AppLocalizationsTr extends AppLocalizations {
   String get fullscreenBehaviorExpand => 'Bildirimi otomatik genişlet';
 
   @override
+  String get filterRulesTitle => 'Filtre kuralları';
+
+  @override
+  String get filterRulesOrderTitle => 'İlk eşleşen kural uygulanır';
+
+  @override
+  String get filterRuleDnd => 'Rahatsız Etmeyin';
+
+  @override
+  String get filterRuleFullscreen => 'Tam ekran';
+
+  @override
+  String get filterRuleLandscape => 'Yatay';
+
+  @override
+  String get dndBehaviorTitle => 'Rahatsız Etmeyin açıkken';
+
+  @override
+  String get fullscreenRuleTitle => 'Tam ekrandayken';
+
+  @override
+  String get landscapeRuleTitle => 'Yataydayken';
+
+  @override
+  String get behaviorPreviewDefault =>
+      'Eşleşince işlem yapma, varsayılan davranışı kullan';
+
+  @override
+  String get behaviorPreviewSuppress => 'Eşleşince normal bildirime dön';
+
+  @override
+  String get behaviorPreviewSmallOnly =>
+      'Eşleşince yalnızca küçük Ada göster, otomatik genişletme';
+
+  @override
+  String get behaviorPreviewExpand => 'Eşleşince bildirimi otomatik genişlet';
+
+  @override
   String get aiConfigSection => 'AI Geliştirmeleri';
 
   @override

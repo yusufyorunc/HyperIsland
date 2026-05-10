@@ -955,6 +955,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fullscreenBehaviorExpand => '通知を自動展開';
 
   @override
+  String get filterRulesTitle => 'フィルタールール';
+
+  @override
+  String get filterRulesOrderTitle => '最初に一致したルールを適用';
+
+  @override
+  String get filterRuleDnd => '通知制限';
+
+  @override
+  String get filterRuleFullscreen => '全画面';
+
+  @override
+  String get filterRuleLandscape => '横画面';
+
+  @override
+  String get dndBehaviorTitle => '通知制限時';
+
+  @override
+  String get fullscreenRuleTitle => '全画面時';
+
+  @override
+  String get landscapeRuleTitle => '横画面時';
+
+  @override
+  String get behaviorPreviewDefault => '一致時は処理せず、デフォルト動作を使用';
+
+  @override
+  String get behaviorPreviewSuppress => '一致時は通常通知に戻します';
+
+  @override
+  String get behaviorPreviewSmallOnly => '一致時は小さい Island のみ表示し、自動展開しません';
+
+  @override
+  String get behaviorPreviewExpand => '一致時は通知を自動展開します';
+
+  @override
   String get aiConfigSection => 'AI エンハンスメント';
 
   @override

@@ -3,12 +3,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/app_cache_service.dart';
 
 const kPrefAppBlacklist = 'pref_app_blacklist';
+const kPrefSceneForegroundPackages = 'pref_scene_foreground_packages';
+const kSceneActionDefault = 'default';
+const kSceneActionSmallOnly = 'small_only';
+const kSceneActionExpand = 'expand';
+const kSceneActionSuppress = 'suppress';
+const _kPrefSceneForegroundPrefix = 'pref_scene_foreground_';
 
 class BlacklistController extends ChangeNotifier {
   List<AppInfo> _allApps = [];
   List<AppInfo> _sortedApps = [];
   List<AppInfo> _filteredApps = [];
   Set<String> blacklistedPackages = {};
+  Map<String, String> sceneActions = {};
   bool loading = true;
   String _searchQuery = '';
   bool showSystemApps = false;
@@ -329,9 +336,9 @@ class BlacklistController extends ChangeNotifier {
   void _resort() {
     _sortedApps = List<AppInfo>.from(_allApps)
       ..sort((a, b) {
-        final aOn = blacklistedPackages.contains(a.packageName);
-        final bOn = blacklistedPackages.contains(b.packageName);
-        if (aOn != bOn) return aOn ? -1 : 1;
+        final aConfigured = actionForPackage(a.packageName) != kSceneActionDefault;
+        final bConfigured = actionForPackage(b.packageName) != kSceneActionDefault;
+        if (aConfigured != bConfigured) return aConfigured ? -1 : 1;
         return a.appName.compareTo(b.appName);
       });
     _rebuildFilteredApps();
@@ -342,7 +349,7 @@ class BlacklistController extends ChangeNotifier {
     Iterable<AppInfo> source = showSystemApps
         ? _sortedApps
         : _sortedApps.where(
-            (a) => !a.isSystem || blacklistedPackages.contains(a.packageName),
+            (a) => !a.isSystem || actionForPackage(a.packageName) != kSceneActionDefault,
           );
     if (q.isNotEmpty) {
       source = source.where(
@@ -366,6 +373,12 @@ class BlacklistController extends ChangeNotifier {
       blacklistedPackages = csv.isEmpty
           ? {}
           : csv.split(',').where((s) => s.isNotEmpty).toSet();
+      sceneActions = {
+        for (final key in prefs.getKeys())
+          if (key.startsWith(_kPrefSceneForegroundPrefix))
+            key.substring(_kPrefSceneForegroundPrefix.length):
+                _normalizeAction(prefs.getString(key) ?? ''),
+      }..removeWhere((_, value) => value == kSceneActionDefault);
 
       _allApps = await AppCacheService.instance.getApps();
       _resort();
@@ -377,15 +390,37 @@ class BlacklistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setBlacklisted(String packageName, bool enabled) async {
-    final changed = enabled
-        ? blacklistedPackages.add(packageName)
-        : blacklistedPackages.remove(packageName);
-    if (!changed) return;
+  String actionForPackage(String packageName) {
+    return sceneActions[packageName] ??
+        (blacklistedPackages.contains(packageName)
+            ? kSceneActionSmallOnly
+            : kSceneActionDefault);
+  }
+
+  Future<void> setSceneAction(String packageName, String action) async {
+    final normalized = _normalizeAction(action);
+    final current = actionForPackage(packageName);
+    if (current == normalized) return;
 
     final prefs = await SharedPreferences.getInstance();
+    final key = '$_kPrefSceneForegroundPrefix$packageName';
+    if (normalized == kSceneActionDefault) {
+      sceneActions.remove(packageName);
+      blacklistedPackages.remove(packageName);
+      await prefs.remove(key);
+    } else {
+      sceneActions[packageName] = normalized;
+      if (normalized == kSceneActionSmallOnly) {
+        blacklistedPackages.add(packageName);
+        await prefs.remove(key);
+      } else {
+        blacklistedPackages.remove(packageName);
+        await prefs.setString(key, normalized);
+      }
+    }
     await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
-    _rebuildFilteredApps();
+    await _saveForegroundPackageIndex(prefs);
+    _resort();
     notifyListeners();
   }
 
@@ -403,51 +438,64 @@ class BlacklistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> enableAll() async {
-    var changed = false;
-    for (final a in filteredApps) {
-      if (blacklistedPackages.add(a.packageName)) {
-        changed = true;
-      }
-    }
-    if (!changed) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
-    _rebuildFilteredApps();
-    notifyListeners();
-  }
-
-  Future<void> disableAll() async {
-    var changed = false;
-    for (final a in filteredApps) {
-      if (blacklistedPackages.remove(a.packageName)) {
-        changed = true;
-      }
-    }
-    if (!changed) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
-    _rebuildFilteredApps();
-    notifyListeners();
-  }
-
   Future<int> applyGamePreset() async {
     int addedCount = 0;
     for (final app in _allApps) {
       if (_gamePresets.contains(app.packageName) &&
-          !blacklistedPackages.contains(app.packageName)) {
+          actionForPackage(app.packageName) != kSceneActionSmallOnly) {
+        sceneActions.remove(app.packageName);
         blacklistedPackages.add(app.packageName);
         addedCount++;
       }
     }
     if (addedCount > 0) {
       final prefs = await SharedPreferences.getInstance();
+      for (final app in _allApps) {
+        if (_gamePresets.contains(app.packageName)) {
+          await prefs.remove('$_kPrefSceneForegroundPrefix${app.packageName}');
+        }
+      }
       await prefs.setString(kPrefAppBlacklist, blacklistedPackages.join(','));
+      await _saveForegroundPackageIndex(prefs);
       _resort();
       notifyListeners();
     }
     return addedCount;
+  }
+
+  Future<int> resetToDefaults() async {
+    final changedCount = <String>{...blacklistedPackages, ...sceneActions.keys}.length;
+    if (changedCount == 0) return 0;
+
+    final prefs = await SharedPreferences.getInstance();
+    for (final packageName in sceneActions.keys) {
+      await prefs.remove('$_kPrefSceneForegroundPrefix$packageName');
+    }
+    await prefs.remove(kPrefAppBlacklist);
+    await prefs.remove(kPrefSceneForegroundPackages);
+
+    blacklistedPackages.clear();
+    sceneActions.clear();
+    _resort();
+    notifyListeners();
+    return changedCount;
+  }
+
+  String _normalizeAction(String action) {
+    return switch (action.trim()) {
+      kSceneActionSmallOnly => kSceneActionSmallOnly,
+      kSceneActionExpand => kSceneActionExpand,
+      kSceneActionSuppress => kSceneActionSuppress,
+      _ => kSceneActionDefault,
+    };
+  }
+
+  Future<void> _saveForegroundPackageIndex(SharedPreferences prefs) async {
+    final packages = <String>{...blacklistedPackages, ...sceneActions.keys};
+    if (packages.isEmpty) {
+      await prefs.remove(kPrefSceneForegroundPackages);
+    } else {
+      await prefs.setString(kPrefSceneForegroundPackages, packages.join(','));
+    }
   }
 }

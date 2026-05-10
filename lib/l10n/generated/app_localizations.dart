@@ -1848,6 +1848,78 @@ abstract class AppLocalizations {
   /// **'自动展开通知'**
   String get fullscreenBehaviorExpand;
 
+  /// No description provided for @filterRulesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'过滤规则'**
+  String get filterRulesTitle;
+
+  /// No description provided for @filterRulesOrderTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'按顺序命中第一条规则'**
+  String get filterRulesOrderTitle;
+
+  /// No description provided for @filterRuleDnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'勿扰'**
+  String get filterRuleDnd;
+
+  /// No description provided for @filterRuleFullscreen.
+  ///
+  /// In zh, this message translates to:
+  /// **'全屏'**
+  String get filterRuleFullscreen;
+
+  /// No description provided for @filterRuleLandscape.
+  ///
+  /// In zh, this message translates to:
+  /// **'横屏'**
+  String get filterRuleLandscape;
+
+  /// No description provided for @dndBehaviorTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'勿扰时'**
+  String get dndBehaviorTitle;
+
+  /// No description provided for @fullscreenRuleTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'全屏时'**
+  String get fullscreenRuleTitle;
+
+  /// No description provided for @landscapeRuleTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'横屏时'**
+  String get landscapeRuleTitle;
+
+  /// No description provided for @behaviorPreviewDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'命中时不处理，继续使用默认行为'**
+  String get behaviorPreviewDefault;
+
+  /// No description provided for @behaviorPreviewSuppress.
+  ///
+  /// In zh, this message translates to:
+  /// **'命中时回退为普通通知'**
+  String get behaviorPreviewSuppress;
+
+  /// No description provided for @behaviorPreviewSmallOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'命中时只显示小岛，不自动展开'**
+  String get behaviorPreviewSmallOnly;
+
+  /// No description provided for @behaviorPreviewExpand.
+  ///
+  /// In zh, this message translates to:
+  /// **'命中时自动展开通知'**
+  String get behaviorPreviewExpand;
+
   /// No description provided for @aiConfigSection.
   ///
   /// In zh, this message translates to:

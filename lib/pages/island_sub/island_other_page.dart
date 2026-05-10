@@ -20,6 +20,8 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
 
   int _computeHash() => Object.hashAll([
         _ctrl.fullscreenBehavior,
+        _ctrl.landscapeBehavior,
+        _ctrl.dndBehavior,
         _ctrl.marqueeSpeed,
         _ctrl.keepIsland,
         _ctrl.keepIslandAutoHide,
@@ -63,6 +65,23 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
     };
   }
 
+  String _dndBehaviorLabel(String value) {
+    return switch (value) {
+      'suppress' => '回退普通通知',
+      'small_only' => '关闭展开',
+      _ => '默认',
+    };
+  }
+
+  String _behaviorPreview(AppLocalizations l10n, String value) {
+    return switch (value) {
+      'fallback' || 'suppress' => l10n.behaviorPreviewSuppress,
+      'small_only' => l10n.behaviorPreviewSmallOnly,
+      'expand' => l10n.behaviorPreviewExpand,
+      _ => l10n.behaviorPreviewDefault,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -81,56 +100,71 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
               delegate: SliverChildListDelegate(
                 [
                   const SizedBox(height: 8),
-                  // --- 全屏时行为 ---
-                  _SectionLabel(l10n.fullscreenBehaviorTitle),
+                  // --- 过滤规则 ---
+                  _SectionLabel(l10n.filterRulesTitle),
                   const SizedBox(height: 8),
                   Card(
                     elevation: 0,
                     color: cs.surfaceContainerHighest,
                     child: Column(
                       children: [
-                        ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          title: Text(
-                            l10n.fullscreenBehaviorTitle,
-                            style: titleStyle,
-                          ),
-                          subtitle: Text(
-                            l10n.fullscreenBehaviorSubtitle,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                          trailing: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _ctrl.fullscreenBehavior,
-                              onChanged: InteractionHaptics.interceptDropdown(
-                                (v) async {
-                                  if (v == null) return;
-                                  await _ctrl.setFullscreenBehavior(v);
-                                },
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.filterRulesOrderTitle, style: titleStyle),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  _RulePriorityChip(
+                                    index: 1,
+                                    label: l10n.filterRuleDnd,
+                                  ),
+                                  _RulePriorityChip(
+                                    index: 2,
+                                    label: l10n.filterRuleFullscreen,
+                                  ),
+                                  _RulePriorityChip(
+                                    index: 3,
+                                    label: l10n.filterRuleLandscape,
+                                  ),
+                                ],
                               ),
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'off',
-                                  child: Text(
-                                      _fullscreenBehaviorLabel(l10n, 'off')),
-                                ),
-                                DropdownMenuItem<String>(
-                                  value: 'fallback',
-                                  child: Text(_fullscreenBehaviorLabel(
-                                      l10n, 'fallback')),
-                                ),
-                                DropdownMenuItem<String>(
-                                  value: 'expand',
-                                  child: Text(_fullscreenBehaviorLabel(
-                                      l10n, 'expand')),
-                                ),
-                              ],
-                            ),
+                            ],
                           ),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _BehaviorRuleTile(
+                          icon: Icons.do_not_disturb_on_outlined,
+                          title: l10n.dndBehaviorTitle,
+                          subtitle: _behaviorPreview(l10n, _ctrl.dndBehavior),
+                          value: _ctrl.dndBehavior,
+                          labelForValue: _dndBehaviorLabel,
+                          values: const ['default', 'suppress', 'small_only'],
+                          onChanged: _ctrl.setDndBehavior,
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _BehaviorRuleTile(
+                          icon: Icons.fullscreen_outlined,
+                          title: l10n.fullscreenRuleTitle,
+                          subtitle: _behaviorPreview(l10n, _ctrl.fullscreenBehavior),
+                          value: _ctrl.fullscreenBehavior,
+                          labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
+                          values: const ['off', 'fallback', 'expand'],
+                          onChanged: _ctrl.setFullscreenBehavior,
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _BehaviorRuleTile(
+                          icon: Icons.screen_rotation_alt_outlined,
+                          title: l10n.landscapeRuleTitle,
+                          subtitle: _behaviorPreview(l10n, _ctrl.landscapeBehavior),
+                          value: _ctrl.landscapeBehavior,
+                          labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
+                          values: const ['off', 'fallback', 'expand'],
+                          onChanged: _ctrl.setLandscapeBehavior,
                         ),
                       ],
                     ),
@@ -355,6 +389,119 @@ class _SectionLabel extends StatelessWidget {
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
+      ),
+    );
+  }
+}
+
+class _RulePriorityChip extends StatelessWidget {
+  const _RulePriorityChip({required this.index, required this.label});
+
+  final int index;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: cs.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$index',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: cs.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BehaviorRuleTile extends StatelessWidget {
+  const _BehaviorRuleTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.labelForValue,
+    required this.values,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String value;
+  final String Function(String value) labelForValue;
+  final List<String> values;
+  final Future<void> Function(String value) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final configured = value != 'default' && value != 'off';
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: configured ? cs.primaryContainer : cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: configured ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+        ),
+      ),
+      title: Text(title),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: cs.onSurfaceVariant,
+        ),
+      ),
+      trailing: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          borderRadius: BorderRadius.circular(16),
+          onChanged: InteractionHaptics.interceptDropdown((next) async {
+            if (next == null) return;
+            await onChanged(next);
+          }),
+          items: [
+            for (final item in values)
+              DropdownMenuItem<String>(
+                value: item,
+                child: Text(labelForValue(item)),
+              ),
+          ],
+        ),
       ),
     );
   }

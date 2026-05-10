@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../controllers/blacklist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -17,6 +19,11 @@ class _BlacklistPageState extends State<BlacklistPage> {
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
 
+  static const _menuPresetGames = 'preset_games';
+  static const _menuToggleSystemApps = 'toggle_system_apps';
+  static const _menuRefresh = 'refresh';
+  static const _menuResetDefaults = 'reset_defaults';
+
   void _clearSearch() {
     _searchCtrl.clear();
     _ctrl.setSearch('');
@@ -35,6 +42,31 @@ class _BlacklistPageState extends State<BlacklistPage> {
     }
 
     return false;
+  }
+
+  Future<void> _handleMenuAction(String action) async {
+    switch (action) {
+      case _menuPresetGames:
+        final count = await _ctrl.applyGamePreset();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.presetGamesSuccess(count))),
+        );
+        return;
+      case _menuToggleSystemApps:
+        _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
+        return;
+      case _menuRefresh:
+        await _ctrl.refresh();
+        return;
+      case _menuResetDefaults:
+        final count = await _ctrl.resetToDefaults();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已恢复默认配置，共重置 $count 个应用')),
+        );
+        return;
+    }
   }
 
   @override
@@ -65,7 +97,6 @@ class _BlacklistPageState extends State<BlacklistPage> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final apps = _ctrl.filteredApps;
-    final enabledCount = _ctrl.blacklistedPackages.length;
 
     return PopScope(
       canPop: false,
@@ -87,45 +118,56 @@ class _BlacklistPageState extends State<BlacklistPage> {
               SliverAppBar.large(
                 backgroundColor: cs.surface,
                 centerTitle: false,
-                title: Text(l10n.navBlacklist),
+                title: Text(l10n.filterRulesSection),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.videogame_asset),
-                    tooltip: l10n.presetGamesTitle,
-                    onPressed: _ctrl.loading
-                        ? null
-                        : InteractionHaptics.interceptButton(() async {
-                            final count = await _ctrl.applyGamePreset();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.presetGamesSuccess(count)),
-                                ),
-                              );
-                            }
-                          }),
-                  ),
-                  AppBarOverflowMenuButton(
-                    onSelected: (value) => handleAppListOverflowMenuSelection(
-                      value: value,
-                      onToggleSystemApps: () {
-                        _ctrl.setShowSystemApps(!_ctrl.showSystemApps);
-                      },
-                      onRefresh: _ctrl.refresh,
-                      onEnableAll: _ctrl.enableAll,
-                      onDisableAll: _ctrl.disableAll,
-                    ),
-                    itemBuilder: (ctx) {
-                      final ml = AppLocalizations.of(ctx)!;
-                      return buildAppListOverflowMenuItems(
-                        context: ctx,
-                        showSystemApps: _ctrl.showSystemApps,
-                        showSystemAppsLabel: ml.showSystemApps,
-                        refreshLabel: ml.refreshList,
-                        enableAllLabel: ml.enableAll,
-                        disableAllLabel: ml.disableAll,
-                      );
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    enabled: !_ctrl.loading,
+                    onSelected: (value) {
+                      unawaited(InteractionHaptics.button());
+                      unawaited(_handleMenuAction(value));
                     },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _menuPresetGames,
+                        child: ListTile(
+                          leading: const Icon(Icons.videogame_asset_outlined),
+                          title: Text(l10n.presetGamesTitle),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _menuToggleSystemApps,
+                        child: ListTile(
+                          leading: Icon(
+                            _ctrl.showSystemApps
+                                ? Icons.phone_android
+                                : Icons.phone_android_outlined,
+                          ),
+                          title: Text(
+                            _ctrl.showSystemApps ? '隐藏系统应用' : l10n.showSystemApps,
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _menuRefresh,
+                        child: ListTile(
+                          leading: const Icon(Icons.refresh),
+                          title: Text(l10n.refreshList),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: _menuResetDefaults,
+                        child: ListTile(
+                          leading: Icon(Icons.restore_outlined),
+                          title: Text('恢复默认配置'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -134,7 +176,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
-                    l10n.navBlacklistSubtitle,
+                    '前台应用启动时，设置超级岛行为。',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
@@ -146,9 +188,8 @@ class _BlacklistPageState extends State<BlacklistPage> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: AppListSearchHeader(
-                    countText: _ctrl.showSystemApps
-                        ? l10n.blacklistedAppsCountWithSystem(enabledCount)
-                        : l10n.blacklistedAppsCount(enabledCount),
+                    countText: '',
+                    showCountText: false,
                     searchController: _searchCtrl,
                     searchFocusNode: _searchFocus,
                     hintText: l10n.searchApps,
@@ -187,16 +228,8 @@ class _BlacklistPageState extends State<BlacklistPage> {
                       return _AppTile(
                         key: ValueKey(pkg),
                         app: app,
-                        enabled: _ctrl.blacklistedPackages.contains(pkg),
-                        onChanged: InteractionHaptics.interceptCheckbox(
-                          (v) => _ctrl.setBlacklisted(pkg, v),
-                        )!,
-                        onTap: InteractionHaptics.interceptButton(() {
-                          _ctrl.setBlacklisted(
-                            pkg,
-                            !_ctrl.blacklistedPackages.contains(pkg),
-                          );
-                        })!,
+                        action: _ctrl.actionForPackage(pkg),
+                        onChanged: (v) => _ctrl.setSceneAction(pkg, v),
                         isFirst: index == 0,
                         isLast: index == apps.length - 1,
                       );
@@ -215,28 +248,70 @@ class _AppTile extends StatelessWidget {
   const _AppTile({
     super.key,
     required this.app,
-    required this.enabled,
+    required this.action,
     required this.onChanged,
-    required this.onTap,
     required this.isFirst,
     required this.isLast,
   });
 
   final AppInfo app;
-  final bool enabled;
-  final ValueChanged<bool?> onChanged;
-  final VoidCallback onTap;
+  final String action;
+  final ValueChanged<String> onChanged;
   final bool isFirst;
   final bool isLast;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final configured = action != kSceneActionDefault;
+
     return AppListItemFrame(
       app: app,
-      onTap: onTap,
+      onTap: () {},
       isFirst: isFirst,
       isLast: isLast,
-      trailing: Checkbox(value: enabled, onChanged: onChanged),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: configured ? cs.primaryContainer : cs.surfaceContainerHigh,
+          border: Border.all(
+            color: configured ? cs.primary.withValues(alpha: 0.24) : Colors.transparent,
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: action,
+            borderRadius: BorderRadius.circular(16),
+            dropdownColor: cs.surfaceContainerHigh,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: configured ? cs.onPrimaryContainer : cs.onSurface,
+              fontWeight: configured ? FontWeight.w600 : FontWeight.w400,
+            ),
+            onChanged: (value) {
+              if (value != null) onChanged(value);
+            },
+            items: const [
+              DropdownMenuItem(
+                value: kSceneActionDefault,
+                child: Text('默认'),
+              ),
+              DropdownMenuItem(
+                value: kSceneActionSmallOnly,
+                child: Text('关闭展开'),
+              ),
+              DropdownMenuItem(
+                value: kSceneActionExpand,
+                child: Text('自动展开'),
+              ),
+              DropdownMenuItem(
+                value: kSceneActionSuppress,
+                child: Text('回退'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

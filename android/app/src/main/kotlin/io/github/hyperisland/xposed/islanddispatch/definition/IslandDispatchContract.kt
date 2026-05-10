@@ -3,6 +3,8 @@ package io.github.hyperisland.xposed.islanddispatch.definition
 object IslandDispatchContract {
     const val ACTION = "io.github.hyperisland.ACTION_SHOW_ISLAND"
     const val ACTION_CANCEL = "io.github.hyperisland.ACTION_CANCEL_ISLAND"
+    const val ACTION_CONFIG_REFRESH = "io.github.hyperisland.ACTION_CONFIG_REFRESH"
+    const val ACTION_CONFIG_CHANGED = "io.github.hyperisland.ACTION_CONFIG_CHANGED"
     const val EXTRA_NOTIF_ID = "notif_id"
 
     const val PERM = "io.github.hyperisland.SEND_ISLAND"

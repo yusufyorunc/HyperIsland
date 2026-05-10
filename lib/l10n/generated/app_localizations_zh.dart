@@ -945,6 +945,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullscreenBehaviorExpand => '自动展开通知';
 
   @override
+  String get filterRulesTitle => '过滤规则';
+
+  @override
+  String get filterRulesOrderTitle => '按顺序命中第一条规则';
+
+  @override
+  String get filterRuleDnd => '勿扰';
+
+  @override
+  String get filterRuleFullscreen => '全屏';
+
+  @override
+  String get filterRuleLandscape => '横屏';
+
+  @override
+  String get dndBehaviorTitle => '勿扰时';
+
+  @override
+  String get fullscreenRuleTitle => '全屏时';
+
+  @override
+  String get landscapeRuleTitle => '横屏时';
+
+  @override
+  String get behaviorPreviewDefault => '命中时不处理，继续使用默认行为';
+
+  @override
+  String get behaviorPreviewSuppress => '命中时回退为普通通知';
+
+  @override
+  String get behaviorPreviewSmallOnly => '命中时只显示小岛，不自动展开';
+
+  @override
+  String get behaviorPreviewExpand => '命中时自动展开通知';
+
+  @override
   String get aiConfigSection => 'AI 增强';
 
   @override
