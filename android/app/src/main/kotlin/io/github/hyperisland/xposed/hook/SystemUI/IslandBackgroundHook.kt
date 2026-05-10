@@ -880,6 +880,7 @@ object IslandBackgroundHook : BaseHook() {
 
         private val clipPath = Path()
         private val rect = RectF()
+        private val srcRect = Rect()
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             isFilterBitmap = true
         }
@@ -910,9 +911,21 @@ object IslandBackgroundHook : BaseHook() {
             clipPath.reset()
             clipPath.addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW)
 
+            val scale = kotlin.math.max(
+                rect.width() / bitmap.width.toFloat(),
+                rect.height() / bitmap.height.toFloat()
+            )
+            val srcWidth = (rect.width() / scale).coerceAtMost(bitmap.width.toFloat())
+            val srcHeight = (rect.height() / scale).coerceAtMost(bitmap.height.toFloat())
+            val srcLeft = ((bitmap.width - srcWidth) / 2f).toInt().coerceAtLeast(0)
+            val srcTop = ((bitmap.height - srcHeight) / 2f).toInt().coerceAtLeast(0)
+            val srcRight = (srcLeft + srcWidth.toInt()).coerceAtMost(bitmap.width)
+            val srcBottom = (srcTop + srcHeight.toInt()).coerceAtMost(bitmap.height)
+            srcRect.set(srcLeft, srcTop, srcRight, srcBottom)
+
             val save = canvas.save()
             canvas.clipPath(clipPath)
-            canvas.drawBitmap(bitmap, null, rect, paint)
+            canvas.drawBitmap(bitmap, srcRect, rect, paint)
             canvas.restoreToCount(save)
         }
 
