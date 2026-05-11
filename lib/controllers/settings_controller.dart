@@ -58,11 +58,7 @@ const kPrefKeepIslandHighlightColor = 'pref_keep_island_highlight_color';
 const kPrefThemeSeedColor = 'pref_theme_seed_color';
 const kPrefBlurBars = 'pref_blur_bars';
 const kPrefDebugLog = 'pref_debug_log';
-
-
-
-
-
+const kPrefOnboardingCompleted = 'pref_onboarding_completed';
 
 class AiLogEntry {
   const AiLogEntry({
@@ -173,6 +169,7 @@ class SettingsController extends ChangeNotifier {
   int themeSeedColor = 0xFF6750A4;
   bool blurBars = true;
   bool debugLog = false;
+  bool onboardingCompleted = false;
   Locale? locale;
   bool loading = true;
 
@@ -254,11 +251,21 @@ class SettingsController extends ChangeNotifier {
     islandHeight = prefs.getDouble(kPrefIslandHeight) ?? 0;
     keepIsland = prefs.getBool(kPrefKeepIsland) ?? false;
     keepIslandAutoHide = prefs.getBool(kPrefKeepIslandAutoHide) ?? true;
-    keepIslandHighlightColor = prefs.getString(kPrefKeepIslandHighlightColor) ?? '';
+    keepIslandHighlightColor =
+        prefs.getString(kPrefKeepIslandHighlightColor) ?? '';
     themeSeedColor = prefs.getInt(kPrefThemeSeedColor) ?? 0xFF6750A4;
     blurBars = prefs.getBool(kPrefBlurBars) ?? true;
     debugLog = prefs.getBool(kPrefDebugLog) ?? false;
+    onboardingCompleted = prefs.getBool(kPrefOnboardingCompleted) ?? false;
     loading = false;
+    notifyListeners();
+  }
+
+  Future<void> setOnboardingCompleted(bool value) async {
+    if (onboardingCompleted == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefOnboardingCompleted, value);
+    onboardingCompleted = value;
     notifyListeners();
   }
 

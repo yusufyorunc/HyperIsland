@@ -1315,6 +1315,83 @@ class AppLocalizationsZh extends AppLocalizations {
   String get miscSection => '杂项';
 
   @override
+  String get onboardingEntryTitle => '打开初始引导';
+
+  @override
+  String get onboardingEntrySubtitle => '重新查看欢迎与快速上手流程';
+
+  @override
+  String get onboardingAppName => 'HyperIsland';
+
+  @override
+  String get onboardingWelcomeTitle => '欢迎使用 HyperIsland';
+
+  @override
+  String get onboardingWelcomeSubtitle => '简洁、快速地配置你的超级岛体验';
+
+  @override
+  String get onboardingEnvironmentTitle => '环境检测';
+
+  @override
+  String get onboardingEnvironmentSubtitle => '确认模块权限状态';
+
+  @override
+  String get onboardingFinishTitle => '一切就绪';
+
+  @override
+  String get onboardingFinishSubtitle => '完成引导后，你可以到设置继续调整细节';
+
+  @override
+  String onboardingStepLabel(int current, int total) {
+    return '第$current步 / 共$total步';
+  }
+
+  @override
+  String get onboardingPrevious => '上一步';
+
+  @override
+  String get onboardingNext => '下一步';
+
+  @override
+  String get onboardingDone => '开始使用';
+
+  @override
+  String get onboardingStatusTitle => '状态检测';
+
+  @override
+  String get onboardingRetry => '重试';
+
+  @override
+  String get onboardingLsposedStatus => 'LSPosed 激活状态';
+
+  @override
+  String get onboardingRootStatus => 'Root 权限';
+
+  @override
+  String get onboardingProtocolStatus => '系统协议版本';
+
+  @override
+  String get onboardingAndroidStatus => '安卓版本';
+
+  @override
+  String get onboardingUnsupportedSystem => '不支持当前系统';
+
+  @override
+  String get onboardingAndroid15Limited => 'A15系统支持有限';
+
+  @override
+  String get onboardingMissingPermissionTitle => '缺少必要权限';
+
+  @override
+  String get onboardingMissingPermissionMessage => '模块可能无法正常工作';
+
+  @override
+  String get onboardingDialogClose => '关闭';
+
+  @override
+  String get onboardingDialogContinue => '继续';
+
+  @override
   String get backupRestoreSection => '备份与恢复';
 
   @override

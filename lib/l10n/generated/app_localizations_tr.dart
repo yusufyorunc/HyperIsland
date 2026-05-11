@@ -1377,6 +1377,88 @@ class AppLocalizationsTr extends AppLocalizations {
   String get miscSection => 'Çeşitli';
 
   @override
+  String get onboardingEntryTitle => 'İlk Kurulumu Aç';
+
+  @override
+  String get onboardingEntrySubtitle =>
+      'Karşılama ve hızlı başlangıç akışını tekrar görüntüle';
+
+  @override
+  String get onboardingAppName => 'HyperIsland';
+
+  @override
+  String get onboardingWelcomeTitle => 'HyperIsland\'a Hoş Geldiniz';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Ada deneyiminizi hızlı ve sade şekilde yapılandırın';
+
+  @override
+  String get onboardingEnvironmentTitle => 'Ortam Denetimi';
+
+  @override
+  String get onboardingEnvironmentSubtitle =>
+      'Modül izin durumunu kontrol edin';
+
+  @override
+  String get onboardingFinishTitle => 'Her Şey Hazır';
+
+  @override
+  String get onboardingFinishSubtitle =>
+      'Kurulumdan sonra ayrıntıları Ayarlar\'dan düzenlemeye devam edebilirsiniz';
+
+  @override
+  String onboardingStepLabel(int current, int total) {
+    return 'Adım $current / $total';
+  }
+
+  @override
+  String get onboardingPrevious => 'Önceki';
+
+  @override
+  String get onboardingNext => 'Sonraki';
+
+  @override
+  String get onboardingDone => 'Başla';
+
+  @override
+  String get onboardingStatusTitle => 'Durum Denetimi';
+
+  @override
+  String get onboardingRetry => 'Yeniden dene';
+
+  @override
+  String get onboardingLsposedStatus => 'LSPosed Etkinleştirme Durumu';
+
+  @override
+  String get onboardingRootStatus => 'Root İzni';
+
+  @override
+  String get onboardingProtocolStatus => 'Sistem Protokol Sürümü';
+
+  @override
+  String get onboardingAndroidStatus => 'Android Sürümü';
+
+  @override
+  String get onboardingUnsupportedSystem => 'Mevcut sistem desteklenmiyor';
+
+  @override
+  String get onboardingAndroid15Limited => 'Android 15 desteği sınırlıdır';
+
+  @override
+  String get onboardingMissingPermissionTitle => 'Gerekli İzin Eksik';
+
+  @override
+  String get onboardingMissingPermissionMessage =>
+      'Modül düzgün çalışmayabilir';
+
+  @override
+  String get onboardingDialogClose => 'Kapat';
+
+  @override
+  String get onboardingDialogContinue => 'Devam et';
+
+  @override
   String get backupRestoreSection => 'Yedekleme ve Geri Yükleme';
 
   @override

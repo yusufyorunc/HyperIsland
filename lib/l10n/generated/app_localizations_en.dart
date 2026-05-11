@@ -1378,6 +1378,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscSection => 'Misc';
 
   @override
+  String get onboardingEntryTitle => 'Open Onboarding';
+
+  @override
+  String get onboardingEntrySubtitle =>
+      'Review the welcome and quick start flow';
+
+  @override
+  String get onboardingAppName => 'HyperIsland';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to HyperIsland';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Configure your island experience quickly and cleanly';
+
+  @override
+  String get onboardingEnvironmentTitle => 'Environment Check';
+
+  @override
+  String get onboardingEnvironmentSubtitle => 'Check module permission status';
+
+  @override
+  String get onboardingFinishTitle => 'All Set';
+
+  @override
+  String get onboardingFinishSubtitle =>
+      'After onboarding, you can keep adjusting details in Settings';
+
+  @override
+  String onboardingStepLabel(int current, int total) {
+    return 'Step $current / $total';
+  }
+
+  @override
+  String get onboardingPrevious => 'Previous';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingDone => 'Get Started';
+
+  @override
+  String get onboardingStatusTitle => 'Status Check';
+
+  @override
+  String get onboardingRetry => 'Retry';
+
+  @override
+  String get onboardingLsposedStatus => 'LSPosed Activation';
+
+  @override
+  String get onboardingRootStatus => 'Root Access';
+
+  @override
+  String get onboardingProtocolStatus => 'System Protocol Version';
+
+  @override
+  String get onboardingAndroidStatus => 'Android Version';
+
+  @override
+  String get onboardingUnsupportedSystem => 'Current system is not supported';
+
+  @override
+  String get onboardingAndroid15Limited => 'Android 15 support is limited';
+
+  @override
+  String get onboardingMissingPermissionTitle => 'Required Permission Missing';
+
+  @override
+  String get onboardingMissingPermissionMessage =>
+      'The module may not work properly';
+
+  @override
+  String get onboardingDialogClose => 'Close';
+
+  @override
+  String get onboardingDialogContinue => 'Continue';
+
+  @override
   String get backupRestoreSection => 'Backup & Restore';
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/settings_controller.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'pages/main_page.dart';
+import 'pages/onboarding_page.dart';
 import 'services/app_cache_service.dart';
 
 void main() {
@@ -25,6 +26,8 @@ class _MyAppState extends State<MyApp> {
   Locale? _locale;
   int _seedColor = 0xFF6750A4;
   bool _blurBars = false;
+  bool _settingsLoading = true;
+  bool _onboardingCompleted = false;
 
   @override
   void initState() {
@@ -33,6 +36,8 @@ class _MyAppState extends State<MyApp> {
     _locale = _ctrl.locale;
     _seedColor = _ctrl.themeSeedColor;
     _blurBars = _ctrl.blurBars;
+    _settingsLoading = _ctrl.loading;
+    _onboardingCompleted = _ctrl.onboardingCompleted;
     _ctrl.addListener(_onSettingsChanged);
   }
 
@@ -47,10 +52,14 @@ class _MyAppState extends State<MyApp> {
     final nextLocale = _ctrl.locale;
     final nextSeedColor = _ctrl.themeSeedColor;
     final nextBlurBars = _ctrl.blurBars;
+    final nextSettingsLoading = _ctrl.loading;
+    final nextOnboardingCompleted = _ctrl.onboardingCompleted;
     if (nextThemeMode == _themeMode &&
         nextLocale == _locale &&
         nextSeedColor == _seedColor &&
-        nextBlurBars == _blurBars) {
+        nextBlurBars == _blurBars &&
+        nextSettingsLoading == _settingsLoading &&
+        nextOnboardingCompleted == _onboardingCompleted) {
       return;
     }
     if (!mounted) return;
@@ -59,6 +68,8 @@ class _MyAppState extends State<MyApp> {
       _locale = nextLocale;
       _seedColor = nextSeedColor;
       _blurBars = nextBlurBars;
+      _settingsLoading = nextSettingsLoading;
+      _onboardingCompleted = nextOnboardingCompleted;
     });
   }
 
@@ -76,9 +87,7 @@ class _MyAppState extends State<MyApp> {
       useMaterial3: true,
       // ── 全局圆角主题 ──
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         shape: RoundedRectangleBorder(
@@ -86,37 +95,27 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       cardTheme: CardThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest,
       ),
       popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       menuTheme: MenuThemeData(
         style: MenuStyle(
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -142,31 +141,23 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       // ── 原有自定义 ──
       appBarTheme: AppBarTheme(
-        backgroundColor: blur
-            ? Colors.transparent
-            : colorScheme.surface,
+        backgroundColor: blur ? Colors.transparent : colorScheme.surface,
         scrolledUnderElevation: blur ? 0 : null,
         systemOverlayStyle: blur
             ? (brightness == Brightness.light
-                ? SystemUiOverlayStyle.dark
-                : SystemUiOverlayStyle.light)
+                  ? SystemUiOverlayStyle.dark
+                  : SystemUiOverlayStyle.light)
             : null,
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -202,7 +193,11 @@ class _MyAppState extends State<MyApp> {
         blur: _blurBars,
       ),
       themeMode: _themeMode,
-      home: const MainPage(),
+      home: _settingsLoading
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : _onboardingCompleted
+          ? const MainPage()
+          : const OnboardingPage(),
     );
   }
 }

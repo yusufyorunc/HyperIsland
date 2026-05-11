@@ -516,6 +516,41 @@
 
 "islandOtherSection": "Diğer",
 "miscSection": "Çeşitli",
+"onboardingEntryTitle": "İlk Kurulumu Aç",
+"onboardingEntrySubtitle": "Karşılama ve hızlı başlangıç akışını tekrar görüntüle",
+"onboardingAppName": "HyperIsland",
+"onboardingWelcomeTitle": "HyperIsland'a Hoş Geldiniz",
+"onboardingWelcomeSubtitle": "Ada deneyiminizi hızlı ve sade şekilde yapılandırın",
+"onboardingEnvironmentTitle": "Ortam Denetimi",
+"onboardingEnvironmentSubtitle": "Modül izin durumunu kontrol edin",
+"onboardingFinishTitle": "Her Şey Hazır",
+"onboardingFinishSubtitle": "Kurulumdan sonra ayrıntıları Ayarlar'dan düzenlemeye devam edebilirsiniz",
+"onboardingStepLabel": "Adım {current} / {total}",
+"@onboardingStepLabel": {
+  "placeholders": {
+    "current": {
+      "type": "int"
+    },
+    "total": {
+      "type": "int"
+    }
+  }
+},
+"onboardingPrevious": "Önceki",
+"onboardingNext": "Sonraki",
+"onboardingDone": "Başla",
+"onboardingStatusTitle": "Durum Denetimi",
+"onboardingRetry": "Yeniden dene",
+"onboardingLsposedStatus": "LSPosed Etkinleştirme Durumu",
+"onboardingRootStatus": "Root İzni",
+"onboardingProtocolStatus": "Sistem Protokol Sürümü",
+"onboardingAndroidStatus": "Android Sürümü",
+"onboardingUnsupportedSystem": "Mevcut sistem desteklenmiyor",
+"onboardingAndroid15Limited": "Android 15 desteği sınırlıdır",
+"onboardingMissingPermissionTitle": "Gerekli İzin Eksik",
+"onboardingMissingPermissionMessage": "Modül düzgün çalışmayabilir",
+"onboardingDialogClose": "Kapat",
+"onboardingDialogContinue": "Devam et",
 "backupRestoreSection": "Yedekleme ve Geri Yükleme",
 "hookExtensionSection": "Hook Uzantısı",
   "hookScopeSystemUI": "Sistem UI",

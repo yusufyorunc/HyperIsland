@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -13,6 +14,7 @@ import io.github.hyperisland.core.data.NotificationChannelRepository
 import io.github.hyperisland.core.service.AppService
 import io.github.hyperisland.xposed.template.core.customization.FocusCustomizationEngine
 import io.github.hyperisland.utils.InteractionHaptics
+import io.github.hyperisland.utils.RootShell
 import io.github.hyperisland.utils.getAppIcon
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -102,6 +104,17 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
+                "checkRootAccess" -> {
+                    Thread {
+                        val ok = try {
+                            RootShell.run("id").exitCode == 0
+                        } catch (_: Exception) {
+                            false
+                        }
+                        runOnUiThread { result.success(ok) }
+                    }.start()
+                }
+
                 "getAppIcon" -> {
                     val pkg = call.argument<String>("packageName") ?: ""
                     Thread {
@@ -186,6 +199,10 @@ class MainActivity : FlutterActivity() {
                         0
                     )
                     result.success(version)
+                }
+
+                "getAndroidSdkVersion" -> {
+                    result.success(Build.VERSION.SDK_INT)
                 }
 
                 "setDesktopIconVisible" -> {

@@ -3,6 +3,7 @@ import '../../controllers/settings_controller.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/blur_app_bar.dart';
 import '../../services/interaction_haptics.dart';
+import '../onboarding_page.dart';
 
 class MiscPage extends StatefulWidget {
   const MiscPage({super.key});
@@ -16,12 +17,12 @@ class _MiscPageState extends State<MiscPage> {
   late int _uiStateHash;
 
   int _buildUiStateHash() => Object.hashAll([
-        _ctrl.interactionHaptics,
-        _ctrl.showWelcome,
-        _ctrl.hideDesktopIcon,
-        _ctrl.checkUpdateOnLaunch,
-        _ctrl.debugLog,
-      ]);
+    _ctrl.interactionHaptics,
+    _ctrl.showWelcome,
+    _ctrl.hideDesktopIcon,
+    _ctrl.checkUpdateOnLaunch,
+    _ctrl.debugLog,
+  ]);
 
   void _onChanged() {
     if (!mounted) return;
@@ -62,100 +63,121 @@ class _MiscPageState extends State<MiscPage> {
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  const SizedBox(height: 8),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(
+                          l10n.interactionHapticsTitle,
+                          style: titleStyle,
+                        ),
+                        subtitle: Text(l10n.interactionHapticsSubtitle),
+                        value: _ctrl.interactionHaptics,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          (value) => _ctrl.setInteractionHaptics(value),
+                          force: true,
+                        ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(16),
                           ),
-                          title: Text(l10n.interactionHapticsTitle,
-                              style: titleStyle),
-                          subtitle: Text(l10n.interactionHapticsSubtitle),
-                          value: _ctrl.interactionHaptics,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            (value) => _ctrl.setInteractionHaptics(value),
-                            force: true,
-                          ),
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(16),
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        leading: const Icon(Icons.auto_awesome_outlined),
+                        title: Text('打开初始引导', style: titleStyle),
+                        subtitle: const Text('重新查看欢迎与快速上手流程'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: InteractionHaptics.interceptButton(
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const OnboardingPage(),
                             ),
                           ),
                         ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          title:
-                              Text(l10n.showWelcomeTitle, style: titleStyle),
-                          subtitle: Text(l10n.showWelcomeSubtitle),
-                          value: _ctrl.showWelcome,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            (value) => _ctrl.setShowWelcome(value),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(l10n.showWelcomeTitle, style: titleStyle),
+                        subtitle: Text(l10n.showWelcomeSubtitle),
+                        value: _ctrl.showWelcome,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          (value) => _ctrl.setShowWelcome(value),
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(
+                          l10n.hideDesktopIconTitle,
+                          style: titleStyle,
+                        ),
+                        subtitle: Text(l10n.hideDesktopIconSubtitle),
+                        value: _ctrl.hideDesktopIcon,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          _onHideDesktopIconChanged,
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(
+                          l10n.checkUpdateOnLaunchTitle,
+                          style: titleStyle,
+                        ),
+                        subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
+                        value: _ctrl.checkUpdateOnLaunch,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          (value) => _ctrl.setCheckUpdateOnLaunch(value),
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(l10n.debugLogTitle, style: titleStyle),
+                        subtitle: Text(l10n.debugLogSubtitle),
+                        value: _ctrl.debugLog,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          (value) => _ctrl.setDebugLog(value),
+                        ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            bottom: Radius.circular(16),
                           ),
                         ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          title: Text(l10n.hideDesktopIconTitle,
-                              style: titleStyle),
-                          subtitle: Text(l10n.hideDesktopIconSubtitle),
-                          value: _ctrl.hideDesktopIcon,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            _onHideDesktopIconChanged,
-                          ),
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          title: Text(l10n.checkUpdateOnLaunchTitle,
-                              style: titleStyle),
-                          subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
-                          value: _ctrl.checkUpdateOnLaunch,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            (value) => _ctrl.setCheckUpdateOnLaunch(value),
-                          ),
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          title: Text(l10n.debugLogTitle, style: titleStyle),
-                          subtitle: Text(l10n.debugLogSubtitle),
-                          value: _ctrl.debugLog,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            (value) => _ctrl.setDebugLog(value),
-                          ),
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              bottom: Radius.circular(16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                ],
-                addAutomaticKeepAlives: false,
-              ),
+                ),
+                const SizedBox(height: 32),
+              ], addAutomaticKeepAlives: false),
             ),
           ),
         ],

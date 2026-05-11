@@ -408,6 +408,41 @@
 
 "islandOtherSection": "その他",
 "miscSection": "その他の設定",
+"onboardingEntryTitle": "初期ガイドを開く",
+"onboardingEntrySubtitle": "ようこそ画面とクイックスタートをもう一度確認",
+"onboardingAppName": "HyperIsland",
+"onboardingWelcomeTitle": "HyperIsland へようこそ",
+"onboardingWelcomeSubtitle": "アイランド体験をすばやくシンプルに設定します",
+"onboardingEnvironmentTitle": "環境チェック",
+"onboardingEnvironmentSubtitle": "モジュールの権限状態を確認します",
+"onboardingFinishTitle": "準備完了",
+"onboardingFinishSubtitle": "ガイド完了後も、設定から細部を調整できます",
+"onboardingStepLabel": "{total}ステップ中 {current}ステップ目",
+"@onboardingStepLabel": {
+  "placeholders": {
+    "current": {
+      "type": "int"
+    },
+    "total": {
+      "type": "int"
+    }
+  }
+},
+"onboardingPrevious": "前へ",
+"onboardingNext": "次へ",
+"onboardingDone": "開始",
+"onboardingStatusTitle": "状態チェック",
+"onboardingRetry": "再試行",
+"onboardingLsposedStatus": "LSPosed 有効化状態",
+"onboardingRootStatus": "Root 権限",
+"onboardingProtocolStatus": "システムプロトコルバージョン",
+"onboardingAndroidStatus": "Android バージョン",
+"onboardingUnsupportedSystem": "現在のシステムはサポートされていません",
+"onboardingAndroid15Limited": "Android 15 のサポートは限定的です",
+"onboardingMissingPermissionTitle": "必要な権限がありません",
+"onboardingMissingPermissionMessage": "モジュールが正常に動作しない可能性があります",
+"onboardingDialogClose": "閉じる",
+"onboardingDialogContinue": "続行",
 "backupRestoreSection": "バックアップと復元",
 "hookExtensionSection": "Hook拡張",
   "hookScopeSystemUI": "システムUI",

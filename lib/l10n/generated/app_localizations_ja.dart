@@ -1330,6 +1330,83 @@ class AppLocalizationsJa extends AppLocalizations {
   String get miscSection => 'その他の設定';
 
   @override
+  String get onboardingEntryTitle => '初期ガイドを開く';
+
+  @override
+  String get onboardingEntrySubtitle => 'ようこそ画面とクイックスタートをもう一度確認';
+
+  @override
+  String get onboardingAppName => 'HyperIsland';
+
+  @override
+  String get onboardingWelcomeTitle => 'HyperIsland へようこそ';
+
+  @override
+  String get onboardingWelcomeSubtitle => 'アイランド体験をすばやくシンプルに設定します';
+
+  @override
+  String get onboardingEnvironmentTitle => '環境チェック';
+
+  @override
+  String get onboardingEnvironmentSubtitle => 'モジュールの権限状態を確認します';
+
+  @override
+  String get onboardingFinishTitle => '準備完了';
+
+  @override
+  String get onboardingFinishSubtitle => 'ガイド完了後も、設定から細部を調整できます';
+
+  @override
+  String onboardingStepLabel(int current, int total) {
+    return '$totalステップ中 $currentステップ目';
+  }
+
+  @override
+  String get onboardingPrevious => '前へ';
+
+  @override
+  String get onboardingNext => '次へ';
+
+  @override
+  String get onboardingDone => '開始';
+
+  @override
+  String get onboardingStatusTitle => '状態チェック';
+
+  @override
+  String get onboardingRetry => '再試行';
+
+  @override
+  String get onboardingLsposedStatus => 'LSPosed 有効化状態';
+
+  @override
+  String get onboardingRootStatus => 'Root 権限';
+
+  @override
+  String get onboardingProtocolStatus => 'システムプロトコルバージョン';
+
+  @override
+  String get onboardingAndroidStatus => 'Android バージョン';
+
+  @override
+  String get onboardingUnsupportedSystem => '現在のシステムはサポートされていません';
+
+  @override
+  String get onboardingAndroid15Limited => 'Android 15 のサポートは限定的です';
+
+  @override
+  String get onboardingMissingPermissionTitle => '必要な権限がありません';
+
+  @override
+  String get onboardingMissingPermissionMessage => 'モジュールが正常に動作しない可能性があります';
+
+  @override
+  String get onboardingDialogClose => '閉じる';
+
+  @override
+  String get onboardingDialogContinue => '続行';
+
+  @override
   String get backupRestoreSection => 'バックアップと復元';
 
   @override

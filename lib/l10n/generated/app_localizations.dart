@@ -2568,6 +2568,156 @@ abstract class AppLocalizations {
   /// **'杂项'**
   String get miscSection;
 
+  /// No description provided for @onboardingEntryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开初始引导'**
+  String get onboardingEntryTitle;
+
+  /// No description provided for @onboardingEntrySubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新查看欢迎与快速上手流程'**
+  String get onboardingEntrySubtitle;
+
+  /// No description provided for @onboardingAppName.
+  ///
+  /// In zh, this message translates to:
+  /// **'HyperIsland'**
+  String get onboardingAppName;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'欢迎使用 HyperIsland'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'简洁、快速地配置你的超级岛体验'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingEnvironmentTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境检测'**
+  String get onboardingEnvironmentTitle;
+
+  /// No description provided for @onboardingEnvironmentSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认模块权限状态'**
+  String get onboardingEnvironmentSubtitle;
+
+  /// No description provided for @onboardingFinishTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'一切就绪'**
+  String get onboardingFinishTitle;
+
+  /// No description provided for @onboardingFinishSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成引导后，你可以到设置继续调整细节'**
+  String get onboardingFinishSubtitle;
+
+  /// No description provided for @onboardingStepLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'第{current}步 / 共{total}步'**
+  String onboardingStepLabel(int current, int total);
+
+  /// No description provided for @onboardingPrevious.
+  ///
+  /// In zh, this message translates to:
+  /// **'上一步'**
+  String get onboardingPrevious;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一步'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始使用'**
+  String get onboardingDone;
+
+  /// No description provided for @onboardingStatusTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'状态检测'**
+  String get onboardingStatusTitle;
+
+  /// No description provided for @onboardingRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get onboardingRetry;
+
+  /// No description provided for @onboardingLsposedStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'LSPosed 激活状态'**
+  String get onboardingLsposedStatus;
+
+  /// No description provided for @onboardingRootStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'Root 权限'**
+  String get onboardingRootStatus;
+
+  /// No description provided for @onboardingProtocolStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统协议版本'**
+  String get onboardingProtocolStatus;
+
+  /// No description provided for @onboardingAndroidStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'安卓版本'**
+  String get onboardingAndroidStatus;
+
+  /// No description provided for @onboardingUnsupportedSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持当前系统'**
+  String get onboardingUnsupportedSystem;
+
+  /// No description provided for @onboardingAndroid15Limited.
+  ///
+  /// In zh, this message translates to:
+  /// **'A15系统支持有限'**
+  String get onboardingAndroid15Limited;
+
+  /// No description provided for @onboardingMissingPermissionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺少必要权限'**
+  String get onboardingMissingPermissionTitle;
+
+  /// No description provided for @onboardingMissingPermissionMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'模块可能无法正常工作'**
+  String get onboardingMissingPermissionMessage;
+
+  /// No description provided for @onboardingDialogClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get onboardingDialogClose;
+
+  /// No description provided for @onboardingDialogContinue.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get onboardingDialogContinue;
+
   /// No description provided for @backupRestoreSection.
   ///
   /// In zh, this message translates to:
