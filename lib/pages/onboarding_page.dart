@@ -25,6 +25,7 @@ class _OnboardingPageState extends State<OnboardingPage>
   bool? _rootGranted;
   int? _protocolVersion;
   int? _androidSdkVersion;
+  bool _defaultFocusNotif = SettingsController.instance.defaultFocusNotif;
 
   @override
   void initState() {
@@ -109,6 +110,7 @@ class _OnboardingPageState extends State<OnboardingPage>
   }
 
   Future<void> _finishOnboarding() async {
+    await SettingsController.instance.setDefaultFocusNotif(_defaultFocusNotif);
     await SettingsController.instance.setOnboardingCompleted(true);
     if (!mounted) return;
     final navigator = Navigator.of(context);
@@ -154,6 +156,11 @@ class _OnboardingPageState extends State<OnboardingPage>
         title: l10n.onboardingEnvironmentTitle,
         subtitle: l10n.onboardingEnvironmentSubtitle,
         icon: Icons.verified_outlined,
+      ),
+      _OnboardingStep(
+        title: l10n.onboardingNotificationStyleTitle,
+        subtitle: l10n.onboardingNotificationStyleSubtitle,
+        icon: Icons.notifications_active_outlined,
       ),
       _OnboardingStep(
         title: l10n.onboardingFinishTitle,
@@ -217,6 +224,14 @@ class _OnboardingPageState extends State<OnboardingPage>
                               androidSdkVersion: _androidSdkVersion,
                               l10n: l10n,
                               onRefresh: _refreshStatus,
+                            )
+                          : null,
+                      contentPanel: index == 2
+                          ? _NotificationStylePanel(
+                              defaultFocusNotif: _defaultFocusNotif,
+                              onChanged: (value) =>
+                                  setState(() => _defaultFocusNotif = value),
+                              l10n: l10n,
                             )
                           : null,
                     ),
@@ -316,12 +331,14 @@ class _OnboardingStepView extends StatelessWidget {
   final int stepIndex;
   final int stepCount;
   final Widget? statusPanel;
+  final Widget? contentPanel;
 
   const _OnboardingStepView({
     required this.step,
     required this.stepIndex,
     required this.stepCount,
     this.statusPanel,
+    this.contentPanel,
   });
 
   @override
@@ -391,6 +408,10 @@ class _OnboardingStepView extends StatelessWidget {
             if (statusPanel != null) ...[
               const SizedBox(height: 28),
               statusPanel!,
+            ],
+            if (contentPanel != null) ...[
+              const SizedBox(height: 28),
+              contentPanel!,
             ],
           ],
         ),
@@ -482,6 +503,133 @@ class _EnvironmentStatusPanel extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationStylePanel extends StatelessWidget {
+  final bool defaultFocusNotif;
+  final ValueChanged<bool> onChanged;
+  final AppLocalizations l10n;
+
+  const _NotificationStylePanel({
+    required this.defaultFocusNotif,
+    required this.onChanged,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: Column(
+        children: [
+          _NotificationStyleOption(
+            label: l10n.focusNotificationLabel,
+            assetPath: 'assets/images/notification1.png',
+            selected: defaultFocusNotif,
+            onTap: () => onChanged(true),
+          ),
+          const SizedBox(height: 14),
+          _NotificationStyleOption(
+            label: l10n.onboardingOriginalNotificationLabel,
+            assetPath: 'assets/images/notification2.png',
+            selected: !defaultFocusNotif,
+            onTap: () => onChanged(false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationStyleOption extends StatelessWidget {
+  final String label;
+  final String assetPath;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NotificationStyleOption({
+    required this.label,
+    required this.assetPath,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = selected
+        ? const Color(0xFF9EEBFF)
+        : Colors.white.withValues(alpha: 0.14);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: selected ? 0.16 : 0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: selected ? 2 : 1),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF73D7FF).withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Spacer(),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    key: ValueKey(selected),
+                    color: selected ? const Color(0xFF9EEBFF) : Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.fitWidth,
+                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 86,
+                  alignment: Alignment.center,
+                  color: Colors.white.withValues(alpha: 0.08),
+                  child: Text(
+                    assetPath,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
