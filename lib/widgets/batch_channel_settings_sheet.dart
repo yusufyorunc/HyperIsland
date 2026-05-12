@@ -2042,6 +2042,11 @@ class _BatchSettingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: cs.outlineVariant),
+    );
 
     return _SettingField(
       label: label,
@@ -2055,7 +2060,15 @@ class _BatchSettingRow extends StatelessWidget {
           ...items,
         ],
         onChanged: onChanged,
-        decoration: _fieldDecoration(context),
+        decoration: _fieldDecoration(context).copyWith(
+          filled: true,
+          fillColor: cs.surfaceContainerHigh,
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border.copyWith(
+            borderSide: BorderSide(color: cs.primary),
+          ),
+        ),
       ),
     );
   }
