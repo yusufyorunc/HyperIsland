@@ -489,6 +489,7 @@ class _BehaviorRuleTile extends StatelessWidget {
       trailing: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
+          alignment: Alignment.center,
           borderRadius: BorderRadius.circular(16),
           onChanged: InteractionHaptics.interceptDropdown((next) async {
             if (next == null) return;
@@ -498,7 +499,7 @@ class _BehaviorRuleTile extends StatelessWidget {
             for (final item in values)
               DropdownMenuItem<String>(
                 value: item,
-                child: Text(labelForValue(item)),
+                child: Center(child: Text(labelForValue(item))),
               ),
           ],
         ),
