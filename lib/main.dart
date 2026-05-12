@@ -157,9 +157,6 @@ class _MyAppState extends State<MyApp> {
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
       // ── 原有自定义 ──
       appBarTheme: AppBarTheme(
         backgroundColor: blur ? Colors.transparent : colorScheme.surface,
