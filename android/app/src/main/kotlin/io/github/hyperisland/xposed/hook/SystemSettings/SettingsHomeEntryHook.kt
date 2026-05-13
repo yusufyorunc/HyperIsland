@@ -3,21 +3,20 @@ package io.github.hyperisland.xposed.hook
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.res.loader.ResourcesLoader
-import android.content.res.loader.ResourcesProvider
-import android.os.ParcelFileDescriptor
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 
 object SettingsHomeEntryHook : BaseHook() {
 
     private const val MODULE_PACKAGE = "io.github.hyperisland"
     private const val MAIN_ACTIVITY = "io.github.hyperisland.MainActivity"
     private const val HEADER_ID = 0x68797065726C // "hyperl"
-    private val resourceLoaderInstalled = AtomicBoolean(false)
+    private const val ICON_FAKE_RES_ID = 0x7e00f001
+    private var iconHookInstalled = false
+    private var moduleIconState: Drawable.ConstantState? = null
 
     override fun getTag(): String = "HyperIsland[SettingsHomeEntry]"
 
@@ -37,6 +36,8 @@ object SettingsHomeEntryHook : BaseHook() {
             logError(module, "updateHeaderList not found: ${e.message}")
             return
         }
+
+        installIconHook(module)
 
         module.hook(method).intercept { chain ->
             val result = chain.proceed()
@@ -78,32 +79,51 @@ object SettingsHomeEntryHook : BaseHook() {
             return
         }
 
-        installModuleResources(context, moduleContext, module)
-
         val header = headerClass.getDeclaredConstructor().apply { isAccessible = true }.newInstance()
         setLongField(header, "id", HEADER_ID)
         setObjectField(header, "title", context.packageManager.getApplicationLabel(moduleContext.applicationInfo))
-        setIntField(header, "iconRes", moduleContext.resources.getIdentifier("ic_settings_entry", "drawable", MODULE_PACKAGE))
+        setIntField(header, "iconRes", ICON_FAKE_RES_ID)
         setObjectField(header, "intent", createLaunchIntent())
 
         headers.add(findInsertPosition(context, headers).coerceIn(0, headers.size), header)
         log(module, "inserted HyperIsland settings entry")
     }
 
-    private fun installModuleResources(context: Context, moduleContext: Context, module: XposedModule) {
-        if (!resourceLoaderInstalled.compareAndSet(false, true)) return
+    private fun installIconHook(module: XposedModule) {
+        if (iconHookInstalled) return
 
-        try {
-            val sourceDir = moduleContext.applicationInfo.sourceDir ?: return
-            val apk = ParcelFileDescriptor.open(File(sourceDir), ParcelFileDescriptor.MODE_READ_ONLY)
-            val provider = ResourcesProvider.loadFromApk(apk)
-            val loader = ResourcesLoader().apply { addProvider(provider) }
-            context.resources.addLoaders(loader)
-            log(module, "installed module ResourcesLoader")
-        } catch (e: Throwable) {
-            resourceLoaderInstalled.set(false)
-            logError(module, "install module resources failed: ${e.message}")
+        val methods = Resources::class.java.declaredMethods.filter { method ->
+            method.name == "getDrawable" &&
+                method.parameterTypes.isNotEmpty() &&
+                method.parameterTypes[0] == Int::class.javaPrimitiveType
         }
+
+        methods.forEach { method ->
+            module.hook(method).intercept { chain ->
+                val resId = chain.args.getOrNull(0) as? Int
+                if (resId == ICON_FAKE_RES_ID) {
+                    moduleIconState?.newDrawable() ?: loadModuleIcon(chain.thisObject as? Resources)
+                } else {
+                    chain.proceed()
+                }
+            }
+        }
+
+        iconHookInstalled = methods.isNotEmpty()
+        log(module, "hooked Resources.getDrawable for settings entry icon")
+    }
+
+    private fun loadModuleIcon(resources: Resources?): Drawable? = try {
+        val context = HookUtils.getContext(ClassLoader.getSystemClassLoader())
+            ?.createPackageContext(MODULE_PACKAGE, Context.CONTEXT_IGNORE_SECURITY)
+        val iconId = context?.resources?.getIdentifier("ic_settings_entry", "drawable", MODULE_PACKAGE) ?: 0
+        if (context != null && iconId != 0) {
+            context.resources.getDrawable(iconId, null)?.also { moduleIconState = it.constantState }
+        } else {
+            null
+        }
+    } catch (_: Throwable) {
+        resources?.getDrawable(android.R.drawable.ic_dialog_info, null)
     }
 
     private fun createLaunchIntent(): Intent = Intent().apply {
