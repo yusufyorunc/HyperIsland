@@ -2781,8 +2781,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHomeEntrySubtitle.
   ///
   /// In zh, this message translates to:
-  /// **'在系统设置首页显示 HyperIsland 入口，关闭后完全不注入该 Hook'**
+  /// **'在系统设置首页显示 HyperIsland 入口'**
   String get settingsHomeEntrySubtitle;
+
+  /// No description provided for @xposedScopeRequestFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'作用域申请失败，请确认模块已在 LSPosed 中启用'**
+  String get xposedScopeRequestFailed;
 
   /// No description provided for @hookScopeSystemUI.
   ///

@@ -1492,7 +1492,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsHomeEntrySubtitle =>
-      'Sistem Ayarları ana sayfasında HyperIsland girişini göster. Kapatıldığında bu Hook hiç enjekte edilmez';
+      'Sistem Ayarları ana sayfasında HyperIsland girişini göster';
+
+  @override
+  String get xposedScopeRequestFailed =>
+      'Kapsam isteği başarısız oldu. Modülün LSPosed\'de etkin olduğundan emin olun';
 
   @override
   String get hookScopeSystemUI => 'Sistem UI';

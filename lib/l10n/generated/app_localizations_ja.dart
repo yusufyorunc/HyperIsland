@@ -1438,8 +1438,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHomeEntryTitle => 'システム設定の入口';
 
   @override
-  String get settingsHomeEntrySubtitle =>
-      'システム設定のホーム画面に HyperIsland の入口を表示します。無効にするとこの Hook は一切注入されません';
+  String get settingsHomeEntrySubtitle => 'システム設定のホーム画面に HyperIsland の入口を表示します';
+
+  @override
+  String get xposedScopeRequestFailed =>
+      'スコープの申請に失敗しました。LSPosed でモジュールが有効になっているか確認してください';
 
   @override
   String get hookScopeSystemUI => 'システムUI';

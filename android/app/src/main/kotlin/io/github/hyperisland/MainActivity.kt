@@ -196,6 +196,20 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
+                "requestXposedScope" -> {
+                    val packages = call.argument<List<String>>("packages").orEmpty()
+                    if (packages.isEmpty()) {
+                        result.error("INVALID_PARAMS", "packages is required", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        (application as XposedPrefsSyncApp).requestScope(packages)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("SERVICE_UNAVAILABLE", e.message, null)
+                    }
+                }
+
                 "getFocusProtocolVersion" -> {
                     val version = Settings.System.getInt(
                         contentResolver,

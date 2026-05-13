@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../controllers/settings_controller.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/blur_app_bar.dart';
@@ -12,6 +13,7 @@ class HookExtensionPage extends StatefulWidget {
 }
 
 class _HookExtensionPageState extends State<HookExtensionPage> {
+  static const _platform = MethodChannel('io.github.hyperisland/test');
   final _ctrl = SettingsController.instance;
   late int _uiStateHash;
 
@@ -43,6 +45,12 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
   }
 
   Future<void> _onResumeNotificationChanged(bool value) async {
+    if (!await _requestScopesIfEnabled(value, const [
+      'com.android.providers.downloads',
+      'com.xiaomi.android.app.downloadmanager',
+    ])) {
+      return;
+    }
     await _ctrl.setResumeNotification(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +63,9 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
   }
 
   Future<void> _onSettingsHomeEntryChanged(bool value) async {
+    if (!await _requestScopesIfEnabled(value, const ['com.android.settings'])) {
+      return;
+    }
     await _ctrl.setSettingsHomeEntry(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +75,49 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
         ),
       );
     }
+  }
+
+  Future<void> _onUnlockAllFocusChanged(bool value) async {
+    if (!await _requestScopesIfEnabled(value, const ['com.android.systemui'])) {
+      return;
+    }
+    await _ctrl.setUnlockAllFocus(value);
+  }
+
+  Future<void> _onUnlockFocusAuthChanged(bool value) async {
+    if (!await _requestScopesIfEnabled(value, const ['com.xiaomi.xmsf'])) {
+      return;
+    }
+    await _ctrl.setUnlockFocusAuth(value);
+  }
+
+  Future<bool> _requestScopesIfEnabled(
+    bool enabled,
+    List<String> packages,
+  ) async {
+    if (!enabled) return true;
+    final fallbackMessage = AppLocalizations.of(
+      context,
+    )!.xposedScopeRequestFailed;
+    try {
+      await _platform.invokeMethod('requestXposedScope', {
+        'packages': packages,
+      });
+      return true;
+    } on PlatformException catch (e) {
+      _showSnackBar(e.message ?? fallbackMessage);
+      return false;
+    } catch (_) {
+      _showSnackBar(fallbackMessage);
+      return false;
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
+    );
   }
 
   @override
@@ -116,7 +170,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
                     subtitle: Text(l10n.unlockAllFocusSubtitle),
                     value: _ctrl.unlockAllFocus,
                     onChanged: InteractionHaptics.interceptToggle(
-                      (v) => _ctrl.setUnlockAllFocus(v),
+                      _onUnlockAllFocusChanged,
                     ),
                   ),
                 ),
@@ -135,7 +189,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
                     subtitle: Text(l10n.unlockFocusAuthSubtitle),
                     value: _ctrl.unlockFocusAuth,
                     onChanged: InteractionHaptics.interceptToggle(
-                      (v) => _ctrl.setUnlockFocusAuth(v),
+                      _onUnlockFocusAuthChanged,
                     ),
                   ),
                 ),

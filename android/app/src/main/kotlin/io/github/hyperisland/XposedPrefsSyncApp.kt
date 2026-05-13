@@ -93,6 +93,26 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
         }
     }
 
+    fun requestScope(packages: List<String>) {
+        val service = xposedService ?: throw IllegalStateException("XposedService is not ready")
+        val currentScope = service.scope.toSet()
+        val missingPackages = packages.filterNot { it in currentScope }
+        if (missingPackages.isEmpty()) {
+            Log.d(TAG, "scope already granted: $packages")
+            return
+        }
+
+        service.requestScope(missingPackages, object : XposedService.OnScopeEventListener {
+            override fun onScopeRequestApproved(scope: List<String>) {
+                Log.d(TAG, "scope request approved: $scope")
+            }
+
+            override fun onScopeRequestFailed(message: String) {
+                Log.w(TAG, "scope request failed: $message")
+            }
+        })
+    }
+
     private fun writeAll(src: SharedPreferences, editor: SharedPreferences.Editor) {
         for ((key, value) in src.all) {
             writeValue(editor, key, value)

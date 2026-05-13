@@ -554,6 +554,7 @@
   "hookScopeSettings": "System Settings",
   "settingsHomeEntryTitle": "System Settings entry",
   "settingsHomeEntrySubtitle": "Show the HyperIsland entry on the System Settings home page",
+  "xposedScopeRequestFailed": "Scope request failed. Make sure the module is enabled in LSPosed",
   "hookScopeSystemUI": "System UI",
   "hookScopeXMSF": "Xiaomi Service Framework (XMSF)",
   "downloadManagerSection": "Download Manager",

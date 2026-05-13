@@ -1492,7 +1492,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHomeEntrySubtitle =>
-      'Show the HyperIsland entry on the System Settings home page. When disabled, this Hook is not injected at all';
+      'Show the HyperIsland entry on the System Settings home page';
+
+  @override
+  String get xposedScopeRequestFailed =>
+      'Scope request failed. Make sure the module is enabled in LSPosed';
 
   @override
   String get hookScopeSystemUI => 'System UI';
