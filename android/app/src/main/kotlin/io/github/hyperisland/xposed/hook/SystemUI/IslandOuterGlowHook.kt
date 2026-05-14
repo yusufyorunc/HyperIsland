@@ -50,13 +50,39 @@ object IslandOuterGlowHook : BaseHook() {
         val createdAt: Long,
     )
 
+    private data class MediaGlowRequest(
+        val pkg: String,
+        val enabled: Boolean,
+        val color: String?,
+    )
+
     private val hookedGlowClassLoaders = ConcurrentHashMap.newKeySet<Int>()
     private val hookedAnimationClassLoaders = ConcurrentHashMap.newKeySet<Int>()
     private val hookedFeatureClassLoaders = ConcurrentHashMap.newKeySet<Int>()
     private val hookedFocusClassLoaders = ConcurrentHashMap.newKeySet<Int>()
     private val defaultShaderColors = WeakHashMap<Class<*>, FloatArray>()
+    private val mediaGlowRequests = ConcurrentHashMap<String, MediaGlowRequest>()
 
     @Volatile private var recentOwnedTarget: OwnedGlowTarget? = null
+
+    fun recordMediaGlowRequest(
+        pkg: String,
+        enabled: Boolean,
+        color: String?,
+        module: XposedModule,
+    ) {
+        val request = MediaGlowRequest(
+            pkg = pkg,
+            enabled = enabled,
+            color = color,
+        )
+        if (enabled) {
+            mediaGlowRequests[pkg] = request
+        } else {
+            mediaGlowRequests.remove(pkg)
+        }
+        log(module, "media glow recorded: pkg=$pkg enabled=$enabled color=$color")
+    }
 
     override fun getTag() = TAG
 
@@ -108,6 +134,14 @@ object IslandOuterGlowHook : BaseHook() {
                     val stateObj = chain.args.getOrNull(0)
                     val mode = resolveStrictGlowMode(stateObj)
                     val extras = extractExtrasFromAnimationState(stateObj)
+                    val channelForLog = extras?.getString("hyperisland_channel_id")
+                        ?: extras?.getString("hyperisland_source_channel")
+                    if (mode == GLOW_MODE_STATUS || channelForLog == "media") {
+//                        log(
+//                            module,
+//                            "big island state probe: mode=$mode state=${readStateText(stateObj)} data=${extractDynamicData(stateObj)?.javaClass?.name} extrasKeys=${formatBundleKeys(extras)} owner=${extras?.getString(OWNER_KEY)} channel=$channelForLog miuiPkg=${extras?.getString("miui.pkg.name")} miuiKey=${extras?.getString("miui.key")} mediaFocus=${extras?.containsKey("miui.focus.param.media")} big=${extras?.getString(BIG_EFFECT_KEY)} effect=${extras?.getString(EFFECT_KEY)} color=${extras?.getString("hyperisland_island_outer_glow_color")}",
+//                        )
+                    }
                     if (mode != GLOW_MODE_AUTO && extras != null && hasOwnedGlowRequest(extras, mode)) {
                         val pkg = extras.getString("hyperisland_source_pkg")
                         val channelId = extras.getString("hyperisland_channel_id")
@@ -123,14 +157,39 @@ object IslandOuterGlowHook : BaseHook() {
                                 islandOuterGlowColor = extras.getString("hyperisland_island_outer_glow_color"),
                                 createdAt = System.currentTimeMillis(),
                             )
+                            if (channelId == "media") {
+//                                log(
+//                                    module,
+//                                    "media glow target matched: mode=$mode pkg=$pkg islandGlow=${extras.getString(BIG_EFFECT_KEY)} color=${extras.getString("hyperisland_island_outer_glow_color")}",
+//                                )
+                            }
                         }
                     }
 
                     val result = chain.proceed()
 
                     val bigView = invokeNoArg(stateObj ?: return@intercept result, "getBigIslandView")
+                    val mediaRequest = if (isStateTag(stateObj, "BigIsland")) {
+                        resolveMediaGlowRequest(stateObj, extras)
+                    } else {
+                        null
+                    }
                     when {
                         isStateTag(stateObj, "BigIsland") && hasOwnedGlowRequest(extras, GLOW_MODE_STATUS) -> {
+                            invokeGlowEffectMethod(bigView, "startGlowEffect")
+                        }
+                        isStateTag(stateObj, "BigIsland") && mediaRequest != null -> {
+                            recentOwnedTarget = OwnedGlowTarget(
+                                pkg = mediaRequest.pkg,
+                                channelId = "media",
+                                mode = GLOW_MODE_STATUS,
+                                focusGlowEnabled = false,
+                                islandGlowEnabled = mediaRequest.enabled,
+                                focusOutEffectColor = null,
+                                islandOuterGlowColor = mediaRequest.color,
+                                createdAt = System.currentTimeMillis(),
+                            )
+                            log(module, "media glow forced start: pkg=${mediaRequest.pkg} enabled=${mediaRequest.enabled} color=${mediaRequest.color}")
                             invokeGlowEffectMethod(bigView, "startGlowEffect")
                         }
                         isStateTag(stateObj, "Deleted") -> {
@@ -155,7 +214,9 @@ object IslandOuterGlowHook : BaseHook() {
             }
             methods.forEach { method ->
                 module.hook(method).intercept { chain ->
-                    applyOwnedGlowColor(chain.thisObject, resolveGlowModeFromGlowView(chain.thisObject))
+                    val mode = resolveGlowModeFromGlowView(chain.thisObject)
+                    logGlowViewProbe(module, chain.thisObject, mode)
+                    applyOwnedGlowColor(chain.thisObject, mode)
                     chain.proceed()
                 }
             }
@@ -182,6 +243,12 @@ object IslandOuterGlowHook : BaseHook() {
                     val sourceExtras = sbn.notification?.extras ?: return@intercept result
                     val targetBundle = result as? Bundle ?: return@intercept result
                     bridgeEffectExtras(sourceExtras, targetBundle)
+                    if (sourceExtras.containsKey("miui.focus.param.media")) {
+                        log(
+                            module,
+                            "media glow bridge: pkg=${sbn.packageName} owner=${targetBundle.getString(OWNER_KEY)} channel=${targetBundle.getString("hyperisland_channel_id")} big=${targetBundle.getString(BIG_EFFECT_KEY)} effect=${targetBundle.getString(EFFECT_KEY)} color=${targetBundle.getString("hyperisland_island_outer_glow_color")}",
+                        )
+                    }
                     result
                 }
             }
@@ -207,7 +274,9 @@ object IslandOuterGlowHook : BaseHook() {
 
     private fun hasOwnedGlowRequest(extras: Bundle?, mode: Int): Boolean {
         if (extras == null) return false
-        if (extras.getString(OWNER_KEY) != OWNER_VALUE) return false
+        val channelId = extras.getString("hyperisland_channel_id")
+            ?: extras.getString("hyperisland_source_channel")
+        if (extras.getString(OWNER_KEY) != OWNER_VALUE && channelId != "media") return false
         return when (mode) {
             GLOW_MODE_STATUS ->
                 extras.getString(BIG_EFFECT_KEY) == EFFECT_VALUE
@@ -223,27 +292,32 @@ object IslandOuterGlowHook : BaseHook() {
         val channelId = target.channelId
         return when (mode) {
             GLOW_MODE_STATUS -> GlowConfig(
-                effectEnabled = if (channelId == "toast") {
-                    target.islandGlowEnabled
-                } else {
-                    resolveGlowEnabled(
+                effectEnabled = when (channelId) {
+                    "toast", "media" -> target.islandGlowEnabled
+                    else -> resolveGlowEnabled(
                         ConfigManager.getString("pref_channel_island_outer_glow_${pkg}_$channelId", "default"),
                         ConfigManager.getString("pref_default_island_outer_glow", "off"),
                     )
                 },
                 colorArgb = parseArgbColor(
-                    target.islandOuterGlowColor ?: resolveGlowColorValue(
-                        mode = ConfigManager.getString("pref_channel_island_outer_glow_${pkg}_$channelId", "default"),
-                        fallbackMode = ConfigManager.getString("pref_default_island_outer_glow", "off"),
-                        manualColor = ConfigManager.getString(
-                            "pref_channel_island_outer_glow_color_${pkg}_$channelId",
+                    target.islandOuterGlowColor ?: when (channelId) {
+                        "media" -> ConfigManager.getString(
+                            "pref_media_island_outer_glow_color_$pkg",
                             ConfigManager.getString("pref_default_island_outer_glow_color", ""),
-                        ),
-                        dynamicColor = ConfigManager.getString(
-                            "pref_channel_highlight_color_${pkg}_$channelId",
-                            "",
-                        ),
-                    ),
+                        )
+                        else -> resolveGlowColorValue(
+                            mode = ConfigManager.getString("pref_channel_island_outer_glow_${pkg}_$channelId", "default"),
+                            fallbackMode = ConfigManager.getString("pref_default_island_outer_glow", "off"),
+                            manualColor = ConfigManager.getString(
+                                "pref_channel_island_outer_glow_color_${pkg}_$channelId",
+                                ConfigManager.getString("pref_default_island_outer_glow_color", ""),
+                            ),
+                            dynamicColor = ConfigManager.getString(
+                                "pref_channel_highlight_color_${pkg}_$channelId",
+                                "",
+                            ),
+                        )
+                    },
                 ),
             )
             GLOW_MODE_EXPAND -> GlowConfig(
@@ -293,6 +367,69 @@ object IslandOuterGlowHook : BaseHook() {
             rebuildLightShaderArray(base, cfg.colorArgb)
         }
         setRuntimeShaderLightColors(runtimeShader, targetColors)
+    }
+
+    private fun resolveMediaGlowRequest(stateObj: Any?, extras: Bundle?): MediaGlowRequest? {
+        val isMediaState = isMediaAnimationState(stateObj, extras)
+        if (!isMediaState) return null
+        val pkg = resolveSourcePkg(extras)
+        if (pkg.isNullOrBlank()) return null
+        return mediaGlowRequests[pkg]?.takeIf { it.enabled }
+    }
+
+    private fun isMediaAnimationState(stateObj: Any?, extras: Bundle?): Boolean {
+        if (extras != null) {
+            val channelId = extras.getString("hyperisland_channel_id")
+                ?: extras.getString("hyperisland_source_channel")
+            if (channelId == "media" || extras.containsKey("miui.focus.param.media")) return true
+            resolveSourcePkg(extras)?.let { pkg ->
+                if (mediaGlowRequests[pkg]?.enabled == true) return true
+            }
+        }
+        return false
+    }
+
+    private fun resolveSourcePkg(extras: Bundle?): String? {
+        if (extras == null) return null
+        return extras.getString("hyperisland_source_pkg")
+            ?: extras.getString("miui.pkg.name")
+    }
+
+    private fun formatBundleKeys(bundle: Bundle?): String {
+        if (bundle == null) return "null"
+        return bundle.keySet().joinToString(prefix = "[", postfix = "]", limit = 40, truncated = "...")
+    }
+
+    private fun logGlowViewProbe(module: XposedModule, glowView: Any?, mode: Int) {
+        if (glowView == null) return
+        val target = recentOwnedTarget
+        log(
+            module,
+            "glow view probe: mode=$mode class=${glowView.javaClass.name} target=${target?.pkg}/${target?.channelId} targetMode=${target?.mode}",
+        )
+        logObjectShape(module, "glowView", glowView)
+        invokeNoArg(glowView, "getMContainer")?.let { container ->
+            logObjectShape(module, "glowContainer", container)
+            resolveLightBgShader(glowView)?.let { shader ->
+                logObjectShape(module, "glowShader", shader)
+                resolveRuntimeShader(shader)?.let { runtimeShader ->
+                    logObjectShape(module, "runtimeShader", runtimeShader)
+                }
+            }
+        }
+    }
+
+    private fun logObjectShape(module: XposedModule, label: String, obj: Any) {
+        val cls = obj.javaClass
+        val fields = cls.declaredFields.joinToString(limit = 24, truncated = "...") { field ->
+            "${field.name}:${field.type.simpleName}"
+        }
+        val methods = cls.declaredMethods
+            .filter { it.parameterCount == 0 }
+            .joinToString(limit = 24, truncated = "...") { method ->
+                "${method.name}():${method.returnType.simpleName}"
+            }
+        log(module, "$label shape: class=${cls.name} fields=[$fields] noArgMethods=[$methods]")
     }
 
     private fun shouldApplyOwnedGlowForMode(mode: Int): Boolean {
@@ -360,6 +497,8 @@ object IslandOuterGlowHook : BaseHook() {
         return when {
             cls.contains(EXPANDED_VIEW_MARKER) -> GLOW_MODE_EXPAND
             cls.contains(BIG_VIEW_MARKER) -> GLOW_MODE_STATUS
+            shouldApplyOwnedGlowForMode(GLOW_MODE_STATUS) -> GLOW_MODE_STATUS
+            shouldApplyOwnedGlowForMode(GLOW_MODE_EXPAND) -> GLOW_MODE_EXPAND
             else -> GLOW_MODE_AUTO
         }
     }

@@ -1,15 +1,21 @@
-package io.github.hyperisland.xposed.hook
+package io.github.hyperisland.xposed.hook.SystemUI
 
+import android.R
 import android.app.KeyguardManager
 import android.app.Notification
+import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.Icon
+import android.os.Build
+import android.os.Bundle
 import android.service.notification.StatusBarNotification
 import io.github.hyperisland.utils.getAppIcon
 import io.github.hyperisland.utils.resolveDynamicHighlightColor
 import io.github.hyperisland.xposed.ConfigManager
+import io.github.hyperisland.xposed.hook.BaseHook
+import io.github.hyperisland.xposed.hook.IslandOuterGlowHook
 import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
 import io.github.hyperisland.xposed.template.core.TemplateRegistry
-import io.github.hyperisland.xposed.template.core.filters.KeywordFilter
 import io.github.hyperisland.xposed.template.core.models.NotifData
 import io.github.hyperisland.xposed.utils.SceneBehavior
 import io.github.hyperisland.xposed.utils.toRounded
@@ -17,6 +23,7 @@ import io.github.hyperisland.xposed.templates.NotificationIslandNotification
 import io.github.hyperisland.xposed.utils.HookUtils
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModule
+import java.lang.reflect.Method
 
 /**
  * 通用通知 Hook — 在 SystemUI 进程内 Hook MiuiBaseNotifUtil.generateInnerNotifBean()。
@@ -237,7 +244,10 @@ object GenericProgressHook : BaseHook() {
             extras.putString("hyperisland_channel_id", channelId)
             extras.putString(EXTRA_OWNER, OWNER_MARKER)
 
-            if (isMediaNotification(notif, extras)) return
+            if (isMediaNotification(notif, extras)) {
+                handleMediaNotification(pkg, channelId, sbn.id, sbn.key, notif, extras, context, module, classLoader)
+                return
+            }
 
             val defaultRestoreLockscreen = loadBooleanSetting("global:default_restore_lockscreen", "pref_default_restore_lockscreen", false)
             val restoreLockscreenRaw = loadChannelStringSetting("restore_lockscreen:$pkg/$channelId", "pref_channel_restore_lockscreen_${pkg}_$channelId", "default")
@@ -413,6 +423,8 @@ object GenericProgressHook : BaseHook() {
                 "follow_dynamic" -> resolvedHighlightColor
                 else -> islandOuterGlowColor
             }
+            resolvedOutEffectColor?.let { extras.putString("hyperisland_focus_out_effect_color", it) }
+            resolvedIslandOuterGlowColor?.let { extras.putString("hyperisland_island_outer_glow_color", it) }
 
             if (resolvedIslandOuterGlowMode != "off") {
                 extras.putString("miui.bigIsland.effect.src", EFFECT_SRC)
@@ -474,7 +486,7 @@ object GenericProgressHook : BaseHook() {
     }
 
     private fun resolveHighlightColor(
-        context: android.content.Context,
+        context: Context,
         iconMode: String,
         notifIcon: Icon?,
         largeIcon: Icon?,
@@ -486,7 +498,7 @@ object GenericProgressHook : BaseHook() {
         if (mode != "on" && mode != "dark" && mode != "darker") {
             return manualHighlightColor
         }
-        val fallback = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
+        val fallback = Icon.createWithResource(context, R.drawable.ic_dialog_info)
         val iconForColor = when (iconMode) {
             "notif_small" -> notifIcon ?: fallback
             "notif_large" -> largeIcon ?: notifIcon ?: fallback
@@ -498,7 +510,7 @@ object GenericProgressHook : BaseHook() {
     }
 
     private fun shouldRedactPrivateContentOnLockscreen(
-        context: android.content.Context,
+        context: Context,
         notif: Notification,
         module: XposedModule,
     ): Boolean {
@@ -510,49 +522,151 @@ object GenericProgressHook : BaseHook() {
         return true
     }
 
-    private fun isKeyguardLocked(context: android.content.Context, module: XposedModule): Boolean {
+    private fun isKeyguardLocked(context: Context, module: XposedModule): Boolean {
         val keyguardManager = context.getSystemService(KeyguardManager::class.java) ?: return false
         val locked = keyguardManager.isKeyguardLocked
         log(module, "isKeyguardLocked = $locked")
         return locked
     }
 
-    private fun isMediaNotification(notif: Notification, extras: android.os.Bundle): Boolean {
+    private fun isMediaNotification(notif: Notification, extras: Bundle): Boolean {
         if (extras.containsKey(Notification.EXTRA_MEDIA_SESSION)) return true
         val template = extras.getString(Notification.EXTRA_TEMPLATE) ?: return false
         return template.contains("MediaStyle", ignoreCase = true)
     }
 
-    private fun extractLargeIcon(extras: android.os.Bundle): android.graphics.drawable.Icon? {
+    private fun handleMediaNotification(
+        pkg: String,
+        channelId: String,
+        notifId: Int,
+        sbnKey: String?,
+        notif: Notification,
+        extras: Bundle,
+        context: Context,
+        module: XposedModule,
+        classLoader: ClassLoader,
+    ) {
+//        val hasMediaSession = extras.containsKey(Notification.EXTRA_MEDIA_SESSION)
+//        val template = extras.getString(Notification.EXTRA_TEMPLATE).orEmpty()
+//        val mediaFocus = extras.getString("miui.focus.param.media")
+//        log(
+//            module, "media notification detected: pkg=$pkg channel=$channelId id=$notifId hasSession=$hasMediaSession template=$template mediaFocus=${!mediaFocus.isNullOrBlank()}",
+//        )
+
+        if (!ConfigManager.getBoolean("pref_media_island_enabled_$pkg", true)) {
+            cancelPostedNotification(sbnKey, module, classLoader)
+            log(module, "media notification canceled: pkg=$pkg channel=$channelId id=$notifId key=$sbnKey")
+            return
+        }
+
+        if (ConfigManager.getBoolean("pref_media_island_normal_notification_$pkg", false)) {
+            extras.remove(Notification.EXTRA_MEDIA_SESSION)
+            extras.remove(Notification.EXTRA_TEMPLATE)
+            extras.remove("miui.focus.param.media")
+            extras.remove("miui.bigIsland.effect.src")
+            extras.remove("miui.effect.src")
+            extras.putBoolean("hyperisland_processed", true)
+            //log(module, "media notification downgraded to normal: pkg=$pkg channel=$channelId id=$notifId")
+            return
+        }
+
+        val defaultIslandOuterGlow = ConfigManager.getString(
+            "pref_default_island_outer_glow",
+            "off",
+        )
+        val islandOuterGlowRaw = ConfigManager.getString(
+            "pref_media_island_outer_glow_$pkg",
+            "default",
+        )
+        val resolvedIslandOuterGlowMode = resolveGlowMode(
+            islandOuterGlowRaw,
+            defaultIslandOuterGlow,
+        )
+        if (resolvedIslandOuterGlowMode != "off") {
+            extras.putString("miui.bigIsland.effect.src", EFFECT_SRC)
+            extras.putString("miui.effect.src", EFFECT_SRC)
+        } else {
+            extras.remove("miui.bigIsland.effect.src")
+            extras.remove("miui.effect.src")
+        }
+        extras.putString("hyperisland_channel_id", "media")
+        val manualIslandOuterGlowColor = ConfigManager.getString(
+            "pref_media_island_outer_glow_color_$pkg",
+            "",
+        ).takeIf { it.isNotBlank() }
+        val resolvedIslandOuterGlowColor = when (resolvedIslandOuterGlowMode) {
+            "follow_dynamic" -> resolveHighlightColor(
+                context = context,
+                iconMode = "auto",
+                notifIcon = notif.smallIcon,
+                largeIcon = extractLargeIcon(extras),
+                appIconRaw = context.packageManager.getAppIcon(pkg),
+                manualHighlightColor = manualIslandOuterGlowColor,
+                dynamicMode = "on",
+            )
+            else -> manualIslandOuterGlowColor
+        }
+        resolvedIslandOuterGlowColor?.let { extras.putString("hyperisland_island_outer_glow_color", it) }
+        IslandOuterGlowHook.recordMediaGlowRequest(
+            pkg = pkg,
+            enabled = resolvedIslandOuterGlowMode != "off",
+            color = extras.getString("hyperisland_island_outer_glow_color"),
+            module = module,
+        )
+        log(
+            module,
+            "media glow request: pkg=$pkg channel=media id=$notifId raw=$islandOuterGlowRaw resolved=$resolvedIslandOuterGlowMode big=${extras.getString("miui.bigIsland.effect.src")} effect=${extras.getString("miui.effect.src")} color=${extras.getString("hyperisland_island_outer_glow_color")}",
+        )
+    }
+
+    private fun cancelPostedNotification(
+        sbnKey: String?,
+        module: XposedModule,
+        classLoader: ClassLoader,
+    ) {
+        if (sbnKey.isNullOrBlank()) return
+        runCatching {
+            val listenerClass = classLoader.loadClass("android.service.notification.NotificationListenerService")
+            val method = findMethod(listenerClass, "cancelNotification", String::class.java)
+            val context = HookUtils.getContext(classLoader) ?: return@runCatching
+            if (listenerClass.isInstance(context)) {
+                method.invoke(context, sbnKey)
+            }
+        }.onFailure {
+            logError(module, "cancel media notification failed: ${it.message}")
+        }
+    }
+
+    private fun extractLargeIcon(extras: Bundle): Icon? {
         return try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 @Suppress("DEPRECATION")
-                val icon = extras.getParcelable<android.graphics.drawable.Icon>(
-                    android.app.Notification.EXTRA_LARGE_ICON
+                val icon = extras.getParcelable<Icon>(
+                    Notification.EXTRA_LARGE_ICON
                 )
                 if (icon != null) return icon
             }
             @Suppress("DEPRECATION")
-            val bitmap = extras.getParcelable<android.graphics.Bitmap>(
-                android.app.Notification.EXTRA_LARGE_ICON
+            val bitmap = extras.getParcelable<Bitmap>(
+                Notification.EXTRA_LARGE_ICON
             )
-            if (bitmap != null) android.graphics.drawable.Icon.createWithBitmap(bitmap) else null
+            if (bitmap != null) Icon.createWithBitmap(bitmap) else null
         } catch (_: Exception) { null }
     }
 
-    private fun getContext(classLoader: ClassLoader): android.content.Context? {
+    private fun getContext(classLoader: ClassLoader): Context? {
         return try {
             val at = classLoader.loadClass("android.app.ActivityThread")
-            at.getMethod("currentApplication").invoke(null) as? android.content.Context
+            at.getMethod("currentApplication").invoke(null) as? Context
         } catch (_: Exception) {
             try {
                 val at = classLoader.loadClass("android.app.ActivityThread")
-                (at.getMethod("getSystemContext").invoke(null) as? android.content.Context)?.applicationContext
+                (at.getMethod("getSystemContext").invoke(null) as? Context)?.applicationContext
             } catch (_: Exception) { null }
         }
     }
 
-    private fun findMethod(clazz: Class<*>, name: String, vararg paramTypes: Class<*>): java.lang.reflect.Method {
+    private fun findMethod(clazz: Class<*>, name: String, vararg paramTypes: Class<*>): Method {
         var c: Class<*>? = clazz
         while (c != null) {
             try { return c.getDeclaredMethod(name, *paramTypes) } catch (_: NoSuchMethodException) {}

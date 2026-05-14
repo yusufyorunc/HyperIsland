@@ -2,11 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../controllers/settings_controller.dart';
 import '../controllers/whitelist_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/blur_app_bar.dart';
 import '../widgets/batch_channel_settings_sheet.dart';
 import '../widgets/app_list_widgets.dart';
+import '../widgets/color_picker_dialog.dart';
+import '../widgets/color_value_field.dart';
 import '../services/app_cache_service.dart';
 
 class AppChannelsPage extends StatefulWidget {
@@ -83,6 +86,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
   Map<String, String> _templateLabels = {};
   Map<String, String> _rendererLabels = {};
   Map<String, Map<String, String>> _channelExtras = {};
+  Map<String, String> _mediaIslandSettings = {};
   bool _loading = true;
   late bool _appEnabled;
 
@@ -137,6 +141,9 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
       pkg,
       channelIds,
     );
+    final mediaIslandSettings = await widget.controller.getMediaIslandSettings(
+      pkg,
+    );
     if (mounted) {
       setState(() {
         _channels = channels;
@@ -145,6 +152,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
         _templateLabels = templateLabels;
         _rendererLabels = rendererLabels;
         _channelExtras = channelExtras;
+        _mediaIslandSettings = mediaIslandSettings;
         _loading = false;
       });
       if (rootError) {
@@ -325,17 +333,257 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
   Future<void> _reloadSettings() async {
     final pkg = widget.app.packageName;
     final channelIds = (_channels ?? []).map((c) => c.id).toList();
-    if (channelIds.isEmpty) return;
     final results = await Future.wait([
-      widget.controller.getChannelTemplates(pkg, channelIds),
-      widget.controller.getChannelExtraSettings(pkg, channelIds),
+      if (channelIds.isNotEmpty)
+        widget.controller.getChannelTemplates(pkg, channelIds),
+      if (channelIds.isNotEmpty)
+        widget.controller.getChannelExtraSettings(pkg, channelIds),
+      widget.controller.getMediaIslandSettings(pkg),
     ]);
     if (mounted) {
       setState(() {
-        _channelTemplates = results[0] as Map<String, String>;
-        _channelExtras = results[1] as Map<String, Map<String, String>>;
+        var index = 0;
+        if (channelIds.isNotEmpty) {
+          _channelTemplates = results[index++] as Map<String, String>;
+          _channelExtras = results[index++] as Map<String, Map<String, String>>;
+        }
+        _mediaIslandSettings = results[index] as Map<String, String>;
       });
     }
+  }
+
+  String _outerGlowDefaultLabel(AppLocalizations l10n, String value) {
+    return switch (value) {
+      kTriOptOn => l10n.optDefaultOn,
+      kTriOptFollowDynamic =>
+        '${l10n.optDefault} (${l10n.followDynamicColorLabel})',
+      _ => l10n.optDefaultOff,
+    };
+  }
+
+  bool _isMediaNotificationModified() {
+    return (_mediaIslandSettings['enabled'] ?? kTriOptOn) != kTriOptOn ||
+        (_mediaIslandSettings['normal_notification'] ?? kTriOptOff) !=
+            kTriOptOff ||
+        (_mediaIslandSettings['island_outer_glow'] ?? kTriOptDefault) !=
+            kTriOptDefault ||
+        (_mediaIslandSettings['island_outer_glow_color'] ?? '').isNotEmpty;
+  }
+
+  bool _isFollowDynamicGlow(String mode, String defaultMode) {
+    return mode == kTriOptFollowDynamic ||
+        (mode == kTriOptDefault && defaultMode == kTriOptFollowDynamic);
+  }
+
+  InputDecoration _dialogFieldDecoration(
+    BuildContext context, {
+    String? hintText,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: cs.outlineVariant),
+    );
+    return InputDecoration(
+      hintText: hintText,
+      isDense: true,
+      filled: true,
+      fillColor: cs.surfaceContainerHigh,
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: cs.primary, width: 1.4),
+      ),
+    );
+  }
+
+  Future<void> _openMediaIslandSettings() async {
+    final l10n = AppLocalizations.of(context)!;
+    final ctrl = SettingsController.instance;
+    final pkg = widget.app.packageName;
+    var enabled = (_mediaIslandSettings['enabled'] ?? kTriOptOn) != kTriOptOff;
+    var normalNotification =
+        (_mediaIslandSettings['normal_notification'] ?? kTriOptOff) ==
+        kTriOptOn;
+    var islandOuterGlow =
+        _mediaIslandSettings['island_outer_glow'] ?? kTriOptDefault;
+    var islandOuterGlowColor =
+        _mediaIslandSettings['island_outer_glow_color'] ?? '';
+    final colorController = TextEditingController(text: islandOuterGlowColor);
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final followDynamic = _isFollowDynamicGlow(
+            islandOuterGlow,
+            ctrl.defaultIslandOuterGlow,
+          );
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Expanded(child: Text('媒体通知')),
+                IconButton(
+                  tooltip: '恢复默认',
+                  icon: const Icon(Icons.restore_rounded),
+                  onPressed: () => setDialogState(() {
+                    enabled = true;
+                    normalNotification = false;
+                    islandOuterGlow = kTriOptDefault;
+                    islandOuterGlowColor = '';
+                    colorController.clear();
+                  }),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('媒体通知'),
+                    subtitle: const Text('关闭后直接删除整条媒体通知'),
+                    value: enabled,
+                    onChanged: (value) => setDialogState(() => enabled = value),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('普通通知'),
+                    subtitle: const Text('开启后移除媒体字段，按普通通知处理'),
+                    value: normalNotification,
+                    onChanged: enabled
+                        ? (value) =>
+                              setDialogState(() => normalNotification = value)
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.outerGlowLabel,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: enabled
+                          ? null
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.38),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: islandOuterGlow,
+                    isExpanded: true,
+                    decoration: _dialogFieldDecoration(context),
+                    items: [
+                      DropdownMenuItem(
+                        value: kTriOptDefault,
+                        child: Text(
+                          _outerGlowDefaultLabel(
+                            l10n,
+                            ctrl.defaultIslandOuterGlow,
+                          ),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOn,
+                        child: Text(l10n.optOn),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptOff,
+                        child: Text(l10n.optOff),
+                      ),
+                      DropdownMenuItem(
+                        value: kTriOptFollowDynamic,
+                        child: Text(l10n.followDynamicColorLabel),
+                      ),
+                    ],
+                    onChanged: enabled
+                        ? (value) {
+                            if (value != null) {
+                              setDialogState(() => islandOuterGlow = value);
+                            }
+                          }
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  ColorValueField(
+                    controller: colorController,
+                    enabled: enabled && !followDynamic,
+                    readOnly: followDynamic,
+                    decoration: _dialogFieldDecoration(
+                      context,
+                      hintText: '#AARRGGBB / #RRGGBB',
+                    ),
+                    previewColor: parseHexColor(islandOuterGlowColor),
+                    previewFallbackColor: Theme.of(context).colorScheme.primary,
+                    onChanged: (value) => setDialogState(
+                      () => islandOuterGlowColor = value.trim(),
+                    ),
+                    onClear: () => setDialogState(() {
+                      islandOuterGlowColor = '';
+                      colorController.clear();
+                    }),
+                    onPickColor: () async {
+                      final color = await showColorPickerDialog(
+                        context,
+                        title: l10n.outEffectColorLabel,
+                        initialHex: islandOuterGlowColor,
+                        enableAlpha: true,
+                      );
+                      if (color != null) {
+                        final hex = colorToArgbHex(color);
+                        colorController.text = hex;
+                        setDialogState(() => islandOuterGlowColor = hex);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, {
+                  'enabled': enabled ? kTriOptOn : kTriOptOff,
+                  'normal_notification': normalNotification
+                      ? kTriOptOn
+                      : kTriOptOff,
+                  'island_outer_glow': islandOuterGlow,
+                  'island_outer_glow_color': islandOuterGlowColor.trim(),
+                }),
+                child: Text(l10n.apply),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    colorController.dispose();
+    if (result == null) return;
+    await Future.wait([
+      widget.controller.setMediaIslandEnabled(
+        pkg,
+        result['enabled'] != kTriOptOff,
+      ),
+      widget.controller.setMediaIslandNormalNotification(
+        pkg,
+        result['normal_notification'] == kTriOptOn,
+      ),
+      widget.controller.setMediaIslandOuterGlow(
+        pkg,
+        result['island_outer_glow'] ?? kTriOptDefault,
+      ),
+      widget.controller.setMediaIslandOuterGlowColor(
+        pkg,
+        result['island_outer_glow_color'] ?? '',
+      ),
+    ]);
+    if (!mounted) return;
+    setState(() => _mediaIslandSettings = result);
   }
 
   Future<void> _batchApply() async {
@@ -598,129 +846,155 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
             const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
             )
-          else if (channels.isEmpty)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.notifications_off_outlined,
-                      size: 48,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.noChannelsFound,
-                      style: TextStyle(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.noChannelsFoundSubtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
           else ...[
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               sliver: SliverToBoxAdapter(
-                child: Text(
-                  _appEnabled
-                      ? (allEnabled
-                            ? l10n.allChannelsActive(channels.length)
-                            : l10n.selectedChannels(
-                                _enabledChannels.length,
-                                channels.length,
-                              ))
-                      : l10n.allChannelsDisabled(channels.length),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                child: _MediaIslandTile(
+                  appEnabled: _appEnabled,
+                  enabled:
+                      (_mediaIslandSettings['enabled'] ?? kTriOptOn) !=
+                      kTriOptOff,
+                  normalNotification:
+                      (_mediaIslandSettings['normal_notification'] ??
+                          kTriOptOff) ==
+                      kTriOptOn,
+                  modified: _isMediaNotificationModified(),
+                  outerGlow:
+                      _mediaIslandSettings['island_outer_glow'] ??
+                      kTriOptDefault,
+                  onTap: _appEnabled ? _openMediaIslandSettings : null,
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final ch = channels[index];
-                    final isFirst = index == 0;
-                    final isLast = index == channels.length - 1;
-                    final channelEnabled = _isEnabled(ch.id);
-                    final template =
-                        _channelTemplates[ch.id] ?? kTemplateNotificationIsland;
-                    final extras = _channelExtras[ch.id] ?? {};
+            if (channels.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.notifications_off_outlined,
+                        size: 48,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.noChannelsFound,
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.noChannelsFoundSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    _appEnabled
+                        ? (allEnabled
+                              ? l10n.allChannelsActive(channels.length)
+                              : l10n.selectedChannels(
+                                  _enabledChannels.length,
+                                  channels.length,
+                                ))
+                        : l10n.allChannelsDisabled(channels.length),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final ch = channels[index];
+                      final isFirst = index == 0;
+                      final isLast = index == channels.length - 1;
+                      final channelEnabled = _isEnabled(ch.id);
+                      final template =
+                          _channelTemplates[ch.id] ??
+                          kTemplateNotificationIsland;
+                      final extras = _channelExtras[ch.id] ?? {};
 
-                    return _ChannelTile(
-                      channel: ch,
-                      channelEnabled: channelEnabled,
-                      appEnabled: _appEnabled,
-                      template: template,
-                      templateLabels: _templateLabels,
-                      renderer:
-                          extras['renderer'] ?? kRendererImageTextWithButtons4,
-                      rendererLabels: _rendererLabels,
-                      importanceLabel: _importanceLabel(ch.importance, l10n),
-                      isFirst: isFirst,
-                      isLast: isLast,
-                      iconMode: extras['icon'] ?? kIconModeAuto,
-                      focusNotif: extras['focus'] ?? kTriOptDefault,
-                      showNotification:
-                          extras['show_notification'] ?? kTriOptOn,
-                      preserveSmallIcon:
-                          extras['preserve_small_icon'] ?? kTriOptDefault,
-                      showIslandIcon:
-                          extras['show_island_icon'] ?? kTriOptDefault,
-                      firstFloat: extras['first_float'] ?? kTriOptDefault,
-                      enableFloat: extras['enable_float'] ?? kTriOptDefault,
-                      islandTimeout: extras['timeout'] ?? '5',
-                      marquee: extras['marquee'] ?? kTriOptDefault,
-                      restoreLockscreen:
-                          extras['restore_lockscreen'] ?? kTriOptDefault,
-                      highlightColor: extras['highlight_color'] ?? '',
-                      dynamicHighlightColor:
-                          extras['dynamic_highlight_color'] ?? kTriOptDefault,
-                      showLeftHighlight:
-                          extras['show_left_highlight'] ?? kTriOptOff,
-                      showRightHighlight:
-                          extras['show_right_highlight'] ?? kTriOptOff,
-                      showLeftNarrowFont:
-                          extras['show_left_narrow_font'] ?? kTriOptOff,
-                      showRightNarrowFont:
-                          extras['show_right_narrow_font'] ?? kTriOptOff,
-                      outerGlow: extras['outer_glow'] ?? kTriOptDefault,
-                      islandOuterGlow:
-                          extras['island_outer_glow'] ?? kTriOptDefault,
-                      islandOuterGlowColor:
-                          extras['island_outer_glow_color'] ?? '',
-                      outEffectColor: extras['out_effect_color'] ?? '',
-                      focusCustom: extras['focus_custom'] ?? '',
-                      islandCustom: extras['island_custom'] ?? '',
-                      filterMode: extras['filter_mode'] ?? 'blacklist',
-                      whitelistKeywords:
-                          (extras['whitelist_keywords'] ?? '').isEmpty
-                          ? []
-                          : (extras['whitelist_keywords'] ?? '').split(','),
-                      blacklistKeywords:
-                          (extras['blacklist_keywords'] ?? '').isEmpty
-                          ? []
-                          : (extras['blacklist_keywords'] ?? '').split(','),
-                      controller: widget.controller,
-                      onToggle: (v) => _toggle(ch.id, v),
-                      onSettingsApplied: (s) => _applyChannelSettings(ch.id, s),
-                    );
-                  },
-                  childCount: channels.length,
-                  addAutomaticKeepAlives: false,
+                      return _ChannelTile(
+                        channel: ch,
+                        channelEnabled: channelEnabled,
+                        appEnabled: _appEnabled,
+                        template: template,
+                        templateLabels: _templateLabels,
+                        renderer:
+                            extras['renderer'] ??
+                            kRendererImageTextWithButtons4,
+                        rendererLabels: _rendererLabels,
+                        importanceLabel: _importanceLabel(ch.importance, l10n),
+                        isFirst: isFirst,
+                        isLast: isLast,
+                        iconMode: extras['icon'] ?? kIconModeAuto,
+                        focusNotif: extras['focus'] ?? kTriOptDefault,
+                        showNotification:
+                            extras['show_notification'] ?? kTriOptOn,
+                        preserveSmallIcon:
+                            extras['preserve_small_icon'] ?? kTriOptDefault,
+                        showIslandIcon:
+                            extras['show_island_icon'] ?? kTriOptDefault,
+                        firstFloat: extras['first_float'] ?? kTriOptDefault,
+                        enableFloat: extras['enable_float'] ?? kTriOptDefault,
+                        islandTimeout: extras['timeout'] ?? '5',
+                        marquee: extras['marquee'] ?? kTriOptDefault,
+                        restoreLockscreen:
+                            extras['restore_lockscreen'] ?? kTriOptDefault,
+                        highlightColor: extras['highlight_color'] ?? '',
+                        dynamicHighlightColor:
+                            extras['dynamic_highlight_color'] ?? kTriOptDefault,
+                        showLeftHighlight:
+                            extras['show_left_highlight'] ?? kTriOptOff,
+                        showRightHighlight:
+                            extras['show_right_highlight'] ?? kTriOptOff,
+                        showLeftNarrowFont:
+                            extras['show_left_narrow_font'] ?? kTriOptOff,
+                        showRightNarrowFont:
+                            extras['show_right_narrow_font'] ?? kTriOptOff,
+                        outerGlow: extras['outer_glow'] ?? kTriOptDefault,
+                        islandOuterGlow:
+                            extras['island_outer_glow'] ?? kTriOptDefault,
+                        islandOuterGlowColor:
+                            extras['island_outer_glow_color'] ?? '',
+                        outEffectColor: extras['out_effect_color'] ?? '',
+                        focusCustom: extras['focus_custom'] ?? '',
+                        islandCustom: extras['island_custom'] ?? '',
+                        filterMode: extras['filter_mode'] ?? 'blacklist',
+                        whitelistKeywords:
+                            (extras['whitelist_keywords'] ?? '').isEmpty
+                            ? []
+                            : (extras['whitelist_keywords'] ?? '').split(','),
+                        blacklistKeywords:
+                            (extras['blacklist_keywords'] ?? '').isEmpty
+                            ? []
+                            : (extras['blacklist_keywords'] ?? '').split(','),
+                        controller: widget.controller,
+                        onToggle: (v) => _toggle(ch.id, v),
+                        onSettingsApplied: (s) =>
+                            _applyChannelSettings(ch.id, s),
+                      );
+                    },
+                    childCount: channels.length,
+                    addAutomaticKeepAlives: false,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ],
       ),
@@ -794,6 +1068,104 @@ class _AppHeaderIconState extends State<_AppHeaderIcon> {
           ),
         );
       },
+    );
+  }
+}
+
+class _MediaIslandTile extends StatelessWidget {
+  const _MediaIslandTile({
+    required this.appEnabled,
+    required this.enabled,
+    required this.normalNotification,
+    required this.modified,
+    required this.outerGlow,
+    required this.onTap,
+  });
+
+  final bool appEnabled;
+  final bool enabled;
+  final bool normalNotification;
+  final bool modified;
+  final String outerGlow;
+  final VoidCallback? onTap;
+
+  String _outerGlowText(AppLocalizations l10n) {
+    return switch (outerGlow) {
+      kTriOptOn => l10n.optOn,
+      kTriOptOff => l10n.optOff,
+      kTriOptFollowDynamic => l10n.followDynamicColorLabel,
+      _ => l10n.optDefault,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final active = appEnabled && enabled;
+    return Material(
+      color: cs.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: active ? cs.primaryContainer : cs.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.album_rounded,
+                  color: active
+                      ? cs.onPrimaryContainer
+                      : cs.onSurface.withValues(alpha: 0.38),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '媒体通知',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: appEnabled
+                            ? null
+                            : cs.onSurface.withValues(alpha: 0.38),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      modified
+                          ? '${enabled ? l10n.optOn : l10n.optOff} · 普通通知: ${normalNotification ? l10n.optOn : l10n.optOff} · ${l10n.outerGlowLabel}: ${_outerGlowText(l10n)}'
+                          : '未修改',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: appEnabled
+                            ? cs.onSurfaceVariant
+                            : cs.onSurface.withValues(alpha: 0.28),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.expand_more_rounded,
+                color: appEnabled
+                    ? cs.onSurfaceVariant
+                    : cs.onSurface.withValues(alpha: 0.28),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

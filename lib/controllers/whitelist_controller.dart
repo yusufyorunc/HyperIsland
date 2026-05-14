@@ -40,6 +40,14 @@ String _prefToastIslandOuterGlowKey(String packageName) =>
     'pref_toast_island_outer_glow_$packageName';
 String _prefToastIslandOuterGlowColorKey(String packageName) =>
     'pref_toast_island_outer_glow_color_$packageName';
+String prefMediaIslandEnabledKey(String packageName) =>
+    'pref_media_island_enabled_$packageName';
+String prefMediaIslandNormalNotificationKey(String packageName) =>
+    'pref_media_island_normal_notification_$packageName';
+String prefMediaIslandOuterGlowKey(String packageName) =>
+    'pref_media_island_outer_glow_$packageName';
+String prefMediaIslandOuterGlowColorKey(String packageName) =>
+    'pref_media_island_outer_glow_color_$packageName';
 
 /// 可用的灵动岛通知模板标识符。
 const kTemplateGenericProgress = 'generic_progress';
@@ -1130,6 +1138,59 @@ class WhitelistController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final key =
         'pref_channel_island_outer_glow_color_${packageName}_$channelId';
+    if (value.isEmpty) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, value);
+    }
+  }
+
+  Future<Map<String, String>> getMediaIslandSettings(String packageName) async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'enabled': prefs.getBool(prefMediaIslandEnabledKey(packageName)) == false
+          ? kTriOptOff
+          : kTriOptOn,
+      'normal_notification':
+          prefs.getBool(prefMediaIslandNormalNotificationKey(packageName)) ==
+              true
+          ? kTriOptOn
+          : kTriOptOff,
+      'island_outer_glow':
+          prefs.getString(prefMediaIslandOuterGlowKey(packageName)) ??
+          kTriOptDefault,
+      'island_outer_glow_color':
+          prefs.getString(prefMediaIslandOuterGlowColorKey(packageName)) ?? '',
+    };
+  }
+
+  Future<void> setMediaIslandEnabled(String packageName, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(prefMediaIslandEnabledKey(packageName), value);
+  }
+
+  Future<void> setMediaIslandNormalNotification(
+    String packageName,
+    bool value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(
+      prefMediaIslandNormalNotificationKey(packageName),
+      value,
+    );
+  }
+
+  Future<void> setMediaIslandOuterGlow(String packageName, String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(prefMediaIslandOuterGlowKey(packageName), value);
+  }
+
+  Future<void> setMediaIslandOuterGlowColor(
+    String packageName,
+    String value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = prefMediaIslandOuterGlowColorKey(packageName);
     if (value.isEmpty) {
       await prefs.remove(key);
     } else {
