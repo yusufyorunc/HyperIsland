@@ -387,6 +387,27 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         ListTile(
+                          leading: const Icon(Icons.telegram),
+                          title: Text(
+                            'Telegram',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          subtitle: const Text('HyperIsland_Module'),
+                          trailing:
+                          const Icon(Icons.open_in_new, size: 18),
+                          onTap: InteractionHaptics.interceptButton(
+                                () async {
+                              await launchUrl(
+                                Uri.parse(
+                                  'https://t.me/HyperIsland_Module',
+                                ),
+                                mode: LaunchMode.externalApplication,
+                              );
+                            },
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.vertical(
                               bottom: Radius.circular(16),
