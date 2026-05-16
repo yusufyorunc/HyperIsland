@@ -1,6 +1,9 @@
 name: Sync Release to Another Repo
 
 on:
+  workflow_run:
+    workflows: ["Build & Release"]
+    types: [completed]
   release:
     types: [published]
   workflow_dispatch:
@@ -12,12 +15,40 @@ on:
 
 jobs:
   sync-release:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.workflow_run.head_sha || github.ref }}
+
+      - name: Resolve release tag
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            CURRENT_FULL=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+            VERSION_NAME=$(echo "$CURRENT_FULL" | cut -d'+' -f1)
+            TAG="v$VERSION_NAME"
+          fi
+
+          if ! gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::notice::No published release found for $TAG. Skipping sync."
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "found=true" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Get version info
+        if: steps.release.outputs.found == 'true'
         id: version
         run: |
           CURRENT_FULL=$(grep '^version:' pubspec.yaml | awk '{print $2}')
@@ -29,9 +60,10 @@ jobs:
           echo "new_tag=${VERSION_CODE}-${VERSION_NAME}" >> $GITHUB_OUTPUT
 
       - name: Download release asset
+        if: steps.release.outputs.found == 'true'
         id: download
         run: |
-          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          TAG="${{ steps.release.outputs.tag }}"
           gh release download "$TAG" \
             --pattern "*.apk" \
             --dir ./release
@@ -42,19 +74,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Get release info
+        if: steps.release.outputs.found == 'true'
         id: release_info
         run: |
-          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
-          RELEASE_NAME="${{ github.event.release.name }}"
-          BODY="${{ github.event.release.body }}"
-          
-          if [ -z "$RELEASE_NAME" ]; then
-            RELEASE_NAME=$(gh release view "$TAG" --json name -q .name)
-          fi
-          
-          if [ -z "$BODY" ]; then
-            BODY=$(gh release view "$TAG" --json body -q .body)
-          fi
+          TAG="${{ steps.release.outputs.tag }}"
+          RELEASE_NAME=$(gh release view "$TAG" --json name -q .name)
+          BODY=$(gh release view "$TAG" --json body -q .body)
           
           echo "name=$RELEASE_NAME" >> $GITHUB_OUTPUT
           echo "content<<EOF" >> $GITHUB_OUTPUT
@@ -64,6 +89,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Create release in target repo
+        if: steps.release.outputs.found == 'true'
         uses: softprops/action-gh-release@v2.1.0
         with:
           repository: Xposed-Modules-Repo/io.github.hyperisland
