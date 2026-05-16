@@ -50,7 +50,11 @@ class _BlacklistPageState extends State<BlacklistPage> {
         final count = await _ctrl.applyGamePreset();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.presetGamesSuccess(count))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.presetGamesSuccess(count),
+            ),
+          ),
         );
         return;
       case _menuToggleSystemApps:
@@ -62,9 +66,9 @@ class _BlacklistPageState extends State<BlacklistPage> {
       case _menuResetDefaults:
         final count = await _ctrl.resetToDefaults();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已恢复默认配置，共重置 $count 个应用')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已恢复默认配置，共重置 $count 个应用')));
         return;
     }
   }
@@ -97,6 +101,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final apps = _ctrl.filteredApps;
+    final exclusionMode = _ctrl.exclusionMode;
 
     return PopScope(
       canPop: false,
@@ -146,7 +151,9 @@ class _BlacklistPageState extends State<BlacklistPage> {
                                 : Icons.phone_android_outlined,
                           ),
                           title: Text(
-                            _ctrl.showSystemApps ? '隐藏系统应用' : l10n.showSystemApps,
+                            _ctrl.showSystemApps
+                                ? '隐藏系统应用'
+                                : l10n.showSystemApps,
                           ),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -174,12 +181,36 @@ class _BlacklistPageState extends State<BlacklistPage> {
 
               SliverToBoxAdapter(
                 child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment<int>(
+                        value: 0,
+                        icon: Icon(Icons.rule_outlined),
+                        label: Text('前台规则'),
+                      ),
+                      ButtonSegment<int>(
+                        value: 1,
+                        icon: Icon(Icons.do_not_disturb_on_outlined),
+                        label: Text('排除应用'),
+                      ),
+                    ],
+                    selected: {exclusionMode ? 1 : 0},
+                    onSelectionChanged: (selection) {
+                      _ctrl.setExclusionMode(selection.first == 1);
+                    },
+                  ),
+                ),
+              ),
+
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
-                    '前台应用启动时，设置超级岛行为。',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                    exclusionMode ? '排除列表内应用不受前台规则限制。' : '前台应用启动时，设置超级岛行为。',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
               ),
@@ -228,8 +259,12 @@ class _BlacklistPageState extends State<BlacklistPage> {
                       return _AppTile(
                         key: ValueKey(pkg),
                         app: app,
+                        exclusionMode: exclusionMode,
                         action: _ctrl.actionForPackage(pkg),
-                        onChanged: (v) => _ctrl.setSceneAction(pkg, v),
+                        excluded: _ctrl.isForegroundExcluded(pkg),
+                        onActionChanged: (v) => _ctrl.setSceneAction(pkg, v),
+                        onExcludedChanged: (v) =>
+                            _ctrl.setForegroundExcluded(pkg, v),
                         isFirst: index == 0,
                         isLast: index == apps.length - 1,
                       );
@@ -248,15 +283,21 @@ class _AppTile extends StatelessWidget {
   const _AppTile({
     super.key,
     required this.app,
+    required this.exclusionMode,
     required this.action,
-    required this.onChanged,
+    required this.excluded,
+    required this.onActionChanged,
+    required this.onExcludedChanged,
     required this.isFirst,
     required this.isLast,
   });
 
   final AppInfo app;
+  final bool exclusionMode;
   final String action;
-  final ValueChanged<String> onChanged;
+  final bool excluded;
+  final ValueChanged<String> onActionChanged;
+  final ValueChanged<bool> onExcludedChanged;
   final bool isFirst;
   final bool isLast;
 
@@ -267,51 +308,68 @@ class _AppTile extends StatelessWidget {
 
     return AppListItemFrame(
       app: app,
-      onTap: () {},
+      onTap: exclusionMode ? () => onExcludedChanged(!excluded) : () {},
       isFirst: isFirst,
       isLast: isLast,
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: BoxDecoration(
-          color: configured ? cs.primaryContainer : cs.surfaceContainerHigh,
-          border: Border.all(
-            color: configured ? cs.primary.withValues(alpha: 0.24) : Colors.transparent,
-          ),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: action,
-            borderRadius: BorderRadius.circular(16),
-            dropdownColor: cs.surfaceContainerHigh,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: configured ? cs.onPrimaryContainer : cs.onSurface,
-              fontWeight: configured ? FontWeight.w600 : FontWeight.w400,
+      trailing: exclusionMode
+          ? SizedBox(
+              height: 48,
+              child: Center(
+                child: Switch(
+                  value: excluded,
+                  onChanged: InteractionHaptics.interceptToggle(
+                    onExcludedChanged,
+                  ),
+                ),
+              ),
+            )
+          : Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: configured
+                    ? cs.primaryContainer
+                    : cs.surfaceContainerHigh,
+                border: Border.all(
+                  color: configured
+                      ? cs.primary.withValues(alpha: 0.24)
+                      : Colors.transparent,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: action,
+                  borderRadius: BorderRadius.circular(16),
+                  dropdownColor: cs.surfaceContainerHigh,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: configured ? cs.onPrimaryContainer : cs.onSurface,
+                    fontWeight: configured ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  onChanged: (value) {
+                    if (value != null) onActionChanged(value);
+                  },
+                  items: const [
+                    DropdownMenuItem(
+                      value: kSceneActionDefault,
+                      child: Text('默认'),
+                    ),
+                    DropdownMenuItem(
+                      value: kSceneActionSmallOnly,
+                      child: Text('关闭展开'),
+                    ),
+                    DropdownMenuItem(
+                      value: kSceneActionExpand,
+                      child: Text('自动展开'),
+                    ),
+                    DropdownMenuItem(
+                      value: kSceneActionSuppress,
+                      child: Text('回退'),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            onChanged: (value) {
-              if (value != null) onChanged(value);
-            },
-            items: const [
-              DropdownMenuItem(
-                value: kSceneActionDefault,
-                child: Text('默认'),
-              ),
-              DropdownMenuItem(
-                value: kSceneActionSmallOnly,
-                child: Text('关闭展开'),
-              ),
-              DropdownMenuItem(
-                value: kSceneActionExpand,
-                child: Text('自动展开'),
-              ),
-              DropdownMenuItem(
-                value: kSceneActionSuppress,
-                child: Text('回退'),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

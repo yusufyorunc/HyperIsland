@@ -16,6 +16,7 @@ object SceneBehavior {
     const val ACTION_SUPPRESS = "suppress"
 
     private const val PREF_FOREGROUND_PACKAGES = "pref_scene_foreground_packages"
+    private const val PREF_FOREGROUND_EXCLUDED_PACKAGES = "pref_scene_foreground_excluded_packages"
     private const val PREF_LEGACY_BLACKLIST = "pref_app_blacklist"
     private const val PREF_DND = "pref_scene_dnd"
     private const val PREF_FULLSCREEN = "pref_scene_fullscreen"
@@ -103,16 +104,19 @@ object SceneBehavior {
         )
         if (sourceAction != ACTION_DEFAULT) return sourceAction
 
-        val foregroundPackages = ConfigManager.getString(PREF_FOREGROUND_PACKAGES)
-        val legacyBlacklist = ConfigManager.getString(PREF_LEGACY_BLACKLIST)
-        val needsForeground = foregroundPackages.isNotBlank() || legacyBlacklist.isNotBlank()
-        if (needsForeground) {
-            val foregroundPackage = foregroundPackage(context)
-            val foregroundAction = normalizedAction(
-                ConfigManager.getString("pref_scene_foreground_$foregroundPackage", ""),
-            )
-            if (foregroundAction != ACTION_DEFAULT) return foregroundAction
-            if (isListed(foregroundPackage, legacyBlacklist)) return ACTION_SMALL_ONLY
+        val foregroundExcludedPackages = ConfigManager.getString(PREF_FOREGROUND_EXCLUDED_PACKAGES)
+        if (!isListed(sourcePackage, foregroundExcludedPackages)) {
+            val foregroundPackages = ConfigManager.getString(PREF_FOREGROUND_PACKAGES)
+            val legacyBlacklist = ConfigManager.getString(PREF_LEGACY_BLACKLIST)
+            val needsForeground = foregroundPackages.isNotBlank() || legacyBlacklist.isNotBlank()
+            if (needsForeground) {
+                val foregroundPackage = foregroundPackage(context)
+                val foregroundAction = normalizedAction(
+                    ConfigManager.getString("pref_scene_foreground_$foregroundPackage", ""),
+                )
+                if (foregroundAction != ACTION_DEFAULT) return foregroundAction
+                if (isListed(foregroundPackage, legacyBlacklist)) return ACTION_SMALL_ONLY
+            }
         }
 
         val dndAction = normalizedAction(ConfigManager.getString(PREF_DND, ACTION_DEFAULT))

@@ -4,6 +4,8 @@ import '../services/app_cache_service.dart';
 
 const kPrefAppBlacklist = 'pref_app_blacklist';
 const kPrefSceneForegroundPackages = 'pref_scene_foreground_packages';
+const kPrefSceneForegroundExcludedPackages =
+    'pref_scene_foreground_excluded_packages';
 const kSceneActionDefault = 'default';
 const kSceneActionSmallOnly = 'small_only';
 const kSceneActionExpand = 'expand';
@@ -15,10 +17,12 @@ class BlacklistController extends ChangeNotifier {
   List<AppInfo> _sortedApps = [];
   List<AppInfo> _filteredApps = [];
   Set<String> blacklistedPackages = {};
+  Set<String> foregroundExcludedPackages = {};
   Map<String, String> sceneActions = {};
   bool loading = true;
   String _searchQuery = '';
   bool showSystemApps = false;
+  bool exclusionMode = false;
 
   static const _gamePresets = {
     'com.miHoYo.Yuanshen', // 原神
@@ -336,8 +340,8 @@ class BlacklistController extends ChangeNotifier {
   void _resort() {
     _sortedApps = List<AppInfo>.from(_allApps)
       ..sort((a, b) {
-        final aConfigured = actionForPackage(a.packageName) != kSceneActionDefault;
-        final bConfigured = actionForPackage(b.packageName) != kSceneActionDefault;
+        final aConfigured = _isConfigured(a.packageName);
+        final bConfigured = _isConfigured(b.packageName);
         if (aConfigured != bConfigured) return aConfigured ? -1 : 1;
         return a.appName.compareTo(b.appName);
       });
@@ -348,9 +352,7 @@ class BlacklistController extends ChangeNotifier {
     final q = _searchQuery.trim().toLowerCase();
     Iterable<AppInfo> source = showSystemApps
         ? _sortedApps
-        : _sortedApps.where(
-            (a) => !a.isSystem || actionForPackage(a.packageName) != kSceneActionDefault,
-          );
+        : _sortedApps.where((a) => !a.isSystem || _isConfigured(a.packageName));
     if (q.isNotEmpty) {
       source = source.where(
         (a) => a.appNameLower.contains(q) || a.packageNameLower.contains(q),
@@ -373,11 +375,17 @@ class BlacklistController extends ChangeNotifier {
       blacklistedPackages = csv.isEmpty
           ? {}
           : csv.split(',').where((s) => s.isNotEmpty).toSet();
+      final excludedCsv =
+          prefs.getString(kPrefSceneForegroundExcludedPackages) ?? '';
+      foregroundExcludedPackages = excludedCsv.isEmpty
+          ? {}
+          : excludedCsv.split(',').where((s) => s.isNotEmpty).toSet();
       sceneActions = {
         for (final key in prefs.getKeys())
           if (key.startsWith(_kPrefSceneForegroundPrefix))
-            key.substring(_kPrefSceneForegroundPrefix.length):
-                _normalizeAction(prefs.getString(key) ?? ''),
+            key.substring(_kPrefSceneForegroundPrefix.length): _normalizeAction(
+              prefs.getString(key) ?? '',
+            ),
       }..removeWhere((_, value) => value == kSceneActionDefault);
 
       _allApps = await AppCacheService.instance.getApps();
@@ -395,6 +403,16 @@ class BlacklistController extends ChangeNotifier {
         (blacklistedPackages.contains(packageName)
             ? kSceneActionSmallOnly
             : kSceneActionDefault);
+  }
+
+  bool isForegroundExcluded(String packageName) {
+    return foregroundExcludedPackages.contains(packageName);
+  }
+
+  bool _isConfigured(String packageName) {
+    return exclusionMode
+        ? isForegroundExcluded(packageName)
+        : actionForPackage(packageName) != kSceneActionDefault;
   }
 
   Future<void> setSceneAction(String packageName, String action) async {
@@ -463,8 +481,41 @@ class BlacklistController extends ChangeNotifier {
     return addedCount;
   }
 
+  void setExclusionMode(bool value) {
+    if (exclusionMode == value) return;
+    exclusionMode = value;
+    _resort();
+    notifyListeners();
+  }
+
+  Future<void> setForegroundExcluded(String packageName, bool value) async {
+    if (foregroundExcludedPackages.contains(packageName) == value) return;
+
+    if (value) {
+      foregroundExcludedPackages.add(packageName);
+    } else {
+      foregroundExcludedPackages.remove(packageName);
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    if (foregroundExcludedPackages.isEmpty) {
+      await prefs.remove(kPrefSceneForegroundExcludedPackages);
+    } else {
+      await prefs.setString(
+        kPrefSceneForegroundExcludedPackages,
+        foregroundExcludedPackages.join(','),
+      );
+    }
+    _resort();
+    notifyListeners();
+  }
+
   Future<int> resetToDefaults() async {
-    final changedCount = <String>{...blacklistedPackages, ...sceneActions.keys}.length;
+    final changedCount = <String>{
+      ...blacklistedPackages,
+      ...sceneActions.keys,
+      ...foregroundExcludedPackages,
+    }.length;
     if (changedCount == 0) return 0;
 
     final prefs = await SharedPreferences.getInstance();
@@ -473,8 +524,10 @@ class BlacklistController extends ChangeNotifier {
     }
     await prefs.remove(kPrefAppBlacklist);
     await prefs.remove(kPrefSceneForegroundPackages);
+    await prefs.remove(kPrefSceneForegroundExcludedPackages);
 
     blacklistedPackages.clear();
+    foregroundExcludedPackages.clear();
     sceneActions.clear();
     _resort();
     notifyListeners();
