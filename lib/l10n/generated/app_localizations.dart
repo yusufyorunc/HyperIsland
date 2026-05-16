@@ -2280,6 +2280,72 @@ abstract class AppLocalizations {
   /// **'过滤规则'**
   String get filterRulesSection;
 
+  /// No description provided for @foregroundRulesTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'前台规则'**
+  String get foregroundRulesTab;
+
+  /// No description provided for @foregroundExclusionsTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'排除应用'**
+  String get foregroundExclusionsTab;
+
+  /// No description provided for @foregroundRulesDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'前台应用启动时，设置超级岛行为。'**
+  String get foregroundRulesDescription;
+
+  /// No description provided for @foregroundExclusionsDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'排除列表内应用的通知不受前台规则限制。'**
+  String get foregroundExclusionsDescription;
+
+  /// No description provided for @hideSystemApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏系统应用'**
+  String get hideSystemApps;
+
+  /// No description provided for @restoreDefaultConfig.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复默认配置'**
+  String get restoreDefaultConfig;
+
+  /// No description provided for @resetDefaultConfigSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复默认配置，共重置 {count} 个应用'**
+  String resetDefaultConfigSuccess(int count);
+
+  /// No description provided for @sceneActionDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get sceneActionDefault;
+
+  /// No description provided for @sceneActionSmallOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭展开'**
+  String get sceneActionSmallOnly;
+
+  /// No description provided for @sceneActionExpand.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动展开'**
+  String get sceneActionExpand;
+
+  /// No description provided for @sceneActionSuppress.
+  ///
+  /// In zh, this message translates to:
+  /// **'回退'**
+  String get sceneActionSuppress;
+
   /// No description provided for @filterModeLabel.
   ///
   /// In zh, this message translates to:

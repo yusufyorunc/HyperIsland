@@ -297,6 +297,25 @@
   "fullscreenBehaviorFallback": "通常通知へフォールバック",
   "fullscreenBehaviorExpand": "通知を自動展開",
   "filterRulesTitle": "フィルタールール",
+  "filterRulesSection": "フィルタールール",
+  "foregroundRulesTab": "前面ルール",
+  "foregroundExclusionsTab": "除外アプリ",
+  "foregroundRulesDescription": "前面アプリの起動時の Island 動作を設定します。",
+  "foregroundExclusionsDescription": "除外リスト内のアプリの通知は前面ルールの影響を受けません。",
+  "hideSystemApps": "システムアプリを非表示",
+  "restoreDefaultConfig": "デフォルト構成に戻す",
+  "resetDefaultConfigSuccess": "デフォルト構成に戻しました。{count} 個のアプリをリセットしました",
+  "@resetDefaultConfigSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneActionDefault": "デフォルト",
+  "sceneActionSmallOnly": "展開を無効化",
+  "sceneActionExpand": "自動展開",
+  "sceneActionSuppress": "フォールバック",
   "filterRulesOrderTitle": "最初に一致したルールを適用",
   "filterRuleDnd": "通知制限",
   "filterRuleFullscreen": "全画面",

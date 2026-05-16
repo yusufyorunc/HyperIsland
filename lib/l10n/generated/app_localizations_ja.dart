@@ -1177,7 +1177,42 @@ class AppLocalizationsJa extends AppLocalizations {
       'アプリのアイコンをランチャーから非表示にします。非表示後は、LSPosed Manager 経由で開くことができます。';
 
   @override
-  String get filterRulesSection => '过滤规则';
+  String get filterRulesSection => 'フィルタールール';
+
+  @override
+  String get foregroundRulesTab => '前面ルール';
+
+  @override
+  String get foregroundExclusionsTab => '除外アプリ';
+
+  @override
+  String get foregroundRulesDescription => '前面アプリの起動時の Island 動作を設定します。';
+
+  @override
+  String get foregroundExclusionsDescription => '除外リスト内のアプリの通知は前面ルールの影響を受けません。';
+
+  @override
+  String get hideSystemApps => 'システムアプリを非表示';
+
+  @override
+  String get restoreDefaultConfig => 'デフォルト構成に戻す';
+
+  @override
+  String resetDefaultConfigSuccess(int count) {
+    return 'デフォルト構成に戻しました。$count 個のアプリをリセットしました';
+  }
+
+  @override
+  String get sceneActionDefault => 'デフォルト';
+
+  @override
+  String get sceneActionSmallOnly => '展開を無効化';
+
+  @override
+  String get sceneActionExpand => '自動展開';
+
+  @override
+  String get sceneActionSuppress => 'フォールバック';
 
   @override
   String get filterModeLabel => '过滤模式';

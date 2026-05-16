@@ -16,7 +16,7 @@ object SceneBehavior {
     const val ACTION_SUPPRESS = "suppress"
 
     private const val PREF_FOREGROUND_PACKAGES = "pref_scene_foreground_packages"
-    private const val PREF_FOREGROUND_EXCLUDED_PACKAGES = "pref_scene_foreground_excluded_packages"
+    private const val PREF_FOREGROUND_EXCLUDED_PACKAGES = "pref_scene_excluded_foreground_packages"
     private const val PREF_LEGACY_BLACKLIST = "pref_app_blacklist"
     private const val PREF_DND = "pref_scene_dnd"
     private const val PREF_FULLSCREEN = "pref_scene_fullscreen"

@@ -402,6 +402,25 @@
   "fullscreenBehaviorOff": "Varsayılan",
   "fullscreenBehaviorFallback": "Normal bildirime dön",
   "fullscreenBehaviorExpand": "Bildirimi otomatik genişlet",
+  "filterRulesSection": "Filtre Kuralları",
+  "foregroundRulesTab": "Ön plan kuralları",
+  "foregroundExclusionsTab": "Hariç tutulan uygulamalar",
+  "foregroundRulesDescription": "Ön plandaki uygulama başladığında Ada davranışını ayarlayın.",
+  "foregroundExclusionsDescription": "Hariç tutma listesindeki uygulamaların bildirimleri ön plan kurallarından etkilenmez.",
+  "hideSystemApps": "Sistem uygulamalarını gizle",
+  "restoreDefaultConfig": "Varsayılan yapılandırmayı geri yükle",
+  "resetDefaultConfigSuccess": "Varsayılan yapılandırma geri yüklendi, {count} uygulama sıfırlandı",
+  "@resetDefaultConfigSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneActionDefault": "Varsayılan",
+  "sceneActionSmallOnly": "Genişletmeyi kapat",
+  "sceneActionExpand": "Otomatik genişlet",
+  "sceneActionSuppress": "Geri dön",
   "filterRulesTitle": "Filtre kuralları",
   "filterRulesOrderTitle": "İlk eşleşen kural uygulanır",
   "filterRuleDnd": "Rahatsız Etmeyin",

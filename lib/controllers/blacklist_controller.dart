@@ -5,7 +5,7 @@ import '../services/app_cache_service.dart';
 const kPrefAppBlacklist = 'pref_app_blacklist';
 const kPrefSceneForegroundPackages = 'pref_scene_foreground_packages';
 const kPrefSceneForegroundExcludedPackages =
-    'pref_scene_foreground_excluded_packages';
+    'pref_scene_excluded_foreground_packages';
 const kSceneActionDefault = 'default';
 const kSceneActionSmallOnly = 'small_only';
 const kSceneActionExpand = 'expand';
@@ -382,7 +382,8 @@ class BlacklistController extends ChangeNotifier {
           : excludedCsv.split(',').where((s) => s.isNotEmpty).toSet();
       sceneActions = {
         for (final key in prefs.getKeys())
-          if (key.startsWith(_kPrefSceneForegroundPrefix))
+          if (key.startsWith(_kPrefSceneForegroundPrefix) &&
+              key != kPrefSceneForegroundPackages)
             key.substring(_kPrefSceneForegroundPrefix.length): _normalizeAction(
               prefs.getString(key) ?? '',
             ),

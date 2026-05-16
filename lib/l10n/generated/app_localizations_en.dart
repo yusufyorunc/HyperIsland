@@ -1222,6 +1222,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterRulesSection => 'Filter Rules';
 
   @override
+  String get foregroundRulesTab => 'Foreground Rules';
+
+  @override
+  String get foregroundExclusionsTab => 'Excluded Apps';
+
+  @override
+  String get foregroundRulesDescription =>
+      'Set Island behavior when a foreground app starts.';
+
+  @override
+  String get foregroundExclusionsDescription =>
+      'Notifications from apps in the exclusion list are not affected by foreground rules.';
+
+  @override
+  String get hideSystemApps => 'Hide system apps';
+
+  @override
+  String get restoreDefaultConfig => 'Restore default config';
+
+  @override
+  String resetDefaultConfigSuccess(int count) {
+    return 'Default config restored for $count apps';
+  }
+
+  @override
+  String get sceneActionDefault => 'Default';
+
+  @override
+  String get sceneActionSmallOnly => 'Disable expansion';
+
+  @override
+  String get sceneActionExpand => 'Auto expand';
+
+  @override
+  String get sceneActionSuppress => 'Fallback';
+
+  @override
   String get filterModeLabel => 'Filter Mode';
 
   @override

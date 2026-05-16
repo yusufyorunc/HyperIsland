@@ -600,6 +600,24 @@
   "hideDesktopIconSubtitle": "隐藏启动器中的应用图标，隐藏后可通过 LSPosed 管理器打开",
 
   "filterRulesSection": "过滤规则",
+  "foregroundRulesTab": "前台规则",
+  "foregroundExclusionsTab": "排除应用",
+  "foregroundRulesDescription": "前台应用启动时，设置超级岛行为。",
+  "foregroundExclusionsDescription": "排除列表内应用的通知不受前台规则限制。",
+  "hideSystemApps": "隐藏系统应用",
+  "restoreDefaultConfig": "恢复默认配置",
+  "resetDefaultConfigSuccess": "已恢复默认配置，共重置 {count} 个应用",
+  "@resetDefaultConfigSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneActionDefault": "默认",
+  "sceneActionSmallOnly": "关闭展开",
+  "sceneActionExpand": "自动展开",
+  "sceneActionSuppress": "回退",
   "filterModeLabel": "过滤模式",
   "filterModeBlacklist": "黑名单",
   "filterModeWhitelist": "白名单",

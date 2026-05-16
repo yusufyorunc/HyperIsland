@@ -1165,6 +1165,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterRulesSection => '过滤规则';
 
   @override
+  String get foregroundRulesTab => '前台规则';
+
+  @override
+  String get foregroundExclusionsTab => '排除应用';
+
+  @override
+  String get foregroundRulesDescription => '前台应用启动时，设置超级岛行为。';
+
+  @override
+  String get foregroundExclusionsDescription => '排除列表内应用的通知不受前台规则限制。';
+
+  @override
+  String get hideSystemApps => '隐藏系统应用';
+
+  @override
+  String get restoreDefaultConfig => '恢复默认配置';
+
+  @override
+  String resetDefaultConfigSuccess(int count) {
+    return '已恢复默认配置，共重置 $count 个应用';
+  }
+
+  @override
+  String get sceneActionDefault => '默认';
+
+  @override
+  String get sceneActionSmallOnly => '关闭展开';
+
+  @override
+  String get sceneActionExpand => '自动展开';
+
+  @override
+  String get sceneActionSuppress => '回退';
+
+  @override
   String get filterModeLabel => '过滤模式';
 
   @override

@@ -433,6 +433,24 @@
   "restoreLockscreenSubtitle": "Skip focus notification processing on lockscreen, keep original privacy behavior",
 
   "filterRulesSection": "Filter Rules",
+  "foregroundRulesTab": "Foreground Rules",
+  "foregroundExclusionsTab": "Excluded Apps",
+  "foregroundRulesDescription": "Set Island behavior when a foreground app starts.",
+  "foregroundExclusionsDescription": "Notifications from apps in the exclusion list are not affected by foreground rules.",
+  "hideSystemApps": "Hide system apps",
+  "restoreDefaultConfig": "Restore default config",
+  "resetDefaultConfigSuccess": "Default config restored for {count} apps",
+  "@resetDefaultConfigSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneActionDefault": "Default",
+  "sceneActionSmallOnly": "Disable expansion",
+  "sceneActionExpand": "Auto expand",
+  "sceneActionSuppress": "Fallback",
   "filterModeLabel": "Filter Mode",
   "filterModeBlacklist": "Blacklist",
   "filterModeWhitelist": "Whitelist",

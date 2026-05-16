@@ -68,7 +68,13 @@ class _BlacklistPageState extends State<BlacklistPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('已恢复默认配置，共重置 $count 个应用')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.resetDefaultConfigSuccess(count),
+            ),
+          ),
+        );
         return;
     }
   }
@@ -152,7 +158,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
                           ),
                           title: Text(
                             _ctrl.showSystemApps
-                                ? '隐藏系统应用'
+                                ? l10n.hideSystemApps
                                 : l10n.showSystemApps,
                           ),
                           contentPadding: EdgeInsets.zero,
@@ -166,11 +172,11 @@ class _BlacklistPageState extends State<BlacklistPage> {
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: _menuResetDefaults,
                         child: ListTile(
-                          leading: Icon(Icons.restore_outlined),
-                          title: Text('恢复默认配置'),
+                          leading: const Icon(Icons.restore_outlined),
+                          title: Text(l10n.restoreDefaultConfig),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -183,16 +189,16 @@ class _BlacklistPageState extends State<BlacklistPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: SegmentedButton<int>(
-                    segments: const [
+                    segments: [
                       ButtonSegment<int>(
                         value: 0,
-                        icon: Icon(Icons.rule_outlined),
-                        label: Text('前台规则'),
+                        icon: const Icon(Icons.rule_outlined),
+                        label: Text(l10n.foregroundRulesTab),
                       ),
                       ButtonSegment<int>(
                         value: 1,
-                        icon: Icon(Icons.do_not_disturb_on_outlined),
-                        label: Text('排除应用'),
+                        icon: const Icon(Icons.do_not_disturb_on_outlined),
+                        label: Text(l10n.foregroundExclusionsTab),
                       ),
                     ],
                     selected: {exclusionMode ? 1 : 0},
@@ -207,7 +213,9 @@ class _BlacklistPageState extends State<BlacklistPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
-                    exclusionMode ? '排除列表内应用不受前台规则限制。' : '前台应用启动时，设置超级岛行为。',
+                    exclusionMode
+                        ? l10n.foregroundExclusionsDescription
+                        : l10n.foregroundRulesDescription,
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -305,6 +313,7 @@ class _AppTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final configured = action != kSceneActionDefault;
+    final l10n = AppLocalizations.of(context)!;
 
     return AppListItemFrame(
       app: app,
@@ -349,22 +358,22 @@ class _AppTile extends StatelessWidget {
                   onChanged: (value) {
                     if (value != null) onActionChanged(value);
                   },
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: kSceneActionDefault,
-                      child: Text('默认'),
+                      child: Text(l10n.sceneActionDefault),
                     ),
                     DropdownMenuItem(
                       value: kSceneActionSmallOnly,
-                      child: Text('关闭展开'),
+                      child: Text(l10n.sceneActionSmallOnly),
                     ),
                     DropdownMenuItem(
                       value: kSceneActionExpand,
-                      child: Text('自动展开'),
+                      child: Text(l10n.sceneActionExpand),
                     ),
                     DropdownMenuItem(
                       value: kSceneActionSuppress,
-                      child: Text('回退'),
+                      child: Text(l10n.sceneActionSuppress),
                     ),
                   ],
                 ),

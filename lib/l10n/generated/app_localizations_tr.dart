@@ -1224,7 +1224,44 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulama simgesini başlatıcıdan gizler. Gizledikten sonra LSPosed Manager üzerinden açın';
 
   @override
-  String get filterRulesSection => '过滤规则';
+  String get filterRulesSection => 'Filtre Kuralları';
+
+  @override
+  String get foregroundRulesTab => 'Ön plan kuralları';
+
+  @override
+  String get foregroundExclusionsTab => 'Hariç tutulan uygulamalar';
+
+  @override
+  String get foregroundRulesDescription =>
+      'Ön plandaki uygulama başladığında Ada davranışını ayarlayın.';
+
+  @override
+  String get foregroundExclusionsDescription =>
+      'Hariç tutma listesindeki uygulamaların bildirimleri ön plan kurallarından etkilenmez.';
+
+  @override
+  String get hideSystemApps => 'Sistem uygulamalarını gizle';
+
+  @override
+  String get restoreDefaultConfig => 'Varsayılan yapılandırmayı geri yükle';
+
+  @override
+  String resetDefaultConfigSuccess(int count) {
+    return 'Varsayılan yapılandırma geri yüklendi, $count uygulama sıfırlandı';
+  }
+
+  @override
+  String get sceneActionDefault => 'Varsayılan';
+
+  @override
+  String get sceneActionSmallOnly => 'Genişletmeyi kapat';
+
+  @override
+  String get sceneActionExpand => 'Otomatik genişlet';
+
+  @override
+  String get sceneActionSuppress => 'Geri dön';
 
   @override
   String get filterModeLabel => '过滤模式';
