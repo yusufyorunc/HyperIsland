@@ -343,6 +343,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final bottomPad = SettingsController.instance.blurBars ? 80.0 : 0.0;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -370,6 +371,7 @@ class _HomePageState extends State<HomePage> {
         ),
         largeTitle: true,
         actions: _actions(l10n),
+        bottomPadding: bottomPad,
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

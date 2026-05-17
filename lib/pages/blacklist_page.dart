@@ -66,9 +66,7 @@ class _BlacklistPageState extends State<BlacklistPage> {
       case _menuResetDefaults:
         final count = await _ctrl.resetToDefaults();
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               AppLocalizations.of(context)!.resetDefaultConfigSuccess(count),
@@ -332,50 +330,79 @@ class _AppTile extends StatelessWidget {
                 ),
               ),
             )
-          : Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: configured
-                    ? cs.primaryContainer
-                    : cs.surfaceContainerHigh,
-                border: Border.all(
+          : SizedBox(
+              width: 112,
+              child: Container(
+                height: 40,
+                padding: const EdgeInsets.only(left: 10, right: 4),
+                decoration: BoxDecoration(
                   color: configured
-                      ? cs.primary.withValues(alpha: 0.24)
-                      : Colors.transparent,
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: action,
-                  borderRadius: BorderRadius.circular(16),
-                  dropdownColor: cs.surfaceContainerHigh,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: configured ? cs.onPrimaryContainer : cs.onSurface,
-                    fontWeight: configured ? FontWeight.w600 : FontWeight.w400,
+                      ? cs.primaryContainer
+                      : cs.surfaceContainerHigh,
+                  border: Border.all(
+                    color: configured
+                        ? cs.primary.withValues(alpha: 0.24)
+                        : Colors.transparent,
                   ),
-                  onChanged: (value) {
-                    if (value != null) onActionChanged(value);
-                  },
-                  items: [
-                    DropdownMenuItem(
-                      value: kSceneActionDefault,
-                      child: Text(l10n.sceneActionDefault),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: action,
+                    isExpanded: true,
+                    borderRadius: BorderRadius.circular(16),
+                    dropdownColor: cs.surfaceContainerHigh,
+                    iconSize: 20,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: configured ? cs.onPrimaryContainer : cs.onSurface,
+                      fontWeight: configured
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
-                    DropdownMenuItem(
-                      value: kSceneActionSmallOnly,
-                      child: Text(l10n.sceneActionSmallOnly),
-                    ),
-                    DropdownMenuItem(
-                      value: kSceneActionExpand,
-                      child: Text(l10n.sceneActionExpand),
-                    ),
-                    DropdownMenuItem(
-                      value: kSceneActionSuppress,
-                      child: Text(l10n.sceneActionSuppress),
-                    ),
-                  ],
+                    selectedItemBuilder: (context) => [
+                      Text(
+                        l10n.sceneActionDefault,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        l10n.sceneActionSmallOnly,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        l10n.sceneActionExpand,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        l10n.sceneActionSuppress,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) onActionChanged(value);
+                    },
+                    items: [
+                      DropdownMenuItem(
+                        value: kSceneActionDefault,
+                        child: Text(l10n.sceneActionDefault),
+                      ),
+                      DropdownMenuItem(
+                        value: kSceneActionSmallOnly,
+                        child: Text(l10n.sceneActionSmallOnly),
+                      ),
+                      DropdownMenuItem(
+                        value: kSceneActionExpand,
+                        child: Text(l10n.sceneActionExpand),
+                      ),
+                      DropdownMenuItem(
+                        value: kSceneActionSuppress,
+                        child: Text(l10n.sceneActionSuppress),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -19,6 +20,7 @@ import io.github.hyperisland.utils.getAppIcon
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.util.Locale
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "io.github.hyperisland/test"
@@ -46,7 +48,7 @@ class MainActivity : FlutterActivity() {
             val icon = packageManager.getAppIcon(packageName)
             sendIslandWithReset(
                 io.github.hyperisland.xposed.islanddispatch.IslandRequest(
-                    title            = getString(R.string.island_welcome_title),
+                    title            = getLocalizedString(R.string.island_welcome_title),
                     content          = "HyperIsland",
                     icon             = icon,
                     firstFloat       = false,
@@ -400,7 +402,7 @@ class MainActivity : FlutterActivity() {
             val icon = packageManager.getAppIcon(packageName)
             sendIslandWithReset(
                 io.github.hyperisland.xposed.islanddispatch.IslandRequest(
-                    title            = getString(R.string.island_welcome_title),
+                    title            = getLocalizedString(R.string.island_welcome_title),
                     content          = "HyperIsland",
                     icon             = icon,
                     firstFloat       = false,
@@ -425,7 +427,7 @@ class MainActivity : FlutterActivity() {
     ) {
         try {
             val icon = packageManager.getAppIcon(packageName)
-            val title = customTitle.ifEmpty { getString(R.string.island_welcome_title) }
+            val title = customTitle.ifEmpty { getLocalizedString(R.string.island_welcome_title) }
             val content = customContent.ifEmpty { "HyperIsland" }
             val request = io.github.hyperisland.xposed.islanddispatch.IslandRequest(
                 title            = title,
@@ -443,6 +445,17 @@ class MainActivity : FlutterActivity() {
             Log.e(TAG, "Error showing custom test notification", e)
             result.error("ERROR", e.message, null)
         }
+    }
+
+    private fun getLocalizedString(resId: Int): String {
+        val localeCode = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            .getString("flutter.pref_locale", null)
+            ?.takeIf { it.isNotBlank() }
+            ?: return getString(resId)
+        val config = Configuration(resources.configuration).apply {
+            setLocale(Locale(localeCode))
+        }
+        return createConfigurationContext(config).getString(resId)
     }
 
     private fun sendIslandWithReset(request: io.github.hyperisland.xposed.islanddispatch.IslandRequest) {

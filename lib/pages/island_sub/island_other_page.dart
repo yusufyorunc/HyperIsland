@@ -19,14 +19,14 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
   late int _buildHash;
 
   int _computeHash() => Object.hashAll([
-        _ctrl.fullscreenBehavior,
-        _ctrl.landscapeBehavior,
-        _ctrl.dndBehavior,
-        _ctrl.marqueeSpeed,
-        _ctrl.keepIsland,
-        _ctrl.keepIslandAutoHide,
-        _ctrl.keepIslandHighlightColor,
-      ]);
+    _ctrl.fullscreenBehavior,
+    _ctrl.landscapeBehavior,
+    _ctrl.dndBehavior,
+    _ctrl.marqueeSpeed,
+    _ctrl.keepIsland,
+    _ctrl.keepIslandAutoHide,
+    _ctrl.keepIslandHighlightColor,
+  ]);
 
   @override
   void initState() {
@@ -65,11 +65,11 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
     };
   }
 
-  String _dndBehaviorLabel(String value) {
+  String _dndBehaviorLabel(AppLocalizations l10n, String value) {
     return switch (value) {
-      'suppress' => '回退普通通知',
-      'small_only' => '关闭展开',
-      _ => '默认',
+      'suppress' => l10n.fullscreenBehaviorFallback,
+      'small_only' => l10n.sceneActionSmallOnly,
+      _ => l10n.optDefault,
     };
   }
 
@@ -97,275 +97,284 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  const SizedBox(height: 8),
-                  // --- 过滤规则 ---
-                  _SectionLabel(l10n.filterRulesTitle),
-                  const SizedBox(height: 8),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    child: Column(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 8),
+                // --- 过滤规则 ---
+                _SectionLabel(l10n.filterRulesTitle),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.filterRulesOrderTitle, style: titleStyle),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _RulePriorityChip(
+                                  index: 1,
+                                  label: l10n.filterRuleDnd,
+                                ),
+                                _RulePriorityChip(
+                                  index: 2,
+                                  label: l10n.filterRuleFullscreen,
+                                ),
+                                _RulePriorityChip(
+                                  index: 3,
+                                  label: l10n.filterRuleLandscape,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      _BehaviorRuleTile(
+                        icon: Icons.do_not_disturb_on_outlined,
+                        title: l10n.dndBehaviorTitle,
+                        subtitle: _behaviorPreview(l10n, _ctrl.dndBehavior),
+                        value: _ctrl.dndBehavior,
+                        labelForValue: (v) => _dndBehaviorLabel(l10n, v),
+                        values: const ['default', 'suppress', 'small_only'],
+                        onChanged: _ctrl.setDndBehavior,
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      _BehaviorRuleTile(
+                        icon: Icons.fullscreen_outlined,
+                        title: l10n.fullscreenRuleTitle,
+                        subtitle: _behaviorPreview(
+                          l10n,
+                          _ctrl.fullscreenBehavior,
+                        ),
+                        value: _ctrl.fullscreenBehavior,
+                        labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
+                        values: const ['off', 'fallback', 'expand'],
+                        onChanged: _ctrl.setFullscreenBehavior,
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      _BehaviorRuleTile(
+                        icon: Icons.screen_rotation_alt_outlined,
+                        title: l10n.landscapeRuleTitle,
+                        subtitle: _behaviorPreview(
+                          l10n,
+                          _ctrl.landscapeBehavior,
+                        ),
+                        value: _ctrl.landscapeBehavior,
+                        labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
+                        values: const ['off', 'fallback', 'expand'],
+                        onChanged: _ctrl.setLandscapeBehavior,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // --- 消息滚动（速度滑块，无开关） ---
+                _SectionLabel(l10n.marqueeChannelTitle),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    title: Row(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(l10n.filterRulesOrderTitle, style: titleStyle),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  _RulePriorityChip(
-                                    index: 1,
-                                    label: l10n.filterRuleDnd,
-                                  ),
-                                  _RulePriorityChip(
-                                    index: 2,
-                                    label: l10n.filterRuleFullscreen,
-                                  ),
-                                  _RulePriorityChip(
-                                    index: 3,
-                                    label: l10n.filterRuleLandscape,
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Expanded(
+                          child: Text(
+                            l10n.marqueeChannelTitle,
+                            style: titleStyle,
                           ),
                         ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        _BehaviorRuleTile(
-                          icon: Icons.do_not_disturb_on_outlined,
-                          title: l10n.dndBehaviorTitle,
-                          subtitle: _behaviorPreview(l10n, _ctrl.dndBehavior),
-                          value: _ctrl.dndBehavior,
-                          labelForValue: _dndBehaviorLabel,
-                          values: const ['default', 'suppress', 'small_only'],
-                          onChanged: _ctrl.setDndBehavior,
+                        Text(
+                          l10n.marqueeSpeedLabel(_marqueeSpeedDraft),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        _BehaviorRuleTile(
-                          icon: Icons.fullscreen_outlined,
-                          title: l10n.fullscreenRuleTitle,
-                          subtitle: _behaviorPreview(l10n, _ctrl.fullscreenBehavior),
-                          value: _ctrl.fullscreenBehavior,
-                          labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
-                          values: const ['off', 'fallback', 'expand'],
-                          onChanged: _ctrl.setFullscreenBehavior,
+                        if (_marqueeSpeedDraft != 100)
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: IconButton(
+                              icon: const Icon(Icons.refresh, size: 18),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              onPressed: InteractionHaptics.interceptButton(() {
+                                setState(() => _marqueeSpeedDraft = 100);
+                                _ctrl.setMarqueeSpeed(100);
+                              }),
+                            ),
+                          ),
+                      ],
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Text(
+                          l10n.marqueeSpeedTitle,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        _BehaviorRuleTile(
-                          icon: Icons.screen_rotation_alt_outlined,
-                          title: l10n.landscapeRuleTitle,
-                          subtitle: _behaviorPreview(l10n, _ctrl.landscapeBehavior),
-                          value: _ctrl.landscapeBehavior,
-                          labelForValue: (v) => _fullscreenBehaviorLabel(l10n, v),
-                          values: const ['off', 'fallback', 'expand'],
-                          onChanged: _ctrl.setLandscapeBehavior,
+                        Expanded(
+                          child: SliderTheme(
+                            data: ModernSliderTheme.theme(context),
+                            child: Slider(
+                              value: _marqueeSpeedDraft.toDouble(),
+                              min: 20,
+                              max: 500,
+                              divisions: 48,
+                              onChanged: InteractionHaptics.interceptSlider((
+                                v,
+                              ) {
+                                final next = v.round();
+                                if (_marqueeSpeedDraft == next) return;
+                                setState(() => _marqueeSpeedDraft = next);
+                              }),
+                              onChangeEnd: (v) async {
+                                final next = v.round();
+                                if (_ctrl.marqueeSpeed == next) return;
+                                await _ctrl.setMarqueeSpeed(next);
+                              },
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // --- 消息滚动（速度滑块，无开关） ---
-                  _SectionLabel(l10n.marqueeChannelTitle),
-                  const SizedBox(height: 8),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 2,
+                ),
+                const SizedBox(height: 8),
+                // --- 常驻岛 ---
+                _SectionLabel(l10n.keepIslandTitle),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(l10n.keepIslandTitle, style: titleStyle),
+                        subtitle: Text(l10n.keepIslandSubtitle),
+                        value: _ctrl.keepIsland,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          (v) => _ctrl.setKeepIsland(v),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: _ctrl.keepIsland
+                              ? const BorderRadius.vertical(
+                                  top: Radius.circular(16),
+                                )
+                              : BorderRadius.circular(16),
+                        ),
                       ),
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.marqueeChannelTitle,
-                              style: titleStyle,
-                            ),
-                          ),
-                          Text(
-                            l10n.marqueeSpeedLabel(_marqueeSpeedDraft),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                          if (_marqueeSpeedDraft != 100)
-                            SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: IconButton(
-                                icon: const Icon(Icons.refresh, size: 18),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                                onPressed: InteractionHaptics.interceptButton(
-                                  () {
-                                    setState(() => _marqueeSpeedDraft = 100);
-                                    _ctrl.setMarqueeSpeed(100);
-                                  },
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Text(
-                            l10n.marqueeSpeedTitle,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                          Expanded(
-                            child: SliderTheme(
-                              data: ModernSliderTheme.theme(context),
-                              child: Slider(
-                                value: _marqueeSpeedDraft.toDouble(),
-                                min: 20,
-                                max: 500,
-                                divisions: 48,
-                                onChanged: InteractionHaptics.interceptSlider(
-                                  (v) {
-                                    final next = v.round();
-                                    if (_marqueeSpeedDraft == next) return;
-                                    setState(() => _marqueeSpeedDraft = next);
-                                  },
-                                ),
-                                onChangeEnd: (v) async {
-                                  final next = v.round();
-                                  if (_ctrl.marqueeSpeed == next) return;
-                                  await _ctrl.setMarqueeSpeed(next);
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // --- 常驻岛 ---
-                  _SectionLabel(l10n.keepIslandTitle),
-                  const SizedBox(height: 8),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    child: Column(
-                      children: [
+                      if (_ctrl.keepIsland) ...[
+                        const Divider(height: 1, indent: 16, endIndent: 16),
                         SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 4,
                           ),
-                          title: Text(l10n.keepIslandTitle, style: titleStyle),
-                          subtitle: Text(l10n.keepIslandSubtitle),
-                          value: _ctrl.keepIsland,
-                          onChanged: InteractionHaptics.interceptToggle(
-                            (v) => _ctrl.setKeepIsland(v),
+                          title: Text(
+                            l10n.keepIslandAutoHideTitle,
+                            style: titleStyle,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: _ctrl.keepIsland
-                                ? const BorderRadius.vertical(
-                                    top: Radius.circular(16),
-                                  )
-                                : BorderRadius.circular(16),
+                          subtitle: Text(l10n.keepIslandAutoHideSubtitle),
+                          value: _ctrl.keepIslandAutoHide,
+                          onChanged: InteractionHaptics.interceptToggle(
+                            (v) => _ctrl.setKeepIslandAutoHide(v),
                           ),
                         ),
-                        if (_ctrl.keepIsland) ...[
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          SwitchListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.keepIslandAutoHideTitle,
-                                style: titleStyle),
-                            subtitle: Text(l10n.keepIslandAutoHideSubtitle),
-                            value: _ctrl.keepIslandAutoHide,
-                            onChanged: InteractionHaptics.interceptToggle(
-                              (v) => _ctrl.setKeepIslandAutoHide(v),
-                            ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
                           ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            title: Text(l10n.keepIslandHighlightColorTitle,
-                                style: titleStyle),
-                            subtitle: Text(l10n.keepIslandHighlightColorSubtitle),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (_ctrl.keepIslandHighlightColor.isNotEmpty)
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: parseHexColor(
-                                              _ctrl.keepIslandHighlightColor) ??
-                                          cs.primary,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                          color: cs.outline, width: 1),
-                                    ),
-                                  )
-                                else
-                                  Icon(Icons.palette_outlined,
-                                      color: cs.onSurfaceVariant),
-                                const SizedBox(width: 8),
-                                if (_ctrl.keepIslandHighlightColor.isNotEmpty)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.refresh, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: InteractionHaptics
-                                          .interceptButton(
-                                        () => _ctrl
-                                            .setKeepIslandHighlightColor(''),
-                                      ),
+                          title: Text(
+                            l10n.keepIslandHighlightColorTitle,
+                            style: titleStyle,
+                          ),
+                          subtitle: Text(l10n.keepIslandHighlightColorSubtitle),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_ctrl.keepIslandHighlightColor.isNotEmpty)
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        parseHexColor(
+                                          _ctrl.keepIslandHighlightColor,
+                                        ) ??
+                                        cs.primary,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: cs.outline,
+                                      width: 1,
                                     ),
                                   ),
-                              ],
-                            ),
-                            onTap: InteractionHaptics.interceptButton(
-                              () async {
-                                final color = await showColorPickerDialog(
-                                  context,
-                                  initialHex:
-                                      _ctrl.keepIslandHighlightColor.isEmpty
-                                          ? null
-                                          : _ctrl.keepIslandHighlightColor,
-                                  title: l10n.keepIslandHighlightColorTitle,
-                                  enableAlpha: true,
-                                );
-                                if (color != null) {
-                                  await _ctrl.setKeepIslandHighlightColor(
-                                      colorToArgbHex(color));
-                                }
-                              },
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
+                                )
+                              else
+                                Icon(
+                                  Icons.palette_outlined,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              const SizedBox(width: 8),
+                              if (_ctrl.keepIslandHighlightColor.isNotEmpty)
+                                SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    padding: EdgeInsets.zero,
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed:
+                                        InteractionHaptics.interceptButton(
+                                          () => _ctrl
+                                              .setKeepIslandHighlightColor(''),
+                                        ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          onTap: InteractionHaptics.interceptButton(() async {
+                            final color = await showColorPickerDialog(
+                              context,
+                              initialHex: _ctrl.keepIslandHighlightColor.isEmpty
+                                  ? null
+                                  : _ctrl.keepIslandHighlightColor,
+                              title: l10n.keepIslandHighlightColorTitle,
+                              enableAlpha: true,
+                            );
+                            if (color != null) {
+                              await _ctrl.setKeepIslandHighlightColor(
+                                colorToArgbHex(color),
+                              );
+                            }
+                          }),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(16),
                             ),
                           ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                ],
-                addAutomaticKeepAlives: false,
-              ),
+                ),
+                const SizedBox(height: 32),
+              ], addAutomaticKeepAlives: false),
             ),
           ),
         ],
@@ -385,10 +394,10 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -431,9 +440,9 @@ class _RulePriorityChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: cs.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -464,6 +473,10 @@ class _BehaviorRuleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final configured = value != 'default' && value != 'off';
+    final dropdownWidth = (MediaQuery.sizeOf(context).width * 0.36).clamp(
+      112.0,
+      172.0,
+    );
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -482,33 +495,47 @@ class _BehaviorRuleTile extends StatelessWidget {
       title: Text(title),
       subtitle: Text(
         subtitle,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: cs.onSurfaceVariant,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
       trailing: DropdownButtonHideUnderline(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          child: DropdownButton<String>(
-            value: value,
-            alignment: Alignment.center,
-            borderRadius: BorderRadius.circular(16),
-            onChanged: InteractionHaptics.interceptDropdown((next) async {
-              if (next == null) return;
-              await onChanged(next);
-            }),
-            items: [
-              for (final item in values)
-                DropdownMenuItem<String>(
-                  value: item,
-                  child: Center(child: Text(labelForValue(item))),
-                ),
-            ],
+        child: SizedBox(
+          width: dropdownWidth,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.outlineVariant),
+            ),
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              alignment: Alignment.center,
+              borderRadius: BorderRadius.circular(16),
+              onChanged: InteractionHaptics.interceptDropdown((next) async {
+                if (next == null) return;
+                await onChanged(next);
+              }),
+              selectedItemBuilder: (context) => [
+                for (final item in values)
+                  Center(
+                    child: Text(
+                      labelForValue(item),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              items: [
+                for (final item in values)
+                  DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(labelForValue(item)),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
