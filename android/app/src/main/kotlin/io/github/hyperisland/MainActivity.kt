@@ -157,6 +157,19 @@ class MainActivity : FlutterActivity() {
                     result.success(merged)
                 }
 
+                "getAodCustomizationSchema" -> {
+                    val templateId = call.argument<String>("templateId") ?: "notification_island"
+                    val schema = FocusCustomizationEngine.buildAodSchema(templateId)
+                    result.success(schema)
+                }
+
+                "mergeAodCustomizationDefaults" -> {
+                    val templateId = call.argument<String>("templateId") ?: "notification_island"
+                    val rawConfig = call.argument<String>("config")
+                    val merged = FocusCustomizationEngine.mergeAodWithDefaults(templateId, rawConfig)
+                    result.success(merged)
+                }
+
                 "restartProcesses" -> {
                     val commands = call.argument<List<String>>("commands") ?: emptyList()
                     Thread {

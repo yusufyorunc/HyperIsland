@@ -142,6 +142,18 @@ fun injectOutEffectColor(jsonParam: String, outEffectColor: String?): String {
     } catch (_: Exception) { jsonParam }
 }
 
+/** 将息屏显示协议字段注入到 param_v2。 */
+fun injectAodConfig(jsonParam: String, aodTitle: String?, aodPicKey: String?): String {
+    if (aodTitle.isNullOrBlank() && aodPicKey.isNullOrBlank()) return jsonParam
+    return try {
+        val json = org.json.JSONObject(jsonParam)
+        val pv2 = json.optJSONObject("param_v2") ?: return jsonParam
+        if (!aodTitle.isNullOrBlank()) pv2.put("aodTitle", aodTitle)
+        if (!aodPicKey.isNullOrBlank()) pv2.put("aodPic", aodPicKey)
+        json.toString()
+    } catch (_: Exception) { jsonParam }
+}
+
 /**
  * 根据渲染器 ID 返回对应的 [IslandRenderer] 实例，未匹配时回退到默认渲染器。
  * 新增渲染器只需在此处注册，所有模板无需修改。

@@ -30,6 +30,9 @@ data class IslandRequest(
     val isOngoing: Boolean = false,
     val actions: List<Notification.Action> = emptyList(),
     val showIslandIcon: Boolean = true,
+    val aodText: String = "default",
+    val aodTitle: String? = null,
+    val aodCustomizationJson: String? = null,
     val clearBeforePost: Boolean = false,
 ) {
     fun toBundle(): Bundle = Bundle().apply {
@@ -55,6 +58,9 @@ data class IslandRequest(
         putParcelable(KEY_CONTENT_INTENT, contentIntent)
         putBoolean(KEY_ONGOING, isOngoing)
         putBoolean(KEY_SHOW_ISLAND_ICON, showIslandIcon)
+        putString(KEY_AOD_TEXT, aodText)
+        putString(KEY_AOD_TITLE, aodTitle)
+        putString(KEY_AOD_CUSTOM, aodCustomizationJson)
         if (actions.isNotEmpty()) putParcelableArray(KEY_ACTIONS, actions.toTypedArray())
         putBoolean(KEY_CLEAR_BEFORE_POST, clearBeforePost)
     }
@@ -83,6 +89,9 @@ data class IslandRequest(
         private const val KEY_ONGOING = "isOngoing"
         private const val KEY_ACTIONS = "actions"
         private const val KEY_SHOW_ISLAND_ICON = "showIslandIcon"
+        private const val KEY_AOD_TEXT = "aodText"
+        private const val KEY_AOD_TITLE = "aodTitle"
+        private const val KEY_AOD_CUSTOM = "aodCustomizationJson"
         private const val KEY_CLEAR_BEFORE_POST = "clearBeforePost"
 
         fun fromBundle(b: Bundle) = IslandRequest(
@@ -109,6 +118,9 @@ data class IslandRequest(
             isOngoing = b.getBoolean(KEY_ONGOING, false),
             actions = actionsFromBundle(b),
             showIslandIcon = b.getBoolean(KEY_SHOW_ISLAND_ICON, true),
+            aodText = b.getString(KEY_AOD_TEXT, "default"),
+            aodTitle = b.getString(KEY_AOD_TITLE),
+            aodCustomizationJson = b.getString(KEY_AOD_CUSTOM),
             clearBeforePost = b.getBoolean(KEY_CLEAR_BEFORE_POST, false),
         )
 

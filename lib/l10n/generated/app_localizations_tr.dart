@@ -677,6 +677,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get islandExpressionCustomizationSection => '超级岛高级自定义';
 
   @override
+  String get aodSection => '息屏显示';
+
+  @override
   String get expandCustomization => '展开';
 
   @override
@@ -771,6 +774,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get islandRightExprLabel => '超级岛右侧表达式';
+
+  @override
+  String get aodTextSwitchLabel => 'AOD文本开关';
+
+  @override
+  String get aodTextExprLabel => 'AOD文本表达式';
+
+  @override
+  String get aodIconSourceLabel => 'AOD图标来源';
 
   @override
   String get focusNotificationLabel => 'Odak Bildirimini Kullan';

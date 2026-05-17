@@ -815,6 +815,12 @@ class WhitelistController extends ChangeNotifier {
                 'pref_channel_island_custom_${packageName}_$id',
               ) ??
               '',
+          'aod_text':
+              prefs.getString('pref_channel_aod_text_${packageName}_$id') ??
+              kTriOptDefault,
+          'aod_custom':
+              prefs.getString('pref_channel_aod_custom_${packageName}_$id') ??
+              '',
           'filter_mode':
               prefs.getString('pref_channel_filter_mode_${packageName}_$id') ??
               'blacklist',
@@ -897,6 +903,39 @@ class WhitelistController extends ChangeNotifier {
       return merged ?? '{}';
     } catch (e) {
       debugPrint('mergeIslandCustomizationDefaults error: $e');
+      return config?.isNotEmpty == true ? config! : '{}';
+    }
+  }
+
+  Future<Map<String, dynamic>?> getAodCustomizationSchema(
+    String templateId,
+  ) async {
+    try {
+      final raw = await _channel.invokeMethod<dynamic>(
+        'getAodCustomizationSchema',
+        {'templateId': templateId},
+      );
+      if (raw is Map) {
+        return Map<String, dynamic>.from(raw.cast<String, dynamic>());
+      }
+    } catch (e) {
+      debugPrint('getAodCustomizationSchema error: $e');
+    }
+    return null;
+  }
+
+  Future<String> mergeAodCustomizationDefaults(
+    String templateId,
+    String? config,
+  ) async {
+    try {
+      final merged = await _channel.invokeMethod<String>(
+        'mergeAodCustomizationDefaults',
+        {'templateId': templateId, 'config': config},
+      );
+      return merged ?? '{}';
+    } catch (e) {
+      debugPrint('mergeAodCustomizationDefaults error: $e');
       return config?.isNotEmpty == true ? config! : '{}';
     }
   }
@@ -1238,6 +1277,32 @@ class WhitelistController extends ChangeNotifier {
     }
   }
 
+  Future<void> setChannelAodText(
+    String packageName,
+    String channelId,
+    String value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'pref_channel_aod_text_${packageName}_$channelId',
+      value,
+    );
+  }
+
+  Future<void> setChannelAodCustomization(
+    String packageName,
+    String channelId,
+    String value,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'pref_channel_aod_custom_${packageName}_$channelId';
+    if (value.isEmpty) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, value);
+    }
+  }
+
   Future<void> setChannelFilterMode(
     String packageName,
     String channelId,
@@ -1314,6 +1379,8 @@ class WhitelistController extends ChangeNotifier {
       'out_effect_color': 'pref_channel_out_effect_color',
       'focus_custom': 'pref_channel_focus_custom',
       'island_custom': 'pref_channel_island_custom',
+      'aod_text': 'pref_channel_aod_text',
+      'aod_custom': 'pref_channel_aod_custom',
       'filter_mode': 'pref_channel_filter_mode',
       'whitelist_keywords': 'pref_channel_filter_whitelist_keywords',
       'blacklist_keywords': 'pref_channel_filter_blacklist_keywords',

@@ -145,6 +145,8 @@ internal object IslandDispatcherNotifier {
 
             notif.extras.putAll(resourceBundle)
             flattenActionsToExtras(resourceBundle, notif.extras)
+            val aodIconKey = "miui.focus.pic_aod"
+            request.icon?.let { notif.extras.putParcelable(aodIconKey, it) }
 
             val jsonParam = islandBuilder.buildJsonParam()
                 .let { fixTextButtonJson(it) }
@@ -157,6 +159,8 @@ internal object IslandDispatcherNotifier {
                         islandOuterGlowColor = request.islandOuterGlowColor,
                         outEffectColor = request.outEffectColor,
                         dismissIsland = request.dismissIsland,
+                        aodTitle = request.aodTitle ?: request.content.ifEmpty { request.title },
+                        aodPicKey = aodIconKey,
                     )
                 }
             notif.extras.putString("miui.focus.param", jsonParam)
@@ -264,8 +268,10 @@ internal object IslandDispatcherNotifier {
         islandOuterGlowColor: String?,
         outEffectColor: String?,
         dismissIsland: Boolean,
+        aodTitle: String?,
+        aodPicKey: String?,
     ): String {
-        if (highlightColor == null && !outerGlow && !islandOuterGlow && islandOuterGlowColor.isNullOrBlank() && outEffectColor.isNullOrBlank() && !dismissIsland) {
+        if (highlightColor == null && !outerGlow && !islandOuterGlow && islandOuterGlowColor.isNullOrBlank() && outEffectColor.isNullOrBlank() && !dismissIsland && aodTitle.isNullOrBlank() && aodPicKey.isNullOrBlank()) {
             return jsonParam
         }
         return try {
@@ -279,6 +285,8 @@ internal object IslandDispatcherNotifier {
             if (outerGlow) pv2.put("outEffectSrc", "outer_glow")
             if (islandOuterGlow) paramIsland.put("outEffectSrc", "outer_glow")
             if (!outEffectColor.isNullOrBlank()) pv2.put("outEffectColor", outEffectColor)
+            if (!aodTitle.isNullOrBlank()) pv2.put("aodTitle", aodTitle)
+            if (!aodPicKey.isNullOrBlank()) pv2.put("aodPic", aodPicKey)
             json.toString()
         } catch (_: Exception) {
             jsonParam

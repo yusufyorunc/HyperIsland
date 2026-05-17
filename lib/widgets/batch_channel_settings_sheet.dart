@@ -42,6 +42,8 @@ class SingleChannelMode extends ChannelSettingsMode {
     required this.outEffectColor,
     required this.focusCustom,
     required this.islandCustom,
+    required this.aodText,
+    required this.aodCustom,
     required this.filterMode,
     required this.whitelistKeywords,
     required this.blacklistKeywords,
@@ -72,6 +74,8 @@ class SingleChannelMode extends ChannelSettingsMode {
   final String outEffectColor;
   final String focusCustom;
   final String islandCustom;
+  final String aodText;
+  final String aodCustom;
   final String filterMode;
   final List<String> whitelistKeywords;
   final List<String> blacklistKeywords;
@@ -206,6 +210,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   String? _outEffectColor;
   String? _focusCustom;
   String? _islandCustom;
+  String? _aodText;
+  String? _aodCustom;
 
   String? _filterMode;
   List<String> _whitelistKeywords = [];
@@ -216,15 +222,19 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
 
   Map<String, dynamic>? _focusSchema;
   Map<String, dynamic>? _islandSchema;
+  Map<String, dynamic>? _aodSchema;
   bool _loadingFocusSchema = false;
   final Map<String, TextEditingController> _focusControllers = {};
   bool _loadingIslandSchema = false;
   final Map<String, TextEditingController> _islandControllers = {};
+  bool _loadingAodSchema = false;
+  final Map<String, TextEditingController> _aodControllers = {};
 
   bool _islandExpanded = false;
   bool _islandCustomExpanded = false;
   bool _focusExpanded = false;
   bool _focusCustomExpanded = false;
+  bool _aodExpanded = false;
   bool _filterExpanded = false;
 
   // 仅 BatchChannelMode + SingleAppScope 下使用
@@ -293,6 +303,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _outEffectColor = m.outEffectColor;
       _focusCustom = m.focusCustom;
       _islandCustom = m.islandCustom;
+      _aodText = m.aodText;
+      _aodCustom = m.aodCustom;
       _filterMode = m.filterMode;
       _whitelistKeywords = List.from(m.whitelistKeywords);
       _blacklistKeywords = List.from(m.blacklistKeywords);
@@ -321,6 +333,9 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       c.dispose();
     }
     for (final c in _islandControllers.values) {
+      c.dispose();
+    }
+    for (final c in _aodControllers.values) {
       c.dispose();
     }
     super.dispose();
@@ -374,6 +389,28 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _islandSchema = schema;
       _islandCustom = merged;
       _loadingIslandSchema = false;
+    });
+    _loadAodSchema();
+  }
+
+  Future<void> _loadAodSchema() async {
+    final template = _template;
+    if (template == null) return;
+    setState(() => _loadingAodSchema = true);
+    final schema = await widget.controller.getAodCustomizationSchema(template);
+    if (!mounted) return;
+    final merged = await widget.controller.mergeAodCustomizationDefaults(
+      template,
+      _aodCustom,
+    );
+    if (!mounted) return;
+
+    final json = _decodeJson(merged);
+    _rebuildAodControllers(schema, json);
+    setState(() {
+      _aodSchema = schema;
+      _aodCustom = merged;
+      _loadingAodSchema = false;
     });
   }
 
@@ -445,6 +482,32 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       map[key] = ctl.text;
     });
     _islandCustom = jsonEncode(map);
+  }
+
+  void _rebuildAodControllers(
+    Map<String, dynamic>? schema,
+    Map<String, dynamic> json,
+  ) {
+    for (final c in _aodControllers.values) {
+      c.dispose();
+    }
+    _aodControllers.clear();
+    final fields = (schema?['fields'] as List?)?.cast<Map>() ?? const [];
+    for (final field in fields) {
+      final key = (field['key'] ?? '').toString();
+      if (key.isEmpty) continue;
+      final def = (field['defaultValue'] ?? '').toString();
+      final value = (json[key] ?? def).toString();
+      _aodControllers[key] = TextEditingController(text: value);
+    }
+  }
+
+  void _syncAodCustomFromControllers() {
+    final map = <String, dynamic>{};
+    _aodControllers.forEach((key, ctl) {
+      map[key] = ctl.text;
+    });
+    _aodCustom = jsonEncode(map);
   }
 
   Widget _buildFocusCustomizationFields() {
@@ -711,6 +774,115 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
     return Column(children: children);
   }
 
+  Widget _buildAodCustomizationFields() {
+    final l10n = AppLocalizations.of(context)!;
+    final schema = _aodSchema;
+    if (schema == null) return const SizedBox.shrink();
+    final placeholders =
+        (schema['placeholders'] as List?)?.cast<Map>() ?? const <Map>[];
+    final functions =
+        (schema['functions'] as List?)?.cast<Map>() ?? const <Map>[];
+    final fields = (schema['fields'] as List?)?.cast<Map>() ?? const <Map>[];
+    if (fields.isEmpty) return const SizedBox.shrink();
+
+    final children = <Widget>[];
+    if (placeholders.isNotEmpty) {
+      final tips = placeholders
+          .map((p) {
+            final key = (p['key'] ?? '').toString();
+            if (key.isEmpty) return null;
+            return _formatPlaceholderTip(key);
+          })
+          .whereType<String>()
+          .toList();
+      children.add(
+        _SettingField(
+          label: l10n.availablePlaceholdersLabel,
+          child: _buildPlaceholderButtons(tips),
+        ),
+      );
+      children.add(const SizedBox(height: 10));
+    }
+    if (functions.isNotEmpty) {
+      final tips = functions
+          .map((f) => _formatFunctionExample((f['example'] ?? '').toString()))
+          .where((e) => e.isNotEmpty)
+          .join('\n');
+      if (tips.isNotEmpty) {
+        children.add(
+          _SettingField(
+            label: l10n.expressionFunctionsLabel,
+            child: SelectableText(tips),
+          ),
+        );
+        children.add(const SizedBox(height: 10));
+      }
+    }
+
+    for (final field in fields) {
+      final key = (field['key'] ?? '').toString();
+      final label = _localizedFieldLabel(
+        key,
+        (field['label'] ?? key).toString(),
+        l10n,
+      );
+      if (key.isEmpty) continue;
+      final type = (field['type'] ?? '').toString();
+      final ctl = _aodControllers.putIfAbsent(
+        key,
+        () => TextEditingController(
+          text: (field['defaultValue'] ?? '').toString(),
+        ),
+      );
+      if (type == 'select') {
+        final options =
+            (field['options'] as List?)?.cast<Map>() ?? const <Map>[];
+        children.add(
+          _BatchSettingRow(
+            label: label,
+            value: ctl.text,
+            showNotChange: false,
+            items: options
+                .map(
+                  (o) => DropdownMenuItem<String?>(
+                    value: (o['value'] ?? '').toString(),
+                    child: Text(
+                      _localizedOptionLabel(
+                        key,
+                        (o['value'] ?? '').toString(),
+                        (o['label'] ?? o['value'] ?? '').toString(),
+                        l10n,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) {
+              setState(() {
+                ctl.text = v ?? '';
+                _syncAodCustomFromControllers();
+              });
+            },
+          ),
+        );
+      } else {
+        children.add(
+          _SettingField(
+            label: label,
+            child: TextFormField(
+              controller: ctl,
+              decoration: _fieldDecoration(context),
+              onChanged: (_) => setState(_syncAodCustomFromControllers),
+            ),
+          ),
+        );
+      }
+      children.add(const SizedBox(height: 10));
+    }
+    if (children.isNotEmpty) children.removeLast();
+    return Column(children: children);
+  }
+
   Color? _parseColor(String? hex) => parseHexColor(hex);
 
   String _formatPlaceholderTip(String key) {
@@ -792,6 +964,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       'action_2_title_color_dark' => l10n.action2TitleColorDarkLabel,
       'island_left_expr' => l10n.islandLeftExprLabel,
       'island_right_expr' => l10n.islandRightExprLabel,
+      'aodTitle' => l10n.aodTextExprLabel,
+      'aodPic' => l10n.aodIconSourceLabel,
       _ => fallback,
     };
     return localized;
@@ -805,7 +979,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
   ) {
     if (fieldKey == 'focus_icon_mode' ||
         fieldKey == 'focus_pic_profile_mode' ||
-        fieldKey == 'focus_app_icon_pkg_mode') {
+        fieldKey == 'focus_app_icon_pkg_mode' ||
+        fieldKey == 'aodPic') {
       switch (value) {
         case kIconModeAuto:
           return l10n.iconModeAuto;
@@ -846,6 +1021,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
       _outEffectColor != null ||
       _focusCustom != null ||
       _islandCustom != null ||
+      _aodText != null ||
+      _aodCustom != null ||
       _filterMode != null ||
       _whitelistKeywords.isNotEmpty ||
       _blacklistKeywords.isNotEmpty;
@@ -917,6 +1094,8 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
               : _outEffectColor,
           'focus_custom': _focusCustom,
           'island_custom': _islandCustom,
+          'aod_text': _aodText,
+          'aod_custom': _aodCustom,
           'filter_mode': _isSingle ? (_filterMode ?? 'blacklist') : _filterMode,
           'whitelist_keywords': _isSingle
               ? _whitelistKeywords.join(',')
@@ -1455,6 +1634,46 @@ class _BatchChannelSettingsSheetState extends State<BatchChannelSettingsSheet> {
                       ],
                     ),
                   if (_isSingle) SizedBox(height: blockGap),
+
+                  _ExpandableSection(
+                    title: l10n.aodSection,
+                    icon: Icons.bedtime_rounded,
+                    expanded: _aodExpanded,
+                    onToggle: () => setState(() => _aodExpanded = !_aodExpanded),
+                    children: [
+                      SizedBox(height: sectionTitleGap),
+                      _BatchSettingRow(
+                        label: l10n.aodTextSwitchLabel,
+                        value: _aodText,
+                        showNotChange: !_isSingle,
+                        items: [
+                          DropdownMenuItem(
+                            value: kTriOptDefault,
+                            child: Text(l10n.optDefault),
+                          ),
+                          DropdownMenuItem(
+                            value: kTriOptOn,
+                            child: Text(l10n.optOn),
+                          ),
+                          DropdownMenuItem(
+                            value: kTriOptOff,
+                            child: Text(l10n.optOff),
+                          ),
+                        ],
+                        onChanged: (v) => setState(() => _aodText = v),
+                      ),
+                      SizedBox(height: rowGap),
+                      if (_isSingle)
+                        if (_loadingAodSchema)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: LinearProgressIndicator(minHeight: 2),
+                          )
+                        else
+                          _buildAodCustomizationFields(),
+                    ],
+                  ),
+                  SizedBox(height: blockGap),
 
                   _ExpandableSection(
                     title: l10n.focusNotificationLabel,

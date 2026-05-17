@@ -9,6 +9,7 @@ import io.github.hyperisland.xposed.renderer.IslandRenderer
 import io.github.hyperisland.xposed.renderer.RendererContext
 import io.github.hyperisland.xposed.renderer.fixTextButtonJson
 import io.github.hyperisland.xposed.renderer.flattenActionsToExtras
+import io.github.hyperisland.xposed.renderer.injectAodConfig
 import io.github.hyperisland.xposed.renderer.injectHighlightColor
 import io.github.hyperisland.xposed.renderer.injectOutEffectColor
 import io.github.hyperisland.xposed.renderer.injectOuterGlow
@@ -41,6 +42,7 @@ object ImageTextWithProgressRenderer : IslandRenderer {
             val vm = ctx.vm
             val islandIconKey = "key_${vm.templateId}_island"
             val profileKey = "key_${vm.templateId}_profile"
+            val aodIconKey = "miui.focus.pic_aod"
             val payload = ctx.payload as? ImageTextWithProgressPayload
             val profileIcon = payload?.picProfileIcon ?: vm.focusIcon
             val appPkg = payload?.appIconPkg
@@ -59,6 +61,7 @@ object ImageTextWithProgressRenderer : IslandRenderer {
 
             builder.addPicture(HyperPicture(islandIconKey, vm.islandIcon))
             builder.addPicture(HyperPicture(profileKey, profileIcon))
+            builder.addPicture(HyperPicture(aodIconKey, vm.islandIcon))
             builder.setChatInfo(
                 title = vm.focusTitle,
                 content = vm.focusContent,
@@ -129,6 +132,7 @@ object ImageTextWithProgressRenderer : IslandRenderer {
             jsonParam = injectHighlightColor(jsonParam, vm.highlightColor)
             jsonParam = injectOuterGlow(jsonParam, vm.outerGlow)
             jsonParam = injectOutEffectColor(jsonParam, vm.outEffectColor)
+            jsonParam = injectAodConfig(jsonParam, vm.aodTitle, aodIconKey)
             extras.putString("miui.focus.param", jsonParam)
 
             if (vm.setFocusProxy && vm.showNotification) {

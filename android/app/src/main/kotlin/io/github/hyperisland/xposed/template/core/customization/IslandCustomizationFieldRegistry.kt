@@ -6,6 +6,8 @@ import org.json.JSONObject
 object IslandCustomizationFieldKeys {
     const val leftExpr = "island_left_expr"
     const val rightExpr = "island_right_expr"
+    const val aodTitle = "aodTitle"
+    const val aodPic = "aodPic"
 }
 
 object IslandCustomizationFieldRegistry {
@@ -62,4 +64,27 @@ object IslandCustomizationFieldRegistry {
         val right = if (rightExpr.isBlank()) "" else ExpressionResolver.resolve(rightExpr, vars).ifEmpty { defaultRight }
         return left to right
     }
+
+    fun aodSchemaFields(template: IslandTemplate?): List<Map<String, Any?>> = listOf(
+        mapOf(
+            "key" to IslandCustomizationFieldKeys.aodTitle,
+            "label" to IslandCustomizationFieldKeys.aodTitle,
+            "type" to "text_expr",
+            "defaultValue" to "${'$'}{subtitle_or_title}",
+            "required" to true,
+        ),
+        mapOf(
+            "key" to IslandCustomizationFieldKeys.aodPic,
+            "label" to IslandCustomizationFieldKeys.aodPic,
+            "type" to "select",
+            "defaultValue" to "auto",
+            "required" to true,
+            "options" to listOf(
+                mapOf("value" to "auto", "label" to "Auto"),
+                mapOf("value" to "notif_small", "label" to "Small notification icon"),
+                mapOf("value" to "notif_large", "label" to "Large notification icon"),
+                mapOf("value" to "app_icon", "label" to "App icon"),
+            ),
+        ),
+    )
 }

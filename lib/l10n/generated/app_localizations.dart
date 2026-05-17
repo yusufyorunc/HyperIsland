@@ -1248,6 +1248,12 @@ abstract class AppLocalizations {
   /// **'超级岛高级自定义'**
   String get islandExpressionCustomizationSection;
 
+  /// No description provided for @aodSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'息屏显示'**
+  String get aodSection;
+
   /// No description provided for @expandCustomization.
   ///
   /// In zh, this message translates to:
@@ -1439,6 +1445,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'超级岛右侧表达式'**
   String get islandRightExprLabel;
+
+  /// No description provided for @aodTextSwitchLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'AOD文本开关'**
+  String get aodTextSwitchLabel;
+
+  /// No description provided for @aodTextExprLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'AOD文本表达式'**
+  String get aodTextExprLabel;
+
+  /// No description provided for @aodIconSourceLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'AOD图标来源'**
+  String get aodIconSourceLabel;
 
   /// No description provided for @focusNotificationLabel.
   ///

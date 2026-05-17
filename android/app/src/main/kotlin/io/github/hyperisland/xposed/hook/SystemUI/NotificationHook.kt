@@ -362,6 +362,16 @@ object GenericProgressHook : BaseHook() {
                 "pref_channel_island_custom_${pkg}_$channelId",
                 ""
             ).takeIf { it.isNotBlank() }
+            val aodText = loadChannelStringSetting(
+                "aod_text:$pkg/$channelId",
+                "pref_channel_aod_text_${pkg}_$channelId",
+                "default"
+            )
+            val aodCustomizationJson = loadChannelStringSetting(
+                "aod_custom:$pkg/$channelId",
+                "pref_channel_aod_custom_${pkg}_$channelId",
+                ""
+            ).takeIf { it.isNotBlank() }
             val highlightColor = loadChannelStringSetting(
                 "highlight_color:$pkg/$channelId", "pref_channel_highlight_color_${pkg}_$channelId", ""
             ).takeIf { it.isNotBlank() }
@@ -474,6 +484,8 @@ object GenericProgressHook : BaseHook() {
                     outEffectColor = resolvedOutEffectColor,
                     focusCustomizationJson = focusCustomizationJson,
                     islandCustomizationJson = islandCustomizationJson,
+                    aodText = aodText,
+                    aodCustomizationJson = aodCustomizationJson,
                 ),
             )
 

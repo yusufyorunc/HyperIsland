@@ -304,6 +304,8 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
       'island_custom',
       widget.controller.setChannelIslandCustomization,
     );
+    queueExtra('aod_text', widget.controller.setChannelAodText);
+    queueExtra('aod_custom', widget.controller.setChannelAodCustomization);
     queueExtra('filter_mode', widget.controller.setChannelFilterMode);
     queueExtra(
       'whitelist_keywords',
@@ -974,6 +976,8 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                         outEffectColor: extras['out_effect_color'] ?? '',
                         focusCustom: extras['focus_custom'] ?? '',
                         islandCustom: extras['island_custom'] ?? '',
+                        aodText: extras['aod_text'] ?? kTriOptDefault,
+                        aodCustom: extras['aod_custom'] ?? '',
                         filterMode: extras['filter_mode'] ?? 'blacklist',
                         whitelistKeywords:
                             (extras['whitelist_keywords'] ?? '').isEmpty
@@ -1204,6 +1208,8 @@ class _ChannelTile extends StatelessWidget {
     required this.outEffectColor,
     required this.focusCustom,
     required this.islandCustom,
+    required this.aodText,
+    required this.aodCustom,
     required this.filterMode,
     required this.whitelistKeywords,
     required this.blacklistKeywords,
@@ -1244,6 +1250,8 @@ class _ChannelTile extends StatelessWidget {
   final String outEffectColor;
   final String focusCustom;
   final String islandCustom;
+  final String aodText;
+  final String aodCustom;
   final String filterMode;
   final List<String> whitelistKeywords;
   final List<String> blacklistKeywords;
@@ -1280,6 +1288,8 @@ class _ChannelTile extends StatelessWidget {
         outEffectColor: outEffectColor,
         focusCustom: focusCustom,
         islandCustom: islandCustom,
+        aodText: aodText,
+        aodCustom: aodCustom,
         filterMode: filterMode,
         whitelistKeywords: whitelistKeywords,
         blacklistKeywords: blacklistKeywords,

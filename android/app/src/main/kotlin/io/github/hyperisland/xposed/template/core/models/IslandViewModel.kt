@@ -68,4 +68,10 @@ data class IslandViewModel(
     val islandOuterGlowColor: String? = null,
     /** 大岛外圈光效颜色，十六进制字符串如 "#E040FB"，null 表示不设置。 */
     val outEffectColor: String? = null,
+    /** 息屏显示文本开关: "default" / "on" / "off"。 */
+    val aodText: String = "default",
+    /** 解析后的息屏显示标题，写入 param_v2.aodTitle。 */
+    val aodTitle: String? = null,
+    /** 息屏显示自定义配置（JSON 字符串），包含文本表达式与图标来源。 */
+    val aodCustomizationJson: String? = null,
 )

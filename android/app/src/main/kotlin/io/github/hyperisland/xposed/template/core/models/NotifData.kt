@@ -64,4 +64,8 @@ data class NotifData(
     val focusCustomizationJson: String? = null,
     /** 超级岛文本自定义配置（JSON 字符串），仅控制左右文本。 */
     val islandCustomizationJson: String? = null,
+    /** 息屏显示文本开关: "default" / "on" / "off"。 */
+    val aodText: String = "default",
+    /** 息屏显示自定义配置（JSON 字符串），包含文本表达式与图标来源。 */
+    val aodCustomizationJson: String? = null,
 )

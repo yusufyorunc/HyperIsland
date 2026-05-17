@@ -54,6 +54,21 @@ object FocusCustomizationEngine {
         )
     }
 
+    fun buildAodSchema(templateId: String): Map<String, Any?> {
+        val template = TemplateRegistry.getTemplate(templateId)
+        return mapOf(
+            "templateId" to templateId,
+            "slots" to listOf("aod_text", "aod_icon"),
+            "placeholders" to placeholders(
+                template?.expressionPlaceholders,
+                template?.islandExpressionPlaceholders,
+            ),
+            "functions" to ExpressionResolver.functionDocs(),
+            "fields" to IslandCustomizationFieldRegistry.aodSchemaFields(template),
+            "configKey" to "aod_custom",
+        )
+    }
+
     fun apply(context: Context, data: NotifData, vm: IslandViewModel): ApplyResult {
         val raw = data.focusCustomizationJson?.trim().orEmpty()
         if (raw.isEmpty()) return ApplyResult(vm = vm)
@@ -97,7 +112,33 @@ object FocusCustomizationEngine {
             stateLabel = vm.leftTitle,
             vm = vm,
         )
-        return vm.copy(leftTitle = text.first, rightTitle = text.second)
+        return vm.copy(
+            leftTitle = text.first,
+            rightTitle = text.second,
+            aodTitle = resolveAodTitle(data, vm.copy(leftTitle = text.first, rightTitle = text.second)),
+        )
+    }
+
+    private fun resolveAodTitle(data: NotifData, vm: IslandViewModel): String? {
+        if (data.aodText == "off") return null
+        val raw = data.aodCustomizationJson?.trim().orEmpty()
+        val expr = try {
+            if (raw.isBlank()) "${'$'}{subtitle_or_title}"
+            else JSONObject(raw).optString("aodTitle", "${'$'}{subtitle_or_title}")
+        } catch (_: Exception) {
+            "${'$'}{subtitle_or_title}"
+        }.trim()
+        if (expr.isBlank()) return null
+        val template = TemplateRegistry.getTemplate(vm.templateId)
+        val vars = buildIslandVars(
+            data = data,
+            vm = vm,
+            leftTitle = vm.leftTitle,
+            rightTitle = vm.rightTitle,
+            stateLabel = vm.leftTitle,
+            template = template,
+        )
+        return ExpressionResolver.resolve(expr, vars).ifEmpty { vm.rightTitle.ifEmpty { vm.leftTitle } }
     }
 
     fun resolveIslandText(
@@ -154,6 +195,25 @@ object FocusCustomizationEngine {
 
     fun mergeIslandWithDefaults(templateId: String, rawConfig: String?): String {
         val schema = buildIslandSchema(templateId)
+        val fields = (schema["fields"] as? List<*>)
+            ?.mapNotNull { it as? Map<*, *> }
+            .orEmpty()
+        val current = try {
+            if (rawConfig.isNullOrBlank()) JSONObject() else JSONObject(rawConfig)
+        } catch (_: Exception) {
+            JSONObject()
+        }
+        val merged = JSONObject()
+        fields.forEach { f ->
+            val key = f["key"] as? String ?: return@forEach
+            val def = f["defaultValue"] as? String ?: ""
+            merged.put(key, current.optString(key, def))
+        }
+        return merged.toString()
+    }
+
+    fun mergeAodWithDefaults(templateId: String, rawConfig: String?): String {
+        val schema = buildAodSchema(templateId)
         val fields = (schema["fields"] as? List<*>)
             ?.mapNotNull { it as? Map<*, *> }
             .orEmpty()

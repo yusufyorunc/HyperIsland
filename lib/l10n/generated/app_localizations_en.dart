@@ -672,6 +672,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Island advanced customization';
 
   @override
+  String get aodSection => 'Always-on display';
+
+  @override
   String get expandCustomization => 'Expand';
 
   @override
@@ -767,6 +770,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get islandRightExprLabel => 'Island right expression';
+
+  @override
+  String get aodTextSwitchLabel => 'AOD text switch';
+
+  @override
+  String get aodTextExprLabel => 'AOD text expression';
+
+  @override
+  String get aodIconSourceLabel => 'AOD icon source';
 
   @override
   String get focusNotificationLabel => 'Focus notification';
