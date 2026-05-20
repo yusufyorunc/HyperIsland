@@ -8,19 +8,18 @@ import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 
 /**
- * 自定义 Application，负责将 Flutter 端写入的 SharedPreferences
- * 镜像同步到 LSPosed 的 RemotePreferences，使 Hook 进程能通过
- * [XposedModule.getRemotePreferences] 读到最新配置。
+ * 自定义 Application，负责将 Flutter 端写入的 SharedPreferences 镜像同步到
+ * LSPosed 的 RemotePreferences，使 Hook 进程能读到最新配置。
  *
  * 架构参考 example/App.kt + example/MainActivity.kt：
  *   - App 端通过 [XposedServiceHelper] 获取 [XposedService]
- *   - 写入用 [XposedService.getRemotePreferences].edit()
- *   - Hook 端用 module.getRemotePreferences() 读取
+ * RemotePreferences 在 hook 进程打开时会经 Binder 初始化整组数据，单组过大会触发
+ * TransactionTooLarge/DeadObject。这里将配置拆为 core + shards，避免任何单个 prefs 组过大。
  */
 class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener {
 
     private val flutterPrefs: SharedPreferences by lazy {
-        getSharedPreferences(REMOTE_PREFS_NAME, Context.MODE_PRIVATE)
+        getSharedPreferences(FLUTTER_PREFS_NAME, Context.MODE_PRIVATE)
     }
 
     @Volatile
@@ -48,11 +47,7 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
     override fun onServiceBind(service: XposedService) {
         xposedService = service
         ServiceState.markReady(service.apiVersion, service.frameworkName, service.frameworkVersion)
-        Log.d(
-            TAG,
-            "XposedService bound, API version: ${ServiceState.getApiVersion()}, " +
-                "framework: ${ServiceState.getFrameworkName()} ${ServiceState.getFrameworkVersion()}, syncing all prefs"
-        )
+        Log.d(TAG, "XposedService bound, syncing sharded prefs")
         syncAllToRemote(service)
         ServiceState.notifyReady()
     }
@@ -78,14 +73,15 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
 
     private fun syncToRemote(service: XposedService, sourcePrefs: SharedPreferences, key: String?) {
         try {
-            val remote = service.getRemotePreferences(REMOTE_PREFS_NAME)
-            val editor = remote.edit() ?: return
             if (key == null) {
-                writeAll(sourcePrefs, editor)
+                writeAllSharded(service, sourcePrefs)
             } else {
+                if (!shouldSyncKey(key)) return
+                val remote = service.getRemotePreferences(remotePrefsNameForKey(key))
+                val editor = remote.edit() ?: return
                 writeValue(editor, key, sourcePrefs.all[key])
+                editor.apply()
             }
-            editor.apply()
             if (key == null) {
                 Log.d(TAG, "full sync done: ${sourcePrefs.all.size} keys")
             } else {
@@ -133,9 +129,29 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
         )
     }
 
-    private fun writeAll(src: SharedPreferences, editor: SharedPreferences.Editor) {
-        for ((key, value) in src.all) {
-            writeValue(editor, key, value)
+    private fun writeAllSharded(service: XposedService, src: SharedPreferences) {
+        clearAllRemotePrefs(service)
+
+        val grouped = src.all
+            .filterKeys { shouldSyncKey(it) }
+            .entries
+            .groupBy { remotePrefsNameForKey(it.key) }
+
+        for ((prefsName, entries) in grouped) {
+            val remote = service.getRemotePreferences(prefsName)
+            var editor = remote.edit() ?: continue
+            for ((key, value) in entries) {
+                writeValue(editor, key, value)
+            }
+            editor.apply()
+            Log.d(TAG, "synced ${entries.size} keys to $prefsName")
+        }
+    }
+
+    private fun clearAllRemotePrefs(service: XposedService) {
+        service.getRemotePreferences(REMOTE_PREFS_CORE).edit()?.clear()?.apply()
+        for (index in 0 until SHARD_COUNT) {
+            service.getRemotePreferences("$REMOTE_PREFS_SHARD_PREFIX$index").edit()?.clear()?.apply()
         }
     }
 
@@ -146,13 +162,86 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
             is Long    -> editor.putLong(key, value)
             is Float   -> editor.putFloat(key, value)
             is String  -> editor.putString(key, value)
+            is Set<*>  -> editor.putStringSet(key, value.filterIsInstance<String>().toSet())
             null       -> editor.remove(key)
         }
     }
 
+    private fun shouldSyncKey(key: String): Boolean {
+        if (!key.startsWith(FLUTTER_KEY_PREFIX)) return false
+        val rawKey = key.removePrefix(FLUTTER_KEY_PREFIX)
+        if (!rawKey.startsWith("pref_")) return false
+        return rawKey != "pref_onboarding_completed" &&
+            rawKey != "pref_config_app_version"
+    }
+
+    private fun remotePrefsNameForKey(key: String): String {
+        val rawKey = key.removePrefix(FLUTTER_KEY_PREFIX)
+        return if (isCoreKey(rawKey)) {
+            REMOTE_PREFS_CORE
+        } else {
+            "$REMOTE_PREFS_SHARD_PREFIX${shardForKey(key)}"
+        }
+    }
+
+    private fun isCoreKey(rawKey: String): Boolean {
+        return rawKey in CORE_PREF_KEYS ||
+            rawKey.startsWith("pref_scene_surface_")
+    }
+
+    private fun shardForKey(key: String): Int {
+        return (key.hashCode() and Int.MAX_VALUE) % SHARD_COUNT
+    }
+
     companion object {
         private const val TAG = "HyperIsland[App]"
-        const val REMOTE_PREFS_NAME = "FlutterSharedPreferences"
+        private const val FLUTTER_PREFS_NAME = "FlutterSharedPreferences"
+        private const val FLUTTER_KEY_PREFIX = "flutter."
+        const val REMOTE_PREFS_CORE = "HyperIslandXposedCore"
+        const val REMOTE_PREFS_SHARD_PREFIX = "HyperIslandXposedShard"
+        const val SHARD_COUNT = 32
+
+        private val CORE_PREF_KEYS = setOf(
+            "pref_show_welcome",
+            "pref_resume_notification",
+            "pref_settings_home_entry",
+            "pref_interaction_haptics",
+            "pref_round_icon",
+            "pref_marquee_feature",
+            "pref_marquee_speed",
+            "pref_big_island_max_width",
+            "pref_big_island_min_width",
+            "pref_unlock_all_focus",
+            "pref_unlock_focus_auth",
+            "pref_default_first_float",
+            "pref_default_enable_float",
+            "pref_default_show_island_icon",
+            "pref_default_marquee",
+            "pref_default_focus_notif",
+            "pref_default_aod_text",
+            "pref_default_dynamic_highlight_color",
+            "pref_default_outer_glow",
+            "pref_default_island_outer_glow",
+            "pref_default_force_outer_glow",
+            "pref_default_force_island_outer_glow",
+            "pref_default_restore_lockscreen",
+            "pref_default_preserve_small_icon",
+            "pref_fullscreen_behavior",
+            "pref_landscape_behavior",
+            "pref_scene_dnd",
+            "pref_scene_fullscreen",
+            "pref_scene_landscape",
+            "pref_ai_enabled",
+            "pref_ai_prompt_in_user",
+            "pref_ai_timeout",
+            "pref_ai_temperature",
+            "pref_ai_max_tokens",
+            "pref_island_height",
+            "pref_keep_island",
+            "pref_keep_island_auto_hide",
+            "pref_blur_bars",
+            "pref_debug_log"
+        )
 
         private object ServiceState {
             @Volatile private var serviceReady = false

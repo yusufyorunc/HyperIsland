@@ -4,25 +4,24 @@ import android.content.SharedPreferences
 import io.github.libxposed.api.XposedModule
 
 /**
- * 基于 XposedService.getRemotePreferences 的配置管理器（API 101 版本）。
- *
- * 架构：
- *   - Flutter 的 shared_preferences 插件将全量配置以 "flutter." 前缀写入模块 App 进程的
- *     FlutterSharedPreferences.xml。
- *   - Hook 进程（SystemUI / XMSF / 下载管理器）通过 XposedService.getRemotePreferences()
- *     跨进程读取该文件，并注册 OnSharedPreferenceChangeListener 实现热重载。
+ * 基于 RemotePreferences 的配置管理器。RemotePreferences 打开时会初始化整组数据，
+ * 所以配置被拆为一个小 core 组和多个 shard，避免单次 Binder 事务超过缓冲区。
  */
 object ConfigManager {
 
     private const val TAG = "HyperIsland[ConfigManager]"
     private const val FLUTTER_KEY_PREFIX = "flutter."
-    private const val PREFS_GROUP = "FlutterSharedPreferences"
+    private const val PREFS_CORE = "HyperIslandXposedCore"
+    private const val PREFS_SHARD_PREFIX = "HyperIslandXposedShard"
+    private const val SHARD_COUNT = 32
     /** Flutter shared_preferences 存储 double 时使用的 Base64 前缀（不需要解码，直接截取）。 */
     private const val DOUBLE_PREFIX_ENCODED = "VGhpcyBpcyB0aGUgcHJlZml4IGZvciBEb3VibGUu"
 
-    @Volatile private var prefs: SharedPreferences? = null
+    @Volatile private var corePrefs: SharedPreferences? = null
     @Volatile private var initialized = false
     @Volatile private var module: XposedModule? = null
+
+    private val shardPrefs = arrayOfNulls<SharedPreferences>(SHARD_COUNT)
 
     private val changeListeners = mutableListOf<() -> Unit>()
 
@@ -39,17 +38,17 @@ object ConfigManager {
     fun init(module: XposedModule) {
         if (initialized) return
         try {
-            val p = module.getRemotePreferences(PREFS_GROUP)
+            val p = module.getRemotePreferences(PREFS_CORE)
             p.registerOnSharedPreferenceChangeListener(prefsListener)
-            prefs = p
+            corePrefs = p
             this.module = module
             initialized = true
-            module.log("$TAG: remote prefs '$PREFS_GROUP' loaded")
+            module.log("$TAG: remote prefs '$PREFS_CORE' loaded")
             notifyListeners()
         } catch (e: UnsupportedOperationException) {
-            module.logWarn("$TAG: init failed — embedded framework, remote prefs unavailable")
+            module.logWarn("$TAG: init failed: embedded framework, remote prefs unavailable")
             initialized = true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             module.logError("$TAG: init failed: ${e.message}")
             initialized = true
         }
@@ -64,11 +63,11 @@ object ConfigManager {
     // ── 类型化读取 ──────────────────────────────────────────────────────────────
 
     fun getBoolean(key: String, default: Boolean): Boolean =
-        try { prefs?.getBoolean(fk(key), default) ?: default }
+        try { prefsForKey(key)?.getBoolean(fk(key), default) ?: default }
         catch (_: ClassCastException) { default }
 
     fun getString(key: String, default: String = ""): String =
-        try { prefs?.getString(fk(key), default) ?: default }
+        try { prefsForKey(key)?.getString(fk(key), default) ?: default }
         catch (_: ClassCastException) { default }
 
     /**
@@ -76,9 +75,9 @@ object ConfigManager {
      * 优先用 getLong 读取再转换，若类型不符再尝试 getInt。
      */
     fun getInt(key: String, default: Int): Int =
-        try { prefs?.getLong(fk(key), default.toLong())?.toInt() ?: default }
+        try { prefsForKey(key)?.getLong(fk(key), default.toLong())?.toInt() ?: default }
         catch (_: ClassCastException) {
-            try { prefs?.getInt(fk(key), default) ?: default }
+            try { prefsForKey(key)?.getInt(fk(key), default) ?: default }
             catch (_: ClassCastException) { default }
         }
 
@@ -88,7 +87,7 @@ object ConfigManager {
      * 直接截取前缀后的字符串即可获取实际 double 值。
      */
     fun getDouble(key: String, default: Double): Double {
-        val raw = try { prefs?.getString(fk(key), null) } catch (_: Throwable) { null }
+        val raw = try { prefsForKey(key)?.getString(fk(key), null) } catch (_: Throwable) { null }
             ?: return default
         return try {
             if (raw.startsWith(DOUBLE_PREFIX_ENCODED)) {
@@ -105,6 +104,7 @@ object ConfigManager {
      */
     fun getFloat(key: String, default: Float): Float =
         try {
+            val prefs = prefsForKey(key)
             val raw = prefs?.getString(fk(key), null)
             if (raw != null && raw.startsWith(DOUBLE_PREFIX_ENCODED)) {
                 raw.substring(DOUBLE_PREFIX_ENCODED.length).trim().toFloatOrNull() ?: default
@@ -115,7 +115,7 @@ object ConfigManager {
         catch (_: ClassCastException) { default }
 
     fun contains(key: String): Boolean =
-        prefs?.contains(fk(key)) ?: false
+        prefsForKey(key)?.contains(fk(key)) ?: false
 
     fun isDebugLogEnabled(): Boolean = getBoolean("pref_debug_log", false)
 
@@ -126,8 +126,77 @@ object ConfigManager {
 
     private fun fk(key: String) = "$FLUTTER_KEY_PREFIX$key"
 
+    private fun prefsForKey(key: String): SharedPreferences? {
+        if (isCoreKey(key)) return corePrefs
+        val index = shardForKey(fk(key))
+        shardPrefs[index]?.let { return it }
+        val m = module ?: return null
+        return synchronized(this) {
+            shardPrefs[index] ?: try {
+                m.getRemotePreferences("$PREFS_SHARD_PREFIX$index").also { prefs ->
+                    prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+                    shardPrefs[index] = prefs
+                    m.log("$TAG: remote prefs '$PREFS_SHARD_PREFIX$index' loaded")
+                }
+            } catch (e: Throwable) {
+                m.logError("$TAG: shard $index load failed: ${e.message}")
+                null
+            }
+        }
+    }
+
+    private fun isCoreKey(key: String): Boolean {
+        return key in CORE_PREF_KEYS || key.startsWith("pref_scene_surface_")
+    }
+
+    private fun shardForKey(key: String): Int {
+        return (key.hashCode() and Int.MAX_VALUE) % SHARD_COUNT
+    }
+
     private fun notifyListeners() {
         val ls = synchronized(this) { changeListeners.toList() }
         ls.forEach { runCatching { it() } }
     }
+
+    private val CORE_PREF_KEYS = setOf(
+        "pref_show_welcome",
+        "pref_resume_notification",
+        "pref_settings_home_entry",
+        "pref_interaction_haptics",
+        "pref_round_icon",
+        "pref_marquee_feature",
+        "pref_marquee_speed",
+        "pref_big_island_max_width",
+        "pref_big_island_min_width",
+        "pref_unlock_all_focus",
+        "pref_unlock_focus_auth",
+        "pref_default_first_float",
+        "pref_default_enable_float",
+        "pref_default_show_island_icon",
+        "pref_default_marquee",
+        "pref_default_focus_notif",
+        "pref_default_aod_text",
+        "pref_default_dynamic_highlight_color",
+        "pref_default_outer_glow",
+        "pref_default_island_outer_glow",
+        "pref_default_force_outer_glow",
+        "pref_default_force_island_outer_glow",
+        "pref_default_restore_lockscreen",
+        "pref_default_preserve_small_icon",
+        "pref_fullscreen_behavior",
+        "pref_landscape_behavior",
+        "pref_scene_dnd",
+        "pref_scene_fullscreen",
+        "pref_scene_landscape",
+        "pref_ai_enabled",
+        "pref_ai_prompt_in_user",
+        "pref_ai_timeout",
+        "pref_ai_temperature",
+        "pref_ai_max_tokens",
+        "pref_island_height",
+        "pref_keep_island",
+        "pref_keep_island_auto_hide",
+        "pref_blur_bars",
+        "pref_debug_log"
+    )
 }
