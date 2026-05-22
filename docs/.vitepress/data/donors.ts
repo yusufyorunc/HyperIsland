@@ -122,7 +122,7 @@ export const donors: DonorItem[] = [
   },
   {
     name: "奶龙",
-    amount: '18.8',
+    amount: '18.88',
     date: '2026-05-22',
     message: '好用，支持开发者'
   }
