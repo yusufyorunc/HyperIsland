@@ -23,6 +23,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
     _ctrl.resumeNotification,
     _ctrl.settingsHomeEntry,
     _ctrl.bluetoothIsland,
+    _ctrl.bluetoothIslandShowDeviceName,
     _ctrl.bluetoothIslandOuterGlow,
     _ctrl.bluetoothIslandOuterGlowColor,
     _ctrl.unlockAllFocus,
@@ -94,9 +95,10 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
       context: context,
       builder: (dialogContext) => _BluetoothIslandSettingsDialog(
         enabled: _ctrl.bluetoothIsland,
+        showDeviceName: _ctrl.bluetoothIslandShowDeviceName,
         outerGlow: _ctrl.bluetoothIslandOuterGlow,
         outerGlowColor: _ctrl.bluetoothIslandOuterGlowColor,
-        onApply: (enabled, outerGlow, outerGlowColor) async {
+        onApply: (enabled, showDeviceName, outerGlow, outerGlowColor) async {
           final enabledChanged = enabled != _ctrl.bluetoothIsland;
           if (!await _requestScopesIfEnabled(enabled, const [
             'com.android.systemui',
@@ -104,6 +106,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
             return false;
           }
           await _ctrl.setBluetoothIsland(enabled);
+          await _ctrl.setBluetoothIslandShowDeviceName(showDeviceName);
           await _ctrl.setBluetoothIslandOuterGlow(outerGlow);
           await _ctrl.setBluetoothIslandOuterGlowColor(outerGlowColor);
           if (mounted && enabledChanged) {
@@ -288,16 +291,19 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
 class _BluetoothIslandSettingsDialog extends StatefulWidget {
   const _BluetoothIslandSettingsDialog({
     required this.enabled,
+    required this.showDeviceName,
     required this.outerGlow,
     required this.outerGlowColor,
     required this.onApply,
   });
 
   final bool enabled;
+  final bool showDeviceName;
   final bool outerGlow;
   final String outerGlowColor;
   final Future<bool> Function(
     bool enabled,
+    bool showDeviceName,
     bool outerGlow,
     String outerGlowColor,
   )
@@ -312,6 +318,7 @@ class _BluetoothIslandSettingsDialogState
     extends State<_BluetoothIslandSettingsDialog> {
   late bool _outerGlow;
   late bool _enabled;
+  late bool _showDeviceName;
   late final TextEditingController _colorController;
   late String _outerGlowColor;
 
@@ -319,6 +326,7 @@ class _BluetoothIslandSettingsDialogState
   void initState() {
     super.initState();
     _enabled = widget.enabled;
+    _showDeviceName = widget.showDeviceName;
     _outerGlow = widget.outerGlow;
     _outerGlowColor = widget.outerGlowColor;
     _colorController = TextEditingController(text: _outerGlowColor);
@@ -347,6 +355,14 @@ class _BluetoothIslandSettingsDialogState
               subtitle: Text(l10n.bluetoothIslandEnableSubtitle),
               value: _enabled,
               onChanged: (value) => setState(() => _enabled = value),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.bluetoothIslandShowDeviceNameTitle),
+              subtitle: Text(l10n.bluetoothIslandShowDeviceNameSubtitle),
+              value: _showDeviceName,
+              onChanged: (value) => setState(() => _showDeviceName = value),
             ),
             const SizedBox(height: 12),
             SwitchListTile(
@@ -408,6 +424,7 @@ class _BluetoothIslandSettingsDialogState
           onPressed: InteractionHaptics.interceptButton(() async {
             final applied = await widget.onApply(
               _enabled,
+              _showDeviceName,
               _outerGlow,
               _outerGlowColor,
             );

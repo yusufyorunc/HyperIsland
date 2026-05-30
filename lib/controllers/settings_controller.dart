@@ -10,6 +10,8 @@ const kPrefShowWelcome = 'pref_show_welcome';
 const kPrefResumeNotification = 'pref_resume_notification';
 const kPrefSettingsHomeEntry = 'pref_settings_home_entry';
 const kPrefBluetoothIsland = 'pref_bluetooth_island';
+const kPrefBluetoothIslandShowDeviceName =
+    'pref_bluetooth_island_show_device_name';
 const kPrefBluetoothIslandOuterGlow = 'pref_bluetooth_island_outer_glow';
 const kPrefBluetoothIslandOuterGlowColor =
     'pref_bluetooth_island_outer_glow_color';
@@ -132,6 +134,7 @@ class SettingsController extends ChangeNotifier {
   bool resumeNotification = true;
   bool settingsHomeEntry = true;
   bool bluetoothIsland = false;
+  bool bluetoothIslandShowDeviceName = true;
   bool bluetoothIslandOuterGlow = false;
   String bluetoothIslandOuterGlowColor = '';
   bool interactionHaptics = true;
@@ -202,6 +205,8 @@ class SettingsController extends ChangeNotifier {
     resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
     settingsHomeEntry = prefs.getBool(kPrefSettingsHomeEntry) ?? true;
     bluetoothIsland = prefs.getBool(kPrefBluetoothIsland) ?? false;
+    bluetoothIslandShowDeviceName =
+        prefs.getBool(kPrefBluetoothIslandShowDeviceName) ?? true;
     bluetoothIslandOuterGlow =
         prefs.getBool(kPrefBluetoothIslandOuterGlow) ?? false;
     bluetoothIslandOuterGlowColor =
@@ -322,6 +327,14 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefBluetoothIsland, value);
     bluetoothIsland = value;
+    notifyListeners();
+  }
+
+  Future<void> setBluetoothIslandShowDeviceName(bool value) async {
+    if (bluetoothIslandShowDeviceName == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefBluetoothIslandShowDeviceName, value);
+    bluetoothIslandShowDeviceName = value;
     notifyListeners();
   }
 

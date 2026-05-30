@@ -1542,6 +1542,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bluetoothIslandEnableSubtitle => '关闭后重启 SystemUI 生效，且不会注册蓝牙 Hook';
 
   @override
+  String get bluetoothIslandShowDeviceNameTitle => '显示设备名称';
+
+  @override
+  String get bluetoothIslandShowDeviceNameSubtitle =>
+      '连接时右侧先显示设备名称，2 秒后再显示连接状态';
+
+  @override
   String get outerGlowTitle => '外圈光效';
 
   @override

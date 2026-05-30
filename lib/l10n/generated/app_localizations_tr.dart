@@ -1622,6 +1622,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Devre dışı bıraktıktan sonra geçerli olması için Sistem UI\'ı yeniden başlatın. Bluetooth Hook kaydedilmez';
 
   @override
+  String get bluetoothIslandShowDeviceNameTitle => 'Cihaz Adını Göster';
+
+  @override
+  String get bluetoothIslandShowDeviceNameSubtitle =>
+      'Bağlandığında önce sağda cihaz adını gösterir, 2 saniye sonra bağlantı durumunu gösterir';
+
+  @override
   String get outerGlowTitle => 'Dış Parlama';
 
   @override

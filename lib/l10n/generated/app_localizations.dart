@@ -3006,6 +3006,18 @@ abstract class AppLocalizations {
   /// **'关闭后重启 SystemUI 生效，且不会注册蓝牙 Hook'**
   String get bluetoothIslandEnableSubtitle;
 
+  /// No description provided for @bluetoothIslandShowDeviceNameTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示设备名称'**
+  String get bluetoothIslandShowDeviceNameTitle;
+
+  /// No description provided for @bluetoothIslandShowDeviceNameSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接时右侧先显示设备名称，2 秒后再显示连接状态'**
+  String get bluetoothIslandShowDeviceNameSubtitle;
+
   /// No description provided for @outerGlowTitle.
   ///
   /// In zh, this message translates to:

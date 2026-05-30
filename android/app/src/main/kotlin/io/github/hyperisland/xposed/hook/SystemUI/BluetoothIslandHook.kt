@@ -12,6 +12,8 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
 import io.github.hyperisland.xposed.islanddispatch.definition.IslandRequest
@@ -24,17 +26,22 @@ object BluetoothIslandHook : BaseHook() {
 
     private const val TAG = "HyperIsland[BluetoothIsland]"
     private const val PREF_ENABLED = "pref_bluetooth_island"
+    private const val PREF_SHOW_DEVICE_NAME = "pref_bluetooth_island_show_device_name"
     private const val PREF_OUTER_GLOW = "pref_bluetooth_island_outer_glow"
     private const val PREF_OUTER_GLOW_COLOR = "pref_bluetooth_island_outer_glow_color"
     private const val NOTIF_ID = 0x48494254
     private const val ACTION_BATTERY_LEVEL_CHANGED = "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
     private const val EXTRA_BATTERY_LEVEL = "android.bluetooth.device.extra.BATTERY_LEVEL"
+    private const val DEVICE_NAME_UPDATE_DELAY_MS = 2000L
 
     @Volatile private var registered = false
     @Volatile private var moduleRef: XposedModule? = null
     @Volatile private var lastConnected = false
     @Volatile private var lastBattery = -1
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val pendingNameRefreshes = ConcurrentHashMap<String, Runnable>()
     private val batteryByDevice = ConcurrentHashMap<String, Int>()
+    private val deviceNameByDevice = ConcurrentHashMap<String, String>()
 
     override fun getTag() = TAG
 
@@ -82,17 +89,57 @@ object BluetoothIslandHook : BaseHook() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             val enabled = ConfigManager.getBoolean(PREF_ENABLED, false)
-            moduleRef?.let { logWarn(it, "received bluetooth broadcast: action=$action enabled=$enabled") }
+            val showDeviceName = ConfigManager.getBoolean(PREF_SHOW_DEVICE_NAME, true)
+            val showDeviceNameStored = ConfigManager.contains(PREF_SHOW_DEVICE_NAME)
+            moduleRef?.let {
+                logWarn(
+                    it,
+                    "received bluetooth broadcast: action=$action enabled=$enabled " +
+                        "showDeviceName=$showDeviceName stored=$showDeviceNameStored",
+                )
+            }
             if (!enabled) return
             if (action == ACTION_BATTERY_LEVEL_CHANGED) {
                 val battery = readBatteryLevel(intent)
                 cacheBattery(intent, battery)
+                val deviceName = resolveDeviceName(intent)
+                val key = deviceKey(intent, deviceName)
+                val hasPendingNameRefresh = pendingNameRefreshes.containsKey(key)
+                moduleRef?.let {
+                    logWarn(
+                        it,
+                        "bluetooth battery broadcast: battery=$battery key=$key " +
+                            "deviceName=$deviceName pendingNameRefresh=$hasPendingNameRefresh",
+                    )
+                }
+                if (showDeviceName && hasPendingNameRefresh) {
+                    if (battery in 0..100) lastBattery = battery
+                    moduleRef?.let {
+                        logWarn(
+                            it,
+                            "skip bluetooth battery update while device name is showing: key=$key cachedBattery=$lastBattery",
+                        )
+                    }
+                    return
+                }
                 if (lastConnected && battery in 0..100) {
                     lastBattery = battery
                     moduleRef?.let { logWarn(it, "bluetooth battery changed: battery=$battery") }
-                    postBluetoothIsland(context, connected = true, battery = battery)
+                    postBluetoothIsland(
+                        context = context,
+                        connected = true,
+                        battery = battery,
+                        deviceName = deviceName,
+                        rightTextOverride = null,
+                        clearBeforePost = false,
+                    )
                 } else {
-                    moduleRef?.let { logWarn(it, "skip bluetooth battery update: connected=$lastConnected battery=$battery") }
+                    moduleRef?.let {
+                        logWarn(
+                            it,
+                            "skip bluetooth battery update: connected=$lastConnected battery=$battery key=$key",
+                        )
+                    }
                 }
                 return
             }
@@ -101,17 +148,63 @@ object BluetoothIslandHook : BaseHook() {
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> false
                 else -> return
             }
+            val deviceName = resolveDeviceName(intent)
+            cacheDeviceName(intent, deviceName)
             lastConnected = connected
             val battery = readBatteryLevel(intent).takeIf { it in 0..100 }
                 ?: readCachedBattery(intent)
                 ?: lastBattery
             if (battery in 0..100) lastBattery = battery
-            moduleRef?.let { logWarn(it, "bluetooth state changed: connected=$connected battery=$battery") }
-            if (connected && battery !in 0..100) {
-                moduleRef?.let { logWarn(it, "skip bluetooth connected island: battery unknown") }
+            val key = deviceKey(intent, deviceName)
+            moduleRef?.let {
+                logWarn(
+                    it,
+                    "bluetooth state changed: connected=$connected battery=$battery " +
+                        "deviceName=$deviceName key=$key showDeviceName=$showDeviceName",
+                )
+            }
+            if (connected && battery !in 0..100 && !showDeviceName) {
+                moduleRef?.let {
+                    logWarn(
+                        it,
+                        "skip bluetooth connected island: battery unknown deviceName=$deviceName key=$key",
+                    )
+                }
                 return
             }
-            postBluetoothIsland(context, connected, battery)
+            if (showDeviceName && connected) {
+                moduleRef?.let {
+                    logWarn(
+                        it,
+                        "post bluetooth device name first: deviceName=$deviceName key=$key battery=$battery",
+                    )
+                }
+                postBluetoothIsland(
+                    context = context,
+                    connected = connected,
+                    battery = battery,
+                    deviceName = deviceName,
+                    rightTextOverride = deviceName,
+                    clearBeforePost = true,
+                )
+                scheduleStatusRefresh(context, key, connected, battery, deviceName)
+            } else {
+                pendingNameRefreshes.remove(key)?.let { mainHandler.removeCallbacks(it) }
+                moduleRef?.let {
+                    logWarn(
+                        it,
+                        "post bluetooth status directly: connected=$connected deviceName=$deviceName key=$key battery=$battery",
+                    )
+                }
+                postBluetoothIsland(
+                    context = context,
+                    connected = connected,
+                    battery = battery,
+                    deviceName = deviceName,
+                    rightTextOverride = if (connected) null else deviceName,
+                    clearBeforePost = true,
+                )
+            }
         }
     }
 
@@ -133,9 +226,77 @@ object BluetoothIslandHook : BaseHook() {
         device.address?.let { batteryByDevice[it] = battery }
     }
 
+    private fun cacheDeviceName(intent: Intent, deviceName: String) {
+        if (deviceName.isBlank()) return
+        val device = getBluetoothDevice(intent) ?: return
+        device.address?.let { deviceNameByDevice[it] = deviceName }
+    }
+
     private fun readCachedBattery(intent: Intent): Int? {
         val device = getBluetoothDevice(intent) ?: return null
         return device.address?.let { batteryByDevice[it] }
+    }
+
+    private fun readCachedDeviceName(intent: Intent): String? {
+        val device = getBluetoothDevice(intent) ?: return null
+        return device.address?.let { deviceNameByDevice[it] }
+    }
+
+    private fun resolveDeviceName(intent: Intent): String {
+        val device = getBluetoothDevice(intent)
+        val fromDevice = device?.name?.takeIf { it.isNotBlank() }
+        val fromCache = readCachedDeviceName(intent)
+        val resolved = fromDevice ?: fromCache ?: device?.address ?: "Bluetooth"
+        moduleRef?.let {
+            logWarn(
+                it,
+                "resolve bluetooth device name: resolved=$resolved fromDevice=$fromDevice " +
+                    "fromCache=$fromCache address=${device?.address}",
+            )
+        }
+        return resolved
+    }
+
+    private fun deviceKey(intent: Intent, deviceName: String): String {
+        return getBluetoothDevice(intent)?.address ?: deviceName
+    }
+
+    private fun scheduleStatusRefresh(
+        context: Context,
+        key: String,
+        connected: Boolean,
+        battery: Int,
+        deviceName: String,
+    ) {
+        pendingNameRefreshes.remove(key)?.let { mainHandler.removeCallbacks(it) }
+        val runnable = Runnable {
+            pendingNameRefreshes.remove(key)
+            val refreshBattery = if (connected && lastBattery in 0..100) lastBattery else battery
+            moduleRef?.let {
+                logWarn(
+                    it,
+                    "delayed bluetooth status refresh: key=$key connected=$connected " +
+                        "battery=$battery refreshBattery=$refreshBattery deviceName=$deviceName",
+                )
+            }
+            postBluetoothIsland(
+                context = context,
+                connected = connected,
+                battery = refreshBattery,
+                deviceName = deviceName,
+                rightTextOverride = null,
+                clearBeforePost = false,
+            )
+        }
+        pendingNameRefreshes[key] = runnable
+        moduleRef?.let {
+            logWarn(
+                it,
+                "schedule bluetooth status refresh: key=$key delayMs=$DEVICE_NAME_UPDATE_DELAY_MS " +
+                    "pendingCount=${pendingNameRefreshes.size}",
+            )
+        }
+        mainHandler.postDelayed(runnable, DEVICE_NAME_UPDATE_DELAY_MS)
     }
 
     private fun getBluetoothDevice(intent: Intent): BluetoothDevice? {
@@ -158,10 +319,25 @@ object BluetoothIslandHook : BaseHook() {
         }
     }
 
-    private fun postBluetoothIsland(context: Context, connected: Boolean, battery: Int) {
+    private fun postBluetoothIsland(
+        context: Context,
+        connected: Boolean,
+        battery: Int,
+        deviceName: String,
+        rightTextOverride: String?,
+        clearBeforePost: Boolean,
+    ) {
         val title = if (connected) "已连接" else "已断开"
-        val content = "电量：${if (battery in 0..100) "$battery%" else "--"}"
-        moduleRef?.let { logWarn(it, "posting bluetooth island: title=$title content=$content") }
+        val content = rightTextOverride
+            ?: "电量：${if (battery in 0..100) "$battery%" else "--"}"
+        moduleRef?.let {
+            logWarn(
+                it,
+                    "posting bluetooth island: title=$title right=$content connected=$connected " +
+                    "battery=$battery deviceName=$deviceName override=${rightTextOverride != null} " +
+                    "clearBeforePost=$clearBeforePost",
+            )
+        }
         val outerGlow = ConfigManager.getBoolean(PREF_OUTER_GLOW, false)
         val outerGlowColor = ConfigManager.getString(PREF_OUTER_GLOW_COLOR, "")
         IslandDispatcher.post(
@@ -174,6 +350,7 @@ object BluetoothIslandHook : BaseHook() {
                 timeoutSecs = 5,
                 firstFloat = false,
                 enableFloat = false,
+                isOngoing = true,
                 showNotification = false,
                 preserveStatusBarSmallIcon = false,
                 outerGlow = outerGlow,
@@ -182,7 +359,7 @@ object BluetoothIslandHook : BaseHook() {
                 islandOuterGlowColor = outerGlowColor,
                 sourcePackage = "com.android.systemui",
                 sourceChannelId = "bluetooth",
-                clearBeforePost = true,
+                clearBeforePost = clearBeforePost,
             ),
         )
     }

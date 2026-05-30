@@ -783,6 +783,8 @@
   "bluetoothIslandSettingsTitle": "蓝牙超级岛设置",
   "bluetoothIslandEnableTitle": "启用蓝牙超级岛",
   "bluetoothIslandEnableSubtitle": "关闭后重启 SystemUI 生效，且不会注册蓝牙 Hook",
+  "bluetoothIslandShowDeviceNameTitle": "显示设备名称",
+  "bluetoothIslandShowDeviceNameSubtitle": "连接时右侧先显示设备名称，2 秒后再显示连接状态",
   "outerGlowTitle": "外圈光效",
   "bluetoothIslandOuterGlowSubtitle": "控制蓝牙超级岛的外圈光效",
   "outerGlowColorTitle": "外圈光效颜色",

@@ -614,6 +614,8 @@
   "bluetoothIslandSettingsTitle": "Bluetooth Island Settings",
   "bluetoothIslandEnableTitle": "Enable Bluetooth Island",
   "bluetoothIslandEnableSubtitle": "After disabling, restart System UI to take effect. The Bluetooth Hook will not be registered",
+  "bluetoothIslandShowDeviceNameTitle": "Show Device Name",
+  "bluetoothIslandShowDeviceNameSubtitle": "On connection, show the device name on the right first, then show the connection status after 2 seconds",
   "outerGlowTitle": "Outer Glow",
   "bluetoothIslandOuterGlowSubtitle": "Control the outer glow effect of Bluetooth Island",
   "outerGlowColorTitle": "Outer Glow Color",

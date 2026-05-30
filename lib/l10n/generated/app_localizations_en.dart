@@ -1622,6 +1622,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'After disabling, restart System UI to take effect. The Bluetooth Hook will not be registered';
 
   @override
+  String get bluetoothIslandShowDeviceNameTitle => 'Show Device Name';
+
+  @override
+  String get bluetoothIslandShowDeviceNameSubtitle =>
+      'On connection, show the device name on the right first, then show the connection status after 2 seconds';
+
+  @override
   String get outerGlowTitle => 'Outer Glow';
 
   @override

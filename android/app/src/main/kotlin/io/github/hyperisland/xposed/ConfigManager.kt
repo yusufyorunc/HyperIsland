@@ -163,6 +163,7 @@ object ConfigManager {
         "pref_resume_notification",
         "pref_settings_home_entry",
         "pref_bluetooth_island",
+        "pref_bluetooth_island_show_device_name",
         "pref_bluetooth_island_outer_glow",
         "pref_bluetooth_island_outer_glow_color",
         "pref_interaction_haptics",

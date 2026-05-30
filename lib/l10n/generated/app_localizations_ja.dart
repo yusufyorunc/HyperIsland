@@ -1561,6 +1561,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'オフにした後は System UI を再起動すると反映され、Bluetooth Hook は登録されません';
 
   @override
+  String get bluetoothIslandShowDeviceNameTitle => 'デバイス名を表示';
+
+  @override
+  String get bluetoothIslandShowDeviceNameSubtitle =>
+      '接続時は右側にデバイス名を先に表示し、2 秒後に接続状態を表示します';
+
+  @override
   String get outerGlowTitle => '外側のグロー';
 
   @override

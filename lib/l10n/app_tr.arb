@@ -601,6 +601,8 @@
   "bluetoothIslandSettingsTitle": "Bluetooth Adası Ayarları",
   "bluetoothIslandEnableTitle": "Bluetooth Adasını Etkinleştir",
   "bluetoothIslandEnableSubtitle": "Devre dışı bıraktıktan sonra geçerli olması için Sistem UI'ı yeniden başlatın. Bluetooth Hook kaydedilmez",
+  "bluetoothIslandShowDeviceNameTitle": "Cihaz Adını Göster",
+  "bluetoothIslandShowDeviceNameSubtitle": "Bağlandığında önce sağda cihaz adını gösterir, 2 saniye sonra bağlantı durumunu gösterir",
   "outerGlowTitle": "Dış Parlama",
   "bluetoothIslandOuterGlowSubtitle": "Bluetooth Adasının dış parlama efektini kontrol eder",
   "outerGlowColorTitle": "Dış Parlama Rengi",
