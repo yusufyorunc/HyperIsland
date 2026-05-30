@@ -9,6 +9,10 @@ import 'whitelist_controller.dart';
 const kPrefShowWelcome = 'pref_show_welcome';
 const kPrefResumeNotification = 'pref_resume_notification';
 const kPrefSettingsHomeEntry = 'pref_settings_home_entry';
+const kPrefBluetoothIsland = 'pref_bluetooth_island';
+const kPrefBluetoothIslandOuterGlow = 'pref_bluetooth_island_outer_glow';
+const kPrefBluetoothIslandOuterGlowColor =
+    'pref_bluetooth_island_outer_glow_color';
 
 const kPrefInteractionHaptics = 'pref_interaction_haptics';
 const kPrefRoundIcon = 'pref_round_icon';
@@ -127,6 +131,9 @@ class SettingsController extends ChangeNotifier {
   bool showWelcome = true;
   bool resumeNotification = true;
   bool settingsHomeEntry = true;
+  bool bluetoothIsland = false;
+  bool bluetoothIslandOuterGlow = false;
+  String bluetoothIslandOuterGlowColor = '';
   bool interactionHaptics = true;
   bool roundIcon = true;
   bool marqueeFeature = false;
@@ -194,6 +201,11 @@ class SettingsController extends ChangeNotifier {
     showWelcome = prefs.getBool(kPrefShowWelcome) ?? true;
     resumeNotification = prefs.getBool(kPrefResumeNotification) ?? true;
     settingsHomeEntry = prefs.getBool(kPrefSettingsHomeEntry) ?? true;
+    bluetoothIsland = prefs.getBool(kPrefBluetoothIsland) ?? false;
+    bluetoothIslandOuterGlow =
+        prefs.getBool(kPrefBluetoothIslandOuterGlow) ?? false;
+    bluetoothIslandOuterGlowColor =
+        prefs.getString(kPrefBluetoothIslandOuterGlowColor) ?? '';
     interactionHaptics = prefs.getBool(kPrefInteractionHaptics) ?? true;
     roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
     marqueeFeature = prefs.getBool(kPrefMarqueeFeature) ?? false;
@@ -302,6 +314,35 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefSettingsHomeEntry, value);
     settingsHomeEntry = value;
+    notifyListeners();
+  }
+
+  Future<void> setBluetoothIsland(bool value) async {
+    if (bluetoothIsland == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefBluetoothIsland, value);
+    bluetoothIsland = value;
+    notifyListeners();
+  }
+
+  Future<void> setBluetoothIslandOuterGlow(bool value) async {
+    if (bluetoothIslandOuterGlow == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefBluetoothIslandOuterGlow, value);
+    bluetoothIslandOuterGlow = value;
+    notifyListeners();
+  }
+
+  Future<void> setBluetoothIslandOuterGlowColor(String value) async {
+    final normalized = value.trim();
+    if (bluetoothIslandOuterGlowColor == normalized) return;
+    final prefs = await _getPrefs();
+    if (normalized.isEmpty) {
+      await prefs.remove(kPrefBluetoothIslandOuterGlowColor);
+    } else {
+      await prefs.setString(kPrefBluetoothIslandOuterGlowColor, normalized);
+    }
+    bluetoothIslandOuterGlowColor = normalized;
     notifyListeners();
   }
 
