@@ -3089,6 +3089,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'为顶栏和底栏添加模糊透明效果'**
   String get blurBarsSubtitle;
+
+  /// No description provided for @bluetoothIslandWhitelistTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备白名单'**
+  String get bluetoothIslandWhitelistTitle;
+
+  /// No description provided for @bluetoothIslandWhitelistSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅对白名单中的蓝牙设备显示超级岛'**
+  String get bluetoothIslandWhitelistSubtitle;
+
+  /// No description provided for @bluetoothIslandWhitelistButton.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理白名单设备'**
+  String get bluetoothIslandWhitelistButton;
+
+  /// No description provided for @bluetoothIslandWhitelistButtonSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选择 {count} 个设备'**
+  String bluetoothIslandWhitelistButtonSubtitle(int count);
+
+  /// No description provided for @bluetoothIslandWhitelistDialogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择蓝牙设备'**
+  String get bluetoothIslandWhitelistDialogTitle;
+
+  /// No description provided for @bluetoothIslandWhitelistEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无已配对设备，请先在系统蓝牙中配对'**
+  String get bluetoothIslandWhitelistEmpty;
+
+  /// No description provided for @bluetoothIslandWhitelistAllHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'未开启白名单时，对所有蓝牙设备生效'**
+  String get bluetoothIslandWhitelistAllHint;
+
+  /// No description provided for @bluetoothIslandLoadDevicesFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'获取蓝牙设备失败'**
+  String get bluetoothIslandLoadDevicesFailed;
+
+  /// No description provided for @bluetoothIslandNeedBtPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要蓝牙权限才能获取设备列表'**
+  String get bluetoothIslandNeedBtPermission;
 }
 
 class _AppLocalizationsDelegate

@@ -797,5 +797,20 @@
   "presetColors": "预设色板",
   "themeResetColor": "恢复默认",
   "blurBarsTitle": "毛玻璃效果",
-  "blurBarsSubtitle": "为顶栏和底栏添加模糊透明效果"
+  "blurBarsSubtitle": "为顶栏和底栏添加模糊透明效果",
+
+  "bluetoothIslandWhitelistTitle": "设备白名单",
+  "bluetoothIslandWhitelistSubtitle": "仅对白名单中的蓝牙设备显示超级岛",
+  "bluetoothIslandWhitelistButton": "管理白名单设备",
+  "bluetoothIslandWhitelistButtonSubtitle": "已选择 {count} 个设备",
+  "@bluetoothIslandWhitelistButtonSubtitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "bluetoothIslandWhitelistDialogTitle": "选择蓝牙设备",
+  "bluetoothIslandWhitelistEmpty": "暂无已配对设备，请先在系统蓝牙中配对",
+  "bluetoothIslandWhitelistAllHint": "未开启白名单时，对所有蓝牙设备生效",
+  "bluetoothIslandLoadDevicesFailed": "获取蓝牙设备失败",
+  "bluetoothIslandNeedBtPermission": "需要蓝牙权限才能获取设备列表"
 }

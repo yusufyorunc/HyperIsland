@@ -15,6 +15,10 @@ const kPrefBluetoothIslandShowDeviceName =
 const kPrefBluetoothIslandOuterGlow = 'pref_bluetooth_island_outer_glow';
 const kPrefBluetoothIslandOuterGlowColor =
     'pref_bluetooth_island_outer_glow_color';
+const kPrefBluetoothIslandWhitelistEnabled =
+    'pref_bluetooth_island_whitelist_enabled';
+const kPrefBluetoothIslandWhitelistAddresses =
+    'pref_bluetooth_island_whitelist_addresses';
 
 const kPrefInteractionHaptics = 'pref_interaction_haptics';
 const kPrefRoundIcon = 'pref_round_icon';
@@ -137,6 +141,8 @@ class SettingsController extends ChangeNotifier {
   bool bluetoothIslandShowDeviceName = true;
   bool bluetoothIslandOuterGlow = false;
   String bluetoothIslandOuterGlowColor = '';
+  bool bluetoothIslandWhitelistEnabled = false;
+  List<String> bluetoothIslandWhitelistAddresses = [];
   bool interactionHaptics = true;
   bool roundIcon = true;
   bool marqueeFeature = false;
@@ -211,6 +217,11 @@ class SettingsController extends ChangeNotifier {
         prefs.getBool(kPrefBluetoothIslandOuterGlow) ?? false;
     bluetoothIslandOuterGlowColor =
         prefs.getString(kPrefBluetoothIslandOuterGlowColor) ?? '';
+    bluetoothIslandWhitelistEnabled =
+        prefs.getBool(kPrefBluetoothIslandWhitelistEnabled) ?? false;
+    bluetoothIslandWhitelistAddresses = _decodeStringList(
+      prefs.getString(kPrefBluetoothIslandWhitelistAddresses),
+    );
     interactionHaptics = prefs.getBool(kPrefInteractionHaptics) ?? true;
     roundIcon = prefs.getBool(kPrefRoundIcon) ?? true;
     marqueeFeature = prefs.getBool(kPrefMarqueeFeature) ?? false;
@@ -357,6 +368,41 @@ class SettingsController extends ChangeNotifier {
     }
     bluetoothIslandOuterGlowColor = normalized;
     notifyListeners();
+  }
+
+  Future<void> setBluetoothIslandWhitelistEnabled(bool value) async {
+    if (bluetoothIslandWhitelistEnabled == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefBluetoothIslandWhitelistEnabled, value);
+    bluetoothIslandWhitelistEnabled = value;
+    notifyListeners();
+  }
+
+  Future<void> setBluetoothIslandWhitelistAddresses(
+    List<String> addresses,
+  ) async {
+    final prefs = await _getPrefs();
+    if (addresses.isEmpty) {
+      await prefs.remove(kPrefBluetoothIslandWhitelistAddresses);
+    } else {
+      await prefs.setString(
+        kPrefBluetoothIslandWhitelistAddresses,
+        jsonEncode(addresses),
+      );
+    }
+    bluetoothIslandWhitelistAddresses = List.unmodifiable(addresses);
+    notifyListeners();
+  }
+
+  static List<String> _decodeStringList(String? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.map((e) => e.toString()).toList();
+      }
+    } catch (_) {}
+    return [];
   }
 
   Future<void> setInteractionHaptics(bool value) async {

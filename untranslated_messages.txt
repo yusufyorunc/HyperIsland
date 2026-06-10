@@ -64,7 +64,16 @@
     "importErrorNotJson",
     "importErrorMissingChannels",
     "importErrorNoMatch",
-    "importErrorUnknown"
+    "importErrorUnknown",
+    "bluetoothIslandWhitelistTitle",
+    "bluetoothIslandWhitelistSubtitle",
+    "bluetoothIslandWhitelistButton",
+    "bluetoothIslandWhitelistButtonSubtitle",
+    "bluetoothIslandWhitelistDialogTitle",
+    "bluetoothIslandWhitelistEmpty",
+    "bluetoothIslandWhitelistAllHint",
+    "bluetoothIslandLoadDevicesFailed",
+    "bluetoothIslandNeedBtPermission"
   ],
 
   "tr": [
@@ -137,6 +146,15 @@
     "importErrorNotJson",
     "importErrorMissingChannels",
     "importErrorNoMatch",
-    "importErrorUnknown"
+    "importErrorUnknown",
+    "bluetoothIslandWhitelistTitle",
+    "bluetoothIslandWhitelistSubtitle",
+    "bluetoothIslandWhitelistButton",
+    "bluetoothIslandWhitelistButtonSubtitle",
+    "bluetoothIslandWhitelistDialogTitle",
+    "bluetoothIslandWhitelistEmpty",
+    "bluetoothIslandWhitelistAllHint",
+    "bluetoothIslandLoadDevicesFailed",
+    "bluetoothIslandNeedBtPermission"
   ]
 }

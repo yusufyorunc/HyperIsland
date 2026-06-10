@@ -26,6 +26,8 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
     _ctrl.bluetoothIslandShowDeviceName,
     _ctrl.bluetoothIslandOuterGlow,
     _ctrl.bluetoothIslandOuterGlowColor,
+    _ctrl.bluetoothIslandWhitelistEnabled,
+    _ctrl.bluetoothIslandWhitelistAddresses.length,
     _ctrl.unlockAllFocus,
     _ctrl.unlockFocusAuth,
   ]);
@@ -98,7 +100,16 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
         showDeviceName: _ctrl.bluetoothIslandShowDeviceName,
         outerGlow: _ctrl.bluetoothIslandOuterGlow,
         outerGlowColor: _ctrl.bluetoothIslandOuterGlowColor,
-        onApply: (enabled, showDeviceName, outerGlow, outerGlowColor) async {
+        whitelistEnabled: _ctrl.bluetoothIslandWhitelistEnabled,
+        whitelistAddresses: _ctrl.bluetoothIslandWhitelistAddresses,
+        onApply: (
+          enabled,
+          showDeviceName,
+          outerGlow,
+          outerGlowColor,
+          whitelistEnabled,
+          whitelistAddresses,
+        ) async {
           final enabledChanged = enabled != _ctrl.bluetoothIsland;
           if (!await _requestScopesIfEnabled(enabled, const [
             'com.android.systemui',
@@ -109,6 +120,8 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
           await _ctrl.setBluetoothIslandShowDeviceName(showDeviceName);
           await _ctrl.setBluetoothIslandOuterGlow(outerGlow);
           await _ctrl.setBluetoothIslandOuterGlowColor(outerGlowColor);
+          await _ctrl.setBluetoothIslandWhitelistEnabled(whitelistEnabled);
+          await _ctrl.setBluetoothIslandWhitelistAddresses(whitelistAddresses);
           if (mounted && enabledChanged) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -294,6 +307,8 @@ class _BluetoothIslandSettingsDialog extends StatefulWidget {
     required this.showDeviceName,
     required this.outerGlow,
     required this.outerGlowColor,
+    required this.whitelistEnabled,
+    required this.whitelistAddresses,
     required this.onApply,
   });
 
@@ -301,11 +316,15 @@ class _BluetoothIslandSettingsDialog extends StatefulWidget {
   final bool showDeviceName;
   final bool outerGlow;
   final String outerGlowColor;
+  final bool whitelistEnabled;
+  final List<String> whitelistAddresses;
   final Future<bool> Function(
     bool enabled,
     bool showDeviceName,
     bool outerGlow,
     String outerGlowColor,
+    bool whitelistEnabled,
+    List<String> whitelistAddresses,
   )
   onApply;
 
@@ -319,8 +338,12 @@ class _BluetoothIslandSettingsDialogState
   late bool _outerGlow;
   late bool _enabled;
   late bool _showDeviceName;
+  late bool _whitelistEnabled;
+  late List<String> _whitelistAddresses;
   late final TextEditingController _colorController;
   late String _outerGlowColor;
+
+  static const _platform = MethodChannel('io.github.hyperisland/test');
 
   @override
   void initState() {
@@ -329,6 +352,8 @@ class _BluetoothIslandSettingsDialogState
     _showDeviceName = widget.showDeviceName;
     _outerGlow = widget.outerGlow;
     _outerGlowColor = widget.outerGlowColor;
+    _whitelistEnabled = widget.whitelistEnabled;
+    _whitelistAddresses = List.of(widget.whitelistAddresses);
     _colorController = TextEditingController(text: _outerGlowColor);
   }
 
@@ -336,6 +361,37 @@ class _BluetoothIslandSettingsDialogState
   void dispose() {
     _colorController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showDevicePicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    List<Map<String, String>>? devices;
+    String? errorMsg;
+    try {
+      final raw = await _platform.invokeMethod('getPairedBluetoothDevices');
+      if (raw is List) {
+        devices = raw
+            .whereType<Map>()
+            .map((e) => Map<String, String>.from(e))
+            .toList();
+      }
+    } on PlatformException catch (e) {
+      errorMsg = e.message ?? l10n.bluetoothIslandLoadDevicesFailed;
+    } catch (_) {
+      errorMsg = l10n.bluetoothIslandLoadDevicesFailed;
+    }
+    if (!mounted) return;
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (ctx) => _BluetoothDevicePickerDialog(
+        devices: devices,
+        selectedAddresses: Set.of(_whitelistAddresses),
+        errorMsg: errorMsg,
+      ),
+    );
+    if (result != null) {
+      setState(() => _whitelistAddresses = result);
+    }
   }
 
   @override
@@ -364,7 +420,41 @@ class _BluetoothIslandSettingsDialogState
               value: _showDeviceName,
               onChanged: (value) => setState(() => _showDeviceName = value),
             ),
-            const SizedBox(height: 12),
+            const Divider(height: 24),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.bluetoothIslandWhitelistTitle),
+              subtitle: Text(l10n.bluetoothIslandWhitelistSubtitle),
+              value: _whitelistEnabled,
+              onChanged: (value) => setState(() => _whitelistEnabled = value),
+            ),
+            if (_whitelistEnabled) ...[
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.devices),
+                title: Text(l10n.bluetoothIslandWhitelistButton),
+                subtitle: Text(
+                  l10n.bluetoothIslandWhitelistButtonSubtitle(
+                    _whitelistAddresses.length,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _showDevicePicker,
+              ),
+            ] else ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  l10n.bluetoothIslandWhitelistAllHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+            const Divider(height: 24),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.outerGlowTitle),
@@ -427,6 +517,8 @@ class _BluetoothIslandSettingsDialogState
               _showDeviceName,
               _outerGlow,
               _outerGlowColor,
+              _whitelistEnabled,
+              _whitelistAddresses,
             );
             if (!applied) return;
             if (context.mounted) Navigator.pop(context);
@@ -434,6 +526,95 @@ class _BluetoothIslandSettingsDialogState
           child: Text(AppLocalizations.of(context)!.apply),
         ),
       ],
+    );
+  }
+}
+
+class _BluetoothDevicePickerDialog extends StatefulWidget {
+  const _BluetoothDevicePickerDialog({
+    required this.devices,
+    required this.selectedAddresses,
+    this.errorMsg,
+  });
+
+  final List<Map<String, String>>? devices;
+  final Set<String> selectedAddresses;
+  final String? errorMsg;
+
+  @override
+  State<_BluetoothDevicePickerDialog> createState() =>
+      _BluetoothDevicePickerDialogState();
+}
+
+class _BluetoothDevicePickerDialogState
+    extends State<_BluetoothDevicePickerDialog> {
+  late Set<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Set.of(widget.selectedAddresses);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.bluetoothIslandWhitelistDialogTitle),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: _buildContent(l10n),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selected.toList()),
+          child: Text(l10n.confirm),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(AppLocalizations l10n) {
+    if (widget.errorMsg != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Text(widget.errorMsg!),
+      );
+    }
+    final devices = widget.devices;
+    if (devices == null || devices.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Text(l10n.bluetoothIslandWhitelistEmpty),
+      );
+    }
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: devices.map((device) {
+          final addr = device['address'] ?? '';
+          final name = device['name'] ?? addr;
+          return CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(name, overflow: TextOverflow.ellipsis),
+            subtitle: addr != name ? Text(addr) : null,
+            value: _selected.contains(addr),
+            onChanged: (checked) {
+              setState(() {
+                if (checked == true) {
+                  _selected.add(addr);
+                } else {
+                  _selected.remove(addr);
+                }
+              });
+            },
+          );
+        }).toList(),
+      ),
     );
   }
 }

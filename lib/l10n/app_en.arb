@@ -628,5 +628,20 @@
   "presetColors": "Preset Colors",
   "themeResetColor": "Reset to Default",
   "blurBarsTitle": "Frosted Glass",
-  "blurBarsSubtitle": "Add blur transparency effect to top and bottom bars"
+  "blurBarsSubtitle": "Add blur transparency effect to top and bottom bars",
+
+  "bluetoothIslandWhitelistTitle": "Device Whitelist",
+  "bluetoothIslandWhitelistSubtitle": "Only show the island for whitelisted Bluetooth devices",
+  "bluetoothIslandWhitelistButton": "Manage Whitelist",
+  "bluetoothIslandWhitelistButtonSubtitle": "{count} device(s) selected",
+  "@bluetoothIslandWhitelistButtonSubtitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "bluetoothIslandWhitelistDialogTitle": "Select Bluetooth Devices",
+  "bluetoothIslandWhitelistEmpty": "No paired devices. Please pair a device in system Bluetooth settings first",
+  "bluetoothIslandWhitelistAllHint": "When disabled, the island shows for all Bluetooth devices",
+  "bluetoothIslandLoadDevicesFailed": "Failed to load Bluetooth devices",
+  "bluetoothIslandNeedBtPermission": "Bluetooth permission is required to load devices"
 }

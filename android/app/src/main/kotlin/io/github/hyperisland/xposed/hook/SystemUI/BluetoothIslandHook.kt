@@ -31,6 +31,8 @@ object BluetoothIslandHook : BaseHook() {
     private const val PREF_SHOW_DEVICE_NAME = "pref_bluetooth_island_show_device_name"
     private const val PREF_OUTER_GLOW = "pref_bluetooth_island_outer_glow"
     private const val PREF_OUTER_GLOW_COLOR = "pref_bluetooth_island_outer_glow_color"
+    private const val PREF_WHITELIST_ENABLED = "pref_bluetooth_island_whitelist_enabled"
+    private const val PREF_WHITELIST_ADDRESSES = "pref_bluetooth_island_whitelist_addresses"
     private const val NOTIF_ID = 0x48494254
     private const val ACTION_BATTERY_LEVEL_CHANGED = "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
     private const val EXTRA_BATTERY_LEVEL = "android.bluetooth.device.extra.BATTERY_LEVEL"
@@ -108,6 +110,14 @@ object BluetoothIslandHook : BaseHook() {
                 cacheBattery(intent, battery)
                 val deviceName = resolveDeviceName(intent)
                 val key = deviceKey(intent, deviceName)
+                // 白名单检查
+                val btAddr = getBluetoothDevice(intent)?.address
+                if (!isDeviceAllowedByWhitelist(btAddr)) {
+                    moduleRef?.let {
+                        logWarn(it, "skip battery island: device not in whitelist address=$btAddr")
+                    }
+                    return
+                }
                 val hasPendingNameRefresh = pendingNameRefreshes.containsKey(key)
                 moduleRef?.let {
                     logWarn(
@@ -152,6 +162,17 @@ object BluetoothIslandHook : BaseHook() {
                 BluetoothDevice.ACTION_ACL_CONNECTED -> true
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> false
                 else -> return
+            }
+            // 白名单检查：开启时仅对白名单中的设备生效
+            val deviceAddress = getBluetoothDevice(intent)?.address
+            if (!isDeviceAllowedByWhitelist(deviceAddress)) {
+                moduleRef?.let {
+                    logWarn(
+                        it,
+                        "skip bluetooth island: device not in whitelist address=$deviceAddress",
+                    )
+                }
+                return
             }
             val deviceName = resolveDeviceName(intent)
             cacheDeviceName(intent, deviceName)
@@ -212,6 +233,24 @@ object BluetoothIslandHook : BaseHook() {
                     timeoutSecs = BATTERY_TIMEOUT_SECS,
                 )
             }
+        }
+    }
+
+    private fun isDeviceAllowedByWhitelist(deviceAddress: String?): Boolean {
+        val whitelistEnabled = ConfigManager.getBoolean(PREF_WHITELIST_ENABLED, false)
+        if (!whitelistEnabled) return true
+        if (deviceAddress == null) return false
+        val raw = ConfigManager.getString(PREF_WHITELIST_ADDRESSES, "")
+        if (raw.isEmpty()) return false
+        return try {
+            // 解析 JSON 数组，例如 ["AA:BB:CC:DD:EE:FF","11:22:33:44:55:66"]
+            val cleaned = raw.trim().removeSurrounding("[", "]")
+            cleaned.split(",").any { entry ->
+                entry.trim().removeSurrounding("\"", "\"").equals(deviceAddress, ignoreCase = true)
+            }
+        } catch (e: Throwable) {
+            moduleRef?.let { logWarn(it, "whitelist parse failed: ${e.message}") }
+            false
         }
     }
 

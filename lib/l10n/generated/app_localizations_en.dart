@@ -1665,4 +1665,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get blurBarsSubtitle =>
       'Add blur transparency effect to top and bottom bars';
+
+  @override
+  String get bluetoothIslandWhitelistTitle => 'Device Whitelist';
+
+  @override
+  String get bluetoothIslandWhitelistSubtitle =>
+      'Only show the island for whitelisted Bluetooth devices';
+
+  @override
+  String get bluetoothIslandWhitelistButton => 'Manage Whitelist';
+
+  @override
+  String bluetoothIslandWhitelistButtonSubtitle(int count) {
+    return '$count device(s) selected';
+  }
+
+  @override
+  String get bluetoothIslandWhitelistDialogTitle => 'Select Bluetooth Devices';
+
+  @override
+  String get bluetoothIslandWhitelistEmpty =>
+      'No paired devices. Please pair a device in system Bluetooth settings first';
+
+  @override
+  String get bluetoothIslandWhitelistAllHint =>
+      'When disabled, the island shows for all Bluetooth devices';
+
+  @override
+  String get bluetoothIslandLoadDevicesFailed =>
+      'Failed to load Bluetooth devices';
+
+  @override
+  String get bluetoothIslandNeedBtPermission =>
+      'Bluetooth permission is required to load devices';
 }

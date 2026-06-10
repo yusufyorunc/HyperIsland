@@ -1,5 +1,6 @@
 package io.github.hyperisland
 
+import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -27,11 +28,13 @@ class MainActivity : FlutterActivity() {
     private val HAPTIC_CHANNEL = "io.github.hyperisland/haptics"
     private val TAG = "HyperIsland"
     private val REQUEST_APP_LIST_PERMISSION = 1002
+    private val REQUEST_BT_CONNECT_PERMISSION = 1003
     private val notificationChannelRepository = NotificationChannelRepository(TAG)
     private val appService = AppService()
 
     private var pendingAppsResult: MethodChannel.Result? = null
     private var pendingAppsIncludeSystem: Boolean = false
+    private var pendingBtDevicesResult: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -360,6 +363,10 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
+                "getPairedBluetoothDevices" -> {
+                    handleGetPairedBluetoothDevices(result)
+                }
+
                 else -> {
                     result.notImplemented()
                 }
@@ -460,6 +467,63 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        if (requestCode == REQUEST_BT_CONNECT_PERMISSION) {
+            val r = pendingBtDevicesResult
+            pendingBtDevicesResult = null
+            if (r != null) {
+                Thread {
+                    val devices = getPairedBluetoothDevicesList()
+                    runOnUiThread { r.success(devices) }
+                }.start()
+            }
+        }
+
+    }
+
+    private fun handleGetPairedBluetoothDevices(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT >= 31 &&
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingBtDevicesResult = result
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.BLUETOOTH_CONNECT),
+                REQUEST_BT_CONNECT_PERMISSION,
+            )
+            return
+        }
+        Thread {
+            val devices = getPairedBluetoothDevicesList()
+            runOnUiThread { result.success(devices) }
+        }.start()
+    }
+
+    private fun getPairedBluetoothDevicesList(): List<Map<String, String>> {
+        return try {
+            val adapter = if (Build.VERSION.SDK_INT >= 23) {
+                (getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+            } else {
+                @Suppress("DEPRECATION")
+                android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            }
+            if (adapter == null || !adapter.isEnabled) return emptyList()
+            val hasPermission = Build.VERSION.SDK_INT < 31 ||
+                ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.BLUETOOTH_CONNECT
+                ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) return emptyList()
+            @Suppress("MissingPermission")
+            adapter.bondedDevices.orEmpty().map { device ->
+                mapOf(
+                    "address" to (device.address ?: ""),
+                    "name" to (try { device.name ?: device.address ?: "" } catch (_: SecurityException) { device.address ?: "" }),
+                )
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "getPairedBluetoothDevices failed: ${e.message}")
+            emptyList()
+        }
     }
 
     private fun handleShowTest(result: MethodChannel.Result) {

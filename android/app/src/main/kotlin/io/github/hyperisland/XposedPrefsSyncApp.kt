@@ -208,6 +208,8 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
             "pref_bluetooth_island",
             "pref_bluetooth_island_outer_glow",
             "pref_bluetooth_island_outer_glow_color",
+            "pref_bluetooth_island_whitelist_enabled",
+            "pref_bluetooth_island_whitelist_addresses",
             "pref_interaction_haptics",
             "pref_round_icon",
             "pref_marquee_feature",

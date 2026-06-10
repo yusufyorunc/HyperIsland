@@ -17,6 +17,9 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     <!-- MIUI/HyperOS 运行时权限：获取已安装应用列表 -->
     <uses-permission android:name="com.android.permission.GET_INSTALLED_APPS"/>
+    <!-- 蓝牙权限（获取已配对设备用于白名单） -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <application
         android:label="HyperIsland"

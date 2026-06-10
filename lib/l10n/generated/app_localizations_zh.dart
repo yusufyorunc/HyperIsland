@@ -1583,4 +1583,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get blurBarsSubtitle => '为顶栏和底栏添加模糊透明效果';
+
+  @override
+  String get bluetoothIslandWhitelistTitle => '设备白名单';
+
+  @override
+  String get bluetoothIslandWhitelistSubtitle => '仅对白名单中的蓝牙设备显示超级岛';
+
+  @override
+  String get bluetoothIslandWhitelistButton => '管理白名单设备';
+
+  @override
+  String bluetoothIslandWhitelistButtonSubtitle(int count) {
+    return '已选择 $count 个设备';
+  }
+
+  @override
+  String get bluetoothIslandWhitelistDialogTitle => '选择蓝牙设备';
+
+  @override
+  String get bluetoothIslandWhitelistEmpty => '暂无已配对设备，请先在系统蓝牙中配对';
+
+  @override
+  String get bluetoothIslandWhitelistAllHint => '未开启白名单时，对所有蓝牙设备生效';
+
+  @override
+  String get bluetoothIslandLoadDevicesFailed => '获取蓝牙设备失败';
+
+  @override
+  String get bluetoothIslandNeedBtPermission => '需要蓝牙权限才能获取设备列表';
 }
