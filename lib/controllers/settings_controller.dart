@@ -26,6 +26,8 @@ const kPrefMarqueeFeature = 'pref_marquee_feature';
 const kPrefMarqueeSpeed = 'pref_marquee_speed';
 const kPrefBigIslandMaxWidth = 'pref_big_island_max_width';
 const kPrefBigIslandMinWidth = 'pref_big_island_min_width';
+const kPrefSmoothIsland = 'pref_smooth_island';
+const kPrefSmoothIslandSmoothing = 'pref_smooth_island_smoothing';
 const kPrefUnlockAllFocus = 'pref_unlock_all_focus';
 const kPrefUnlockFocusAuth = 'pref_unlock_focus_auth';
 const kPrefThemeMode = 'pref_theme_mode';
@@ -150,6 +152,8 @@ class SettingsController extends ChangeNotifier {
   int marqueeSpeed = 100;
   int bigIslandMaxWidth = 0;
   int bigIslandMinWidth = 0;
+  bool smoothIsland = false;
+  double smoothIslandSmoothing = 0.8;
   bool unlockAllFocus = false;
   bool unlockFocusAuth = false;
   bool checkUpdateOnLaunch = true;
@@ -230,6 +234,8 @@ class SettingsController extends ChangeNotifier {
     marqueeSpeed = prefs.getInt(kPrefMarqueeSpeed) ?? 100;
     bigIslandMaxWidth = prefs.getInt(kPrefBigIslandMaxWidth) ?? 0;
     bigIslandMinWidth = prefs.getInt(kPrefBigIslandMinWidth) ?? 0;
+    smoothIsland = prefs.getBool(kPrefSmoothIsland) ?? false;
+    smoothIslandSmoothing = prefs.getDouble(kPrefSmoothIslandSmoothing) ?? 0.8;
     unlockAllFocus = prefs.getBool(kPrefUnlockAllFocus) ?? false;
     unlockFocusAuth = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
     checkUpdateOnLaunch = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
@@ -459,6 +465,23 @@ class SettingsController extends ChangeNotifier {
       await prefs.setInt(kPrefBigIslandMinWidth, clamped);
     }
     bigIslandMinWidth = clamped;
+    notifyListeners();
+  }
+
+  Future<void> setSmoothIsland(bool value) async {
+    if (smoothIsland == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefSmoothIsland, value);
+    smoothIsland = value;
+    notifyListeners();
+  }
+
+  Future<void> setSmoothIslandSmoothing(double value) async {
+    final clamped = value.clamp(0.0, 1.0).toDouble();
+    if (smoothIslandSmoothing == clamped) return;
+    final prefs = await _getPrefs();
+    await prefs.setDouble(kPrefSmoothIslandSmoothing, clamped);
+    smoothIslandSmoothing = clamped;
     notifyListeners();
   }
 

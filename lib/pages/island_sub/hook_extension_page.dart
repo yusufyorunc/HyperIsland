@@ -5,6 +5,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/blur_app_bar.dart';
 import '../../widgets/color_picker_dialog.dart';
 import '../../widgets/color_value_field.dart';
+import '../../widgets/modern_slider.dart';
 import '../../services/interaction_haptics.dart';
 
 class HookExtensionPage extends StatefulWidget {
@@ -28,6 +29,8 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
     _ctrl.bluetoothIslandOuterGlowColor,
     _ctrl.bluetoothIslandWhitelistEnabled,
     _ctrl.bluetoothIslandWhitelistAddresses.length,
+    _ctrl.smoothIsland,
+    _ctrl.smoothIslandSmoothing,
     _ctrl.unlockAllFocus,
     _ctrl.unlockFocusAuth,
   ]);
@@ -90,6 +93,21 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
       return;
     }
     await _ctrl.setUnlockAllFocus(value);
+  }
+
+  Future<void> _onSmoothIslandChanged(bool value) async {
+    if (!await _requestScopesIfEnabled(value, const ['com.android.systemui'])) {
+      return;
+    }
+    await _ctrl.setSmoothIsland(value);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.restartScopeApp),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   Future<void> _showBluetoothIslandSettings() async {
@@ -213,6 +231,36 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
                 Card(
                   elevation: 0,
                   color: cs.surfaceContainerHighest,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        title: Text(l10n.smoothIslandTitle, style: titleStyle),
+                        subtitle: Text(l10n.smoothIslandSubtitle),
+                        value: _ctrl.smoothIsland,
+                        onChanged: InteractionHaptics.interceptToggle(
+                          _onSmoothIslandChanged,
+                        ),
+                      ),
+                      if (_ctrl.smoothIsland) ...[
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _SmoothingSliderTile(
+                          title: l10n.smoothIslandSmoothingTitle,
+                          value: _ctrl.smoothIslandSmoothing,
+                          onChanged: (value) => _ctrl.setSmoothIslandSmoothing(value),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
                   child: SwitchListTile(
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -296,6 +344,48 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SmoothingSliderTile extends StatelessWidget {
+  const _SmoothingSliderTile({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final titleStyle = Theme.of(context).textTheme.titleMedium;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      title: Row(
+        children: [
+          Expanded(child: Text(title, style: titleStyle)),
+          Text(
+            value.toStringAsFixed(2),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+      subtitle: SliderTheme(
+        data: ModernSliderTheme.theme(context),
+        child: Slider(
+          value: value.clamp(0.0, 1.0),
+          min: 0,
+          max: 1,
+          divisions: 20,
+          onChanged: InteractionHaptics.interceptSlider(onChanged),
+        ),
       ),
     );
   }

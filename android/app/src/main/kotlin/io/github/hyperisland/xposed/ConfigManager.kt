@@ -174,6 +174,8 @@ object ConfigManager {
         "pref_marquee_speed",
         "pref_big_island_max_width",
         "pref_big_island_min_width",
+        "pref_smooth_island",
+        "pref_smooth_island_smoothing",
         "pref_unlock_all_focus",
         "pref_unlock_focus_auth",
         "pref_default_first_float",

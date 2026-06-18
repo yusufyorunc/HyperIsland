@@ -1522,6 +1522,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hookScopeSystemUI => '系统界面';
 
   @override
+  String get smoothIslandTitle => '平滑超级岛';
+
+  @override
+  String get smoothIslandSubtitle => '使用连续曲率胶囊优化超级岛轮廓，关闭后需重启作用域以完全卸载 Hook';
+
+  @override
+  String get smoothIslandSmoothingTitle => '平滑强度';
+
+  @override
   String get bluetoothIslandStatusEnabled => '已开启';
 
   @override

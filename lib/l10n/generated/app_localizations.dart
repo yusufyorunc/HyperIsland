@@ -2970,6 +2970,24 @@ abstract class AppLocalizations {
   /// **'系统界面'**
   String get hookScopeSystemUI;
 
+  /// No description provided for @smoothIslandTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'平滑超级岛'**
+  String get smoothIslandTitle;
+
+  /// No description provided for @smoothIslandSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用连续曲率胶囊优化超级岛轮廓，关闭后需重启作用域以完全卸载 Hook'**
+  String get smoothIslandSubtitle;
+
+  /// No description provided for @smoothIslandSmoothingTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'平滑强度'**
+  String get smoothIslandSmoothingTitle;
+
   /// No description provided for @bluetoothIslandStatusEnabled.
   ///
   /// In zh, this message translates to:

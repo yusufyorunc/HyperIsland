@@ -1601,6 +1601,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hookScopeSystemUI => 'Sistem UI';
 
   @override
+  String get smoothIslandTitle => 'Pürüzsüz Ada';
+
+  @override
+  String get smoothIslandSubtitle =>
+      'Ada kenarları için sürekli eğriliğe sahip kapsül kullanır. Devre dışı bıraktıktan sonra Hook\'u tamamen kaldırmak için kapsamı yeniden başlatın';
+
+  @override
+  String get smoothIslandSmoothingTitle => 'Pürüzsüzlük Gücü';
+
+  @override
   String get bluetoothIslandStatusEnabled => 'Etkin';
 
   @override

@@ -1540,6 +1540,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get hookScopeSystemUI => 'システムUI';
 
   @override
+  String get smoothIslandTitle => 'スムーズ Island';
+
+  @override
+  String get smoothIslandSubtitle =>
+      '連続曲率のカプセルで Island の輪郭を滑らかにします。オフ後に Hook を完全解除するにはスコープを再起動してください';
+
+  @override
+  String get smoothIslandSmoothingTitle => 'スムーズ強度';
+
+  @override
   String get bluetoothIslandStatusEnabled => '有効';
 
   @override

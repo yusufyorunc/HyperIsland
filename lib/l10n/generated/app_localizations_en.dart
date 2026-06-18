@@ -1601,6 +1601,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hookScopeSystemUI => 'System UI';
 
   @override
+  String get smoothIslandTitle => 'Smooth Island';
+
+  @override
+  String get smoothIslandSubtitle =>
+      'Use a continuous-curvature capsule for island outlines. Restart the scope after disabling to fully unload the hook';
+
+  @override
+  String get smoothIslandSmoothingTitle => 'Smoothing Strength';
+
+  @override
   String get bluetoothIslandStatusEnabled => 'Enabled';
 
   @override
