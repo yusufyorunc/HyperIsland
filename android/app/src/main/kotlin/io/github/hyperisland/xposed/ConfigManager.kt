@@ -200,6 +200,7 @@ object ConfigManager {
         "pref_ai_temperature",
         "pref_ai_max_tokens",
         "pref_island_height",
+        "pref_island_top_offset",
         "pref_keep_island",
         "pref_keep_island_auto_hide",
         "pref_blur_bars",

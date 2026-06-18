@@ -2568,6 +2568,12 @@ abstract class AppLocalizations {
   /// **'岛高度'**
   String get islandDimenHeight;
 
+  /// No description provided for @islandTopOffset.
+  ///
+  /// In zh, this message translates to:
+  /// **'距屏幕顶部'**
+  String get islandTopOffset;
+
   /// No description provided for @followSystem.
   ///
   /// In zh, this message translates to:

@@ -516,6 +516,7 @@
 
   "islandDimenSection": "Island Dimensions",
   "islandDimenHeight": "Island Height",
+  "islandTopOffset": "Distance from Top of Screen",
   "followSystem": "Follow system",
   "islandDimenMiniY": "Vertical Position",
   "islandDimenMiniYHint": "0=follow system",

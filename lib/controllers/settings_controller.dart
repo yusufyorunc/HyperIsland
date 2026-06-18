@@ -66,6 +66,7 @@ const kPrefIslandBgSmallPath = 'pref_island_bg_small_path';
 const kPrefIslandBgBigPath = 'pref_island_bg_big_path';
 const kPrefIslandBgExpandPath = 'pref_island_bg_expand_path';
 const kPrefIslandHeight = 'pref_island_height';
+const kPrefIslandTopOffset = 'pref_island_top_offset';
 const kPrefKeepIsland = 'pref_keep_island';
 const kPrefKeepIslandAutoHide = 'pref_keep_island_auto_hide';
 const kPrefKeepIslandHighlightColor = 'pref_keep_island_highlight_color';
@@ -187,6 +188,7 @@ class SettingsController extends ChangeNotifier {
   String islandBgBigPath = '';
   String islandBgExpandPath = '';
   double islandHeight = 0;
+  double islandTopOffset = 0;
   bool keepIsland = false;
   bool keepIslandAutoHide = true;
   String keepIslandHighlightColor = '';
@@ -290,6 +292,7 @@ class SettingsController extends ChangeNotifier {
     islandBgBigPath = prefs.getString(kPrefIslandBgBigPath) ?? '';
     islandBgExpandPath = prefs.getString(kPrefIslandBgExpandPath) ?? '';
     islandHeight = prefs.getDouble(kPrefIslandHeight) ?? 0;
+    islandTopOffset = prefs.getDouble(kPrefIslandTopOffset) ?? 0;
     keepIsland = prefs.getBool(kPrefKeepIsland) ?? false;
     keepIslandAutoHide = prefs.getBool(kPrefKeepIslandAutoHide) ?? true;
     keepIslandHighlightColor =
@@ -879,6 +882,19 @@ class SettingsController extends ChangeNotifier {
       await prefs.setDouble(kPrefIslandHeight, value);
     }
     islandHeight = value;
+    notifyListeners();
+  }
+
+  Future<void> setIslandTopOffset(double value) async {
+    final clamped = value.clamp(-100, 100).toDouble();
+    if (islandTopOffset == clamped) return;
+    final prefs = await _getPrefs();
+    if (clamped == 0) {
+      await prefs.remove(kPrefIslandTopOffset);
+    } else {
+      await prefs.setDouble(kPrefIslandTopOffset, clamped);
+    }
+    islandTopOffset = clamped;
     notifyListeners();
   }
 

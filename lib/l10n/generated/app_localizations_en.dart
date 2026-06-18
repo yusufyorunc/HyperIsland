@@ -1386,6 +1386,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandDimenHeight => 'Island Height';
 
   @override
+  String get islandTopOffset => 'Distance from Top of Screen';
+
+  @override
   String get followSystem => 'Follow system';
 
   @override

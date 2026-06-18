@@ -1317,6 +1317,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get islandDimenHeight => '岛高度';
 
   @override
+  String get islandTopOffset => '距屏幕顶部';
+
+  @override
   String get followSystem => '跟随系统';
 
   @override

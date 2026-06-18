@@ -20,12 +20,14 @@ class IslandAppearancePage extends StatefulWidget {
 class _IslandAppearancePageState extends State<IslandAppearancePage> {
   final _ctrl = SettingsController.instance;
   late double _islandHeightDraft;
+  late double _islandTopOffsetDraft;
   late int _bigIslandMaxWidthDraft;
   late int _bigIslandMinWidthDraft;
   late int _buildHash;
 
   int _computeHash() => Object.hashAll([
     _ctrl.islandHeight,
+    _ctrl.islandTopOffset,
     _ctrl.bigIslandMaxWidth,
     _ctrl.bigIslandMinWidth,
     _ctrl.roundIcon,
@@ -38,6 +40,7 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
   void initState() {
     super.initState();
     _islandHeightDraft = _ctrl.islandHeight;
+    _islandTopOffsetDraft = _ctrl.islandTopOffset;
     _bigIslandMaxWidthDraft = _ctrl.bigIslandMaxWidth;
     _bigIslandMinWidthDraft = _ctrl.bigIslandMinWidth;
     _buildHash = _computeHash();
@@ -54,10 +57,12 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
     if (!mounted) return;
     final nextHash = _computeHash();
     final nextHeight = _ctrl.islandHeight;
+    final nextTopOffset = _ctrl.islandTopOffset;
     final nextMaxWidth = _ctrl.bigIslandMaxWidth;
     final nextMinWidth = _ctrl.bigIslandMinWidth;
     if (nextHash == _buildHash &&
         nextHeight == _islandHeightDraft &&
+        nextTopOffset == _islandTopOffsetDraft &&
         nextMaxWidth == _bigIslandMaxWidthDraft &&
         nextMinWidth == _bigIslandMinWidthDraft) {
       return;
@@ -65,6 +70,7 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
     setState(() {
       _buildHash = nextHash;
       _islandHeightDraft = nextHeight;
+      _islandTopOffsetDraft = nextTopOffset;
       _bigIslandMaxWidthDraft = nextMaxWidth;
       _bigIslandMinWidthDraft = nextMinWidth;
     });
@@ -181,6 +187,23 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
                           isFirst: true,
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
+                        _DimenTile(
+                          title: l10n.islandTopOffset,
+                          value: _islandTopOffsetDraft,
+                          min: -100,
+                          max: 100,
+                          unit: 'dp',
+                          defaultVal: 0,
+                          followSystemLabel: l10n.followSystem,
+                          onChanged: (v) {
+                            if (_islandTopOffsetDraft == v) return;
+                            setState(() => _islandTopOffsetDraft = v);
+                          },
+                          onPersist: (v) async {
+                            if (_ctrl.islandTopOffset == v) return;
+                            await _ctrl.setIslandTopOffset(v);
+                          },
+                        ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         ListTile(
                           contentPadding: const EdgeInsets.symmetric(
@@ -452,7 +475,7 @@ class _DimenTile extends StatelessWidget {
         children: [
           Expanded(child: Text(title, style: titleStyle)),
           Text(
-            value > 0 ? '${value.toStringAsFixed(1)} $unit' : followSystemLabel,
+            value != defaultVal ? '${value.toStringAsFixed(1)} $unit' : followSystemLabel,
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: cs.onSurfaceVariant),
           ),
