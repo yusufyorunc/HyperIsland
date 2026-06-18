@@ -3,7 +3,9 @@ package io.github.hyperisland.xposed.hook.SystemUI
 import android.R
 import android.app.KeyguardManager
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -296,7 +298,7 @@ object GenericProgressHook : BaseHook() {
                 extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
             ).firstNotNullOfOrNull { it?.toString()?.takeIf { s -> s.isNotEmpty() } } ?: ""
 
-            val actions: List<Notification.Action> = notif.actions?.take(2) ?: emptyList()
+            val actions: List<Notification.Action> = resolveNotificationActions(context, pkg, notif)
 
             val template = loadChannelTemplate(pkg, channelId)
 
@@ -546,6 +548,37 @@ object GenericProgressHook : BaseHook() {
         if (extras.containsKey(Notification.EXTRA_MEDIA_SESSION)) return true
         val template = extras.getString(Notification.EXTRA_TEMPLATE) ?: return false
         return template.contains("MediaStyle", ignoreCase = true)
+    }
+
+    private fun resolveNotificationActions(
+        context: Context,
+        pkg: String,
+        notif: Notification,
+    ): List<Notification.Action> {
+        val fallbackIntent = notif.contentIntent ?: createLaunchAppIntent(context, pkg)
+        return notif.actions?.take(2)?.map { action ->
+            if (action.hasRemoteInput() && fallbackIntent != null) {
+                Notification.Action.Builder(action.icon, action.title, fallbackIntent).build()
+            } else {
+                action
+            }
+        } ?: emptyList()
+    }
+
+    private fun createLaunchAppIntent(context: Context, pkg: String): PendingIntent? {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        } ?: return null
+        return PendingIntent.getActivity(
+            context,
+            pkg.hashCode(),
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun Notification.Action.hasRemoteInput(): Boolean {
+        return remoteInputs?.isNotEmpty() == true
     }
 
     private fun handleMediaNotification(
