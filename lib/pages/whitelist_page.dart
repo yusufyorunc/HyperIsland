@@ -291,9 +291,12 @@ class WhitelistPageState extends State<WhitelistPage> {
   void _selectEnabled() {
     setState(() {
       _selectedPackages.addAll(
-        _ctrl.filteredApps
-            .where((a) => _ctrl.enabledPackages.contains(a.packageName))
-            .map((a) => a.packageName),
+        _ctrl.filteredApps.where((a) {
+          final pkg = a.packageName;
+          return _isToastMode
+              ? _ctrl.isToastForwardEnabledSync(pkg)
+              : _ctrl.enabledPackages.contains(pkg);
+        }).map((a) => a.packageName),
       );
     });
   }
