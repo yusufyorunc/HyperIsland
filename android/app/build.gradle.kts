@@ -97,7 +97,7 @@ configurations.all {
 
 dependencies {
     implementation("androidx.graphics:graphics-shapes:1.1.0")
-    implementation("io.github.d4viddf:hyperisland_kit:0.4.3")
+    implementation("io.github.d4viddf:hyperisland_kit:0.4.4")
     compileOnly("io.github.libxposed:api:101.0.0")
     implementation("io.github.libxposed:service:101.0.0")
 }
