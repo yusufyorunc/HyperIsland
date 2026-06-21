@@ -823,14 +823,10 @@
   "hideBehaviorScreenPinningSubtitle": "屏幕固定激活时隐藏超级岛",
   "hideBehaviorBouncerShowing": "解锁界面",
   "hideBehaviorBouncerShowingSubtitle": "密码、指纹等解锁界面显示时隐藏超级岛",
-  "hideBehaviorDesktopAnimating": "桌面动画",
-  "hideBehaviorDesktopAnimatingSubtitle": "打开或关闭应用动画期间隐藏超级岛",
   "hideBehaviorFullscreen": "全屏模式",
   "hideBehaviorFullscreenSubtitle": "状态栏消失或沉浸式全屏时隐藏超级岛",
   "hideBehaviorScreenLocked": "锁屏",
   "hideBehaviorScreenLockedSubtitle": "锁屏或息屏流程中隐藏超级岛",
   "hideBehaviorNotificationCenter": "通知中心",
-  "hideBehaviorNotificationCenterSubtitle": "通知栏展开或下滑过渡时隐藏超级岛",
-  "hideBehaviorControlCenter": "控制中心",
-  "hideBehaviorControlCenterSubtitle": "控制中心展开或下滑过渡时隐藏超级岛"
+  "hideBehaviorNotificationCenterSubtitle": "通知栏展开或下滑过渡时隐藏超级岛"
 }

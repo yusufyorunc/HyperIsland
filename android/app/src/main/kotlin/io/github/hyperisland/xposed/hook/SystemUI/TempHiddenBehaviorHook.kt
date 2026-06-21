@@ -14,8 +14,6 @@ object TempHiddenBehaviorHook : BaseHook() {
     private const val WINDOW_VIEW_CLASS = "miui.systemui.dynamicisland.window.DynamicIslandWindowView"
     private const val EVENT_COORDINATOR_CLASS =
         "miui.systemui.dynamicisland.event.DynamicIslandEventCoordinator"
-    private const val DESKTOP_STATE_CONTROLLER_CLASS =
-        "miui.systemui.dynamicisland.window.DynamicIslandDesktopStateController"
 
     private val hookedClassLoaders = ConcurrentHashMap.newKeySet<Int>()
 
@@ -37,7 +35,6 @@ object TempHiddenBehaviorHook : BaseHook() {
         hookedAny = hookWindowView(module, classLoader) || hookedAny
         hookedAny = hookEventCoordinator(module, classLoader) || hookedAny
         hookedAny = hookWindowViewController(module, classLoader) || hookedAny
-        hookedAny = hookDesktopStateController(module, classLoader) || hookedAny
         if (!hookedAny) hookedClassLoaders.remove(clId)
     }
 
@@ -135,19 +132,9 @@ object TempHiddenBehaviorHook : BaseHook() {
         var count = 0
         hookBooleanMethod(module, clazz, "lockScreen", HideBehavior.SCREEN_LOCKED) { count++ }
         hookBooleanMethod(module, clazz, "notificationAppearance", HideBehavior.NOTIFICATION_CENTER) { count++ }
-        hookBooleanMethod(module, clazz, "controlCenterExpanded", HideBehavior.CONTROL_CENTER) { count++ }
-        hookBooleanMethod(module, clazz, "statusBarAppearance", HideBehavior.FULLSCREEN) { count++ }
+        hookStatusBarAppearance(module, clazz) { count++ }
         hookBooleanMethod(module, clazz, "screenPinningActive", HideBehavior.SCREEN_PINNING) { count++ }
         log(module, "hooked windowViewController temp hide methods=$count")
-        return count > 0
-    }
-
-    private fun hookDesktopStateController(module: XposedModule, classLoader: ClassLoader): Boolean {
-        val clazz = runCatching { classLoader.loadClass(DESKTOP_STATE_CONTROLLER_CLASS) }.getOrNull()
-            ?: return false
-        var count = 0
-        hookBooleanMethod(module, clazz, "runDesktopAnim", HideBehavior.DESKTOP_ANIMATING) { count++ }
-        log(module, "hooked desktopStateController temp hide methods=$count")
         return count > 0
     }
 
@@ -177,6 +164,27 @@ object TempHiddenBehaviorHook : BaseHook() {
         }
     }
 
+    private fun hookStatusBarAppearance(
+        module: XposedModule,
+        clazz: Class<*>,
+        onHooked: () -> Unit,
+    ) {
+        clazz.declaredMethods
+            .filter { it.name == "statusBarAppearance" && it.parameterCount == 1 && it.parameterTypes[0] == Boolean::class.javaPrimitiveType }
+            .forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val original = chain.args.getOrNull(0)
+                    val blocked = original == true && !HideBehavior.FULLSCREEN.enabled()
+                    log(module, "DynamicIslandWindowViewController.statusBarAppearance original=$original fullscreenEnabled=${HideBehavior.FULLSCREEN.enabled()} blocked=$blocked")
+                    if (blocked) {
+                        chain.args[0] = false
+                    }
+                    chain.proceed()
+                }
+                onHooked()
+            }
+    }
+
     private fun currentTypeName(windowState: Any?): String? {
         return invokeNoArg(windowState, "getTempHiddenType")?.toString()
     }
@@ -186,13 +194,10 @@ object TempHiddenBehaviorHook : BaseHook() {
             "SCREEN_LOCKED" -> !HideBehavior.SCREEN_LOCKED.enabled()
             "BOUNCER_SHOWING" -> !HideBehavior.BOUNCER_SHOWING.enabled()
             "SCREEN_PINNING_ACTIVE" -> !HideBehavior.SCREEN_PINNING.enabled()
-            "DESKTOP_ANIMATING" -> !HideBehavior.DESKTOP_ANIMATING.enabled()
             "STATUS_BAR_DISAPPEARANCE" -> !HideBehavior.FULLSCREEN.enabled()
             "NOTIFICATION_APPEARANCE",
             "NOTIFICATION_SWIPE_TO_APPEARANCE",
             "SHOW_NOTIFICATION_ICONS" -> !HideBehavior.NOTIFICATION_CENTER.enabled()
-            "CONTROL_CENTER_EXPANDED",
-            "CONTROL_CENTER_SWIPE_TO_APPEARANCE" -> !HideBehavior.CONTROL_CENTER.enabled()
             else -> false
         }
     }
@@ -202,14 +207,11 @@ object TempHiddenBehaviorHook : BaseHook() {
             getStateValue(windowState, "getScreenLocked") == true -> !HideBehavior.SCREEN_LOCKED.enabled()
             getStateValue(windowState, "getBouncerShowing") == true -> !HideBehavior.BOUNCER_SHOWING.enabled()
             getStateValue(windowState, "getScreenPinning") == true -> !HideBehavior.SCREEN_PINNING.enabled()
-            getStateValue(windowState, "getDeskTopAnimating") == true -> !HideBehavior.DESKTOP_ANIMATING.enabled()
             getStateValue(windowState, "getStatusBarDisappearance") == true -> !HideBehavior.FULLSCREEN.enabled()
             getStateValue(windowState, "getStatusBarViewShowing") == false -> !HideBehavior.FULLSCREEN.enabled()
             getStateValue(windowState, "getNotificationAppearance") == true -> !HideBehavior.NOTIFICATION_CENTER.enabled()
             getStateValue(windowState, "getNotificationPanelSwipeToAppearance") == true -> !HideBehavior.NOTIFICATION_CENTER.enabled()
             getStateValue(windowState, "getShowNotificationIcons") == false -> !HideBehavior.NOTIFICATION_CENTER.enabled()
-            getStateValue(windowState, "getControlCenterExpanded") == true -> !HideBehavior.CONTROL_CENTER.enabled()
-            getStateValue(windowState, "getControlCenterPanelSwipeToAppearance") == true -> !HideBehavior.CONTROL_CENTER.enabled()
             typeName != null -> shouldBlockType(typeName)
             else -> false
         }
@@ -220,7 +222,6 @@ object TempHiddenBehaviorHook : BaseHook() {
             "screenLocked=${getStateValue(windowState, "getScreenLocked")}",
             "bouncer=${getStateValue(windowState, "getBouncerShowing")}",
             "pinning=${getStateValue(windowState, "getScreenPinning")}",
-            "desktop=${getStateValue(windowState, "getDeskTopAnimating")}",
             "statusGone=${getStateValue(windowState, "getStatusBarDisappearance")}",
             "statusShowing=${getStateValue(windowState, "getStatusBarViewShowing")}",
             "notif=${getStateValue(windowState, "getNotificationAppearance")}",
@@ -246,9 +247,6 @@ object TempHiddenBehaviorHook : BaseHook() {
         if (!HideBehavior.SCREEN_PINNING.enabled()) {
             setStateValue(windowState, "getScreenPinning", false)
         }
-        if (!HideBehavior.DESKTOP_ANIMATING.enabled()) {
-            setStateValue(windowState, "getDeskTopAnimating", false)
-        }
         if (!HideBehavior.FULLSCREEN.enabled()) {
             setStateValue(windowState, "getStatusBarDisappearance", false)
             setStateValue(windowState, "getStatusBarViewShowing", true)
@@ -257,10 +255,6 @@ object TempHiddenBehaviorHook : BaseHook() {
             setStateValue(windowState, "getNotificationAppearance", false)
             setStateValue(windowState, "getNotificationPanelSwipeToAppearance", false)
             setStateValue(windowState, "getShowNotificationIcons", true)
-        }
-        if (!HideBehavior.CONTROL_CENTER.enabled()) {
-            setStateValue(windowState, "getControlCenterExpanded", false)
-            setStateValue(windowState, "getControlCenterPanelSwipeToAppearance", false)
         }
     }
 
@@ -275,7 +269,6 @@ object TempHiddenBehaviorHook : BaseHook() {
 
     private fun shouldBlockCollapse(reason: String?): Boolean {
         return when (reason) {
-            "cc expand" -> !HideBehavior.CONTROL_CENTER.enabled()
             "lockscreen" -> !HideBehavior.SCREEN_LOCKED.enabled()
             else -> false
         }
@@ -292,11 +285,9 @@ object TempHiddenBehaviorHook : BaseHook() {
     private enum class HideBehavior(private val prefKey: String) {
         SCREEN_PINNING("pref_temp_hide_screen_pinning"),
         BOUNCER_SHOWING("pref_temp_hide_bouncer_showing"),
-        DESKTOP_ANIMATING("pref_temp_hide_desktop_animating"),
         FULLSCREEN("pref_temp_hide_fullscreen"),
         SCREEN_LOCKED("pref_temp_hide_screen_locked"),
-        NOTIFICATION_CENTER("pref_temp_hide_notification_center"),
-        CONTROL_CENTER("pref_temp_hide_control_center");
+        NOTIFICATION_CENTER("pref_temp_hide_notification_center");
 
         fun enabled(): Boolean = ConfigManager.getBoolean(prefKey, true)
     }

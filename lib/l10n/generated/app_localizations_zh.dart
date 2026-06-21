@@ -1645,12 +1645,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hideBehaviorBouncerShowingSubtitle => '密码、指纹等解锁界面显示时隐藏超级岛';
 
   @override
-  String get hideBehaviorDesktopAnimating => '桌面动画';
-
-  @override
-  String get hideBehaviorDesktopAnimatingSubtitle => '打开或关闭应用动画期间隐藏超级岛';
-
-  @override
   String get hideBehaviorFullscreen => '全屏模式';
 
   @override
@@ -1667,10 +1661,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hideBehaviorNotificationCenterSubtitle => '通知栏展开或下滑过渡时隐藏超级岛';
-
-  @override
-  String get hideBehaviorControlCenter => '控制中心';
-
-  @override
-  String get hideBehaviorControlCenterSubtitle => '控制中心展开或下滑过渡时隐藏超级岛';
 }

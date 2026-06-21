@@ -1668,13 +1668,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'Hide the island while the unlock challenge is showing';
 
   @override
-  String get hideBehaviorDesktopAnimating => 'Desktop animation';
-
-  @override
-  String get hideBehaviorDesktopAnimatingSubtitle =>
-      'Hide the island during app open or close animations';
-
-  @override
   String get hideBehaviorFullscreen => 'Fullscreen mode';
 
   @override
@@ -1694,11 +1687,4 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get hideBehaviorNotificationCenterSubtitle =>
       'Hide the island while the notification shade expands or transitions';
-
-  @override
-  String get hideBehaviorControlCenter => 'Control center';
-
-  @override
-  String get hideBehaviorControlCenterSubtitle =>
-      'Hide the island while Control Center expands or transitions';
 }

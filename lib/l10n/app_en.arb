@@ -654,14 +654,10 @@
   "hideBehaviorScreenPinningSubtitle": "Hide the island while screen pinning is active",
   "hideBehaviorBouncerShowing": "Unlock screen",
   "hideBehaviorBouncerShowingSubtitle": "Hide the island while the unlock challenge is showing",
-  "hideBehaviorDesktopAnimating": "Desktop animation",
-  "hideBehaviorDesktopAnimatingSubtitle": "Hide the island during app open or close animations",
   "hideBehaviorFullscreen": "Fullscreen mode",
   "hideBehaviorFullscreenSubtitle": "Hide the island when the status bar disappears or immersive fullscreen is active",
   "hideBehaviorScreenLocked": "Lock screen",
   "hideBehaviorScreenLockedSubtitle": "Hide the island during lock screen or screen-off flows",
   "hideBehaviorNotificationCenter": "Notification center",
-  "hideBehaviorNotificationCenterSubtitle": "Hide the island while the notification shade expands or transitions",
-  "hideBehaviorControlCenter": "Control center",
-  "hideBehaviorControlCenterSubtitle": "Hide the island while Control Center expands or transitions"
+  "hideBehaviorNotificationCenterSubtitle": "Hide the island while the notification shade expands or transitions"
 }

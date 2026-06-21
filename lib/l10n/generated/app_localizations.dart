@@ -3204,18 +3204,6 @@ abstract class AppLocalizations {
   /// **'密码、指纹等解锁界面显示时隐藏超级岛'**
   String get hideBehaviorBouncerShowingSubtitle;
 
-  /// No description provided for @hideBehaviorDesktopAnimating.
-  ///
-  /// In zh, this message translates to:
-  /// **'桌面动画'**
-  String get hideBehaviorDesktopAnimating;
-
-  /// No description provided for @hideBehaviorDesktopAnimatingSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'打开或关闭应用动画期间隐藏超级岛'**
-  String get hideBehaviorDesktopAnimatingSubtitle;
-
   /// No description provided for @hideBehaviorFullscreen.
   ///
   /// In zh, this message translates to:
@@ -3251,18 +3239,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'通知栏展开或下滑过渡时隐藏超级岛'**
   String get hideBehaviorNotificationCenterSubtitle;
-
-  /// No description provided for @hideBehaviorControlCenter.
-  ///
-  /// In zh, this message translates to:
-  /// **'控制中心'**
-  String get hideBehaviorControlCenter;
-
-  /// No description provided for @hideBehaviorControlCenterSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'控制中心展开或下滑过渡时隐藏超级岛'**
-  String get hideBehaviorControlCenterSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -249,11 +249,9 @@ class XposedPrefsSyncApp : Application(), XposedServiceHelper.OnServiceListener 
             "pref_keep_island_auto_hide",
             "pref_temp_hide_screen_pinning",
             "pref_temp_hide_bouncer_showing",
-            "pref_temp_hide_desktop_animating",
             "pref_temp_hide_fullscreen",
             "pref_temp_hide_screen_locked",
             "pref_temp_hide_notification_center",
-            "pref_temp_hide_control_center",
             "pref_blur_bars",
             "pref_debug_log"
         )
