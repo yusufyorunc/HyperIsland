@@ -87,6 +87,8 @@ const kIslandTextColorDefault = 'default';
 const kIslandTextColorBlack = 'black';
 const kIslandTextColorFollowBackground = 'follow_background';
 const kIslandTextColorInvertBackground = 'invert_background';
+const kIslandTextColorFollowStatusBar = 'follow_status_bar';
+const kIslandTextColorInvertStatusBar = 'invert_status_bar';
 
 class AiLogEntry {
   const AiLogEntry({
@@ -1096,6 +1098,8 @@ class SettingsController extends ChangeNotifier {
       kIslandTextColorBlack => kIslandTextColorBlack,
       kIslandTextColorFollowBackground => kIslandTextColorFollowBackground,
       kIslandTextColorInvertBackground => kIslandTextColorInvertBackground,
+      kIslandTextColorFollowStatusBar => kIslandTextColorFollowStatusBar,
+      kIslandTextColorInvertStatusBar => kIslandTextColorInvertStatusBar,
       _ => kIslandTextColorDefault,
     };
   }

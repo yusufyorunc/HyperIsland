@@ -440,6 +440,22 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
                             ),
                           ),
                         ),
+                        DropdownMenuItem(
+                          value: kIslandTextColorFollowStatusBar,
+                          child: Text(
+                            _textColorModeLabel(
+                              kIslandTextColorFollowStatusBar,
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: kIslandTextColorInvertStatusBar,
+                          child: Text(
+                            _textColorModeLabel(
+                              kIslandTextColorInvertStatusBar,
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: InteractionHaptics.interceptDropdown<String>((
                         value,
@@ -495,6 +511,8 @@ class _IslandAppearancePageState extends State<IslandAppearancePage> {
         isZh ? '跟随岛背景' : 'Follow island background',
       kIslandTextColorInvertBackground =>
         isZh ? '反跟随岛背景' : 'Invert island background',
+      kIslandTextColorFollowStatusBar => isZh ? '跟随状态栏' : 'Follow status bar',
+      kIslandTextColorInvertStatusBar => isZh ? '反跟随状态栏' : 'Invert status bar',
       _ => isZh ? '默认' : 'Default',
     };
   }
