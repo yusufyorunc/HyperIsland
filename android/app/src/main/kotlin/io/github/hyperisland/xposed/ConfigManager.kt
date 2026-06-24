@@ -183,6 +183,7 @@ object ConfigManager {
         "pref_charge_island_right_mode",
         "pref_charge_island_duration_mode",
         "pref_charge_island_duration_seconds",
+        "pref_charge_island_outer_glow",
         "pref_default_first_float",
         "pref_default_enable_float",
         "pref_default_show_island_icon",

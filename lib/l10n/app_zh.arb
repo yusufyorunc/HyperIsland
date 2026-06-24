@@ -815,6 +815,7 @@
   "chargeIslandDurationPersistent": "常驻",
   "chargeIslandDurationSecondsTitle": "自定义时长",
   "chargeIslandDurationSecondsUnit": "秒",
+  "chargeIslandOuterGlowSubtitle": "控制充电超级岛的外圈光效",
   "outerGlowTitle": "外圈光效",
   "bluetoothIslandOuterGlowSubtitle": "控制蓝牙超级岛的外圈光效",
   "outerGlowColorTitle": "外圈光效颜色",

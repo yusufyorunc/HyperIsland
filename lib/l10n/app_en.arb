@@ -644,6 +644,7 @@
   "chargeIslandDurationPersistent": "Persistent",
   "chargeIslandDurationSecondsTitle": "Custom Duration",
   "chargeIslandDurationSecondsUnit": "s",
+  "chargeIslandOuterGlowSubtitle": "Control the outer glow effect of Charging Island",
   "outerGlowTitle": "Outer Glow",
   "bluetoothIslandOuterGlowSubtitle": "Control the outer glow effect of Bluetooth Island",
   "outerGlowColorTitle": "Outer Glow Color",

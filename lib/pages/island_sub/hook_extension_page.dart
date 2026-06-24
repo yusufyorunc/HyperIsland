@@ -38,6 +38,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
     _ctrl.chargeIslandRightMode,
     _ctrl.chargeIslandDurationMode,
     _ctrl.chargeIslandDurationSeconds,
+    _ctrl.chargeIslandOuterGlow,
   ]);
 
   void _onChanged() {
@@ -168,7 +169,15 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
         rightMode: _ctrl.chargeIslandRightMode,
         durationMode: _ctrl.chargeIslandDurationMode,
         durationSeconds: _ctrl.chargeIslandDurationSeconds,
-        onApply: (enabled, leftMode, rightMode, durationMode, durationSeconds) async {
+        outerGlow: _ctrl.chargeIslandOuterGlow,
+        onApply: (
+          enabled,
+          leftMode,
+          rightMode,
+          durationMode,
+          durationSeconds,
+          outerGlow,
+        ) async {
           final enabledChanged = enabled != _ctrl.chargeIsland;
           if (!await _requestScopesIfEnabled(enabled, const [
             'com.android.systemui',
@@ -180,6 +189,7 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
           await _ctrl.setChargeIslandRightMode(rightMode);
           await _ctrl.setChargeIslandDurationMode(durationMode);
           await _ctrl.setChargeIslandDurationSeconds(durationSeconds);
+          await _ctrl.setChargeIslandOuterGlow(outerGlow);
           if (mounted && enabledChanged) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -497,6 +507,7 @@ class _ChargeIslandSettingsDialog extends StatefulWidget {
     required this.rightMode,
     required this.durationMode,
     required this.durationSeconds,
+    required this.outerGlow,
     required this.onApply,
   });
 
@@ -505,12 +516,14 @@ class _ChargeIslandSettingsDialog extends StatefulWidget {
   final String rightMode;
   final String durationMode;
   final int durationSeconds;
+  final bool outerGlow;
   final Future<bool> Function(
     bool enabled,
     String leftMode,
     String rightMode,
     String durationMode,
     int durationSeconds,
+    bool outerGlow,
   )
   onApply;
 
@@ -525,6 +538,7 @@ class _ChargeIslandSettingsDialogState
   late String _leftMode;
   late String _rightMode;
   late String _durationMode;
+  late bool _outerGlow;
   late final TextEditingController _durationController;
 
   @override
@@ -534,6 +548,7 @@ class _ChargeIslandSettingsDialogState
     _leftMode = widget.leftMode;
     _rightMode = widget.rightMode;
     _durationMode = widget.durationMode;
+    _outerGlow = widget.outerGlow;
     _durationController = TextEditingController(
       text: widget.durationSeconds.toString(),
     );
@@ -592,6 +607,14 @@ class _ChargeIslandSettingsDialogState
                 ),
               ),
             ],
+            const Divider(height: 24),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.outerGlowTitle),
+              subtitle: Text(l10n.chargeIslandOuterGlowSubtitle),
+              value: _outerGlow,
+              onChanged: (value) => setState(() => _outerGlow = value),
+            ),
           ],
         ),
       ),
@@ -610,6 +633,7 @@ class _ChargeIslandSettingsDialogState
               _rightMode,
               _durationMode,
               _parseDurationSeconds(),
+              _outerGlow,
             );
             if (!applied) return;
             if (context.mounted) Navigator.pop(context);

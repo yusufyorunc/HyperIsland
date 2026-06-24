@@ -30,6 +30,7 @@ object ChargeIslandHook : BaseHook() {
     private const val PREF_RIGHT_MODE = "pref_charge_island_right_mode"
     private const val PREF_DURATION_MODE = "pref_charge_island_duration_mode"
     private const val PREF_DURATION_SECONDS = "pref_charge_island_duration_seconds"
+    private const val PREF_OUTER_GLOW = "pref_charge_island_outer_glow"
 
     private const val MODE_DEFAULT = "default"
     private const val MODE_POWER = "power"
@@ -270,7 +271,8 @@ object ChargeIslandHook : BaseHook() {
         if (model == null) return model
         val leftMode = ConfigManager.getString(PREF_LEFT_MODE, MODE_DEFAULT)
         val rightMode = ConfigManager.getString(PREF_RIGHT_MODE, MODE_DEFAULT)
-        if (leftMode == MODE_DEFAULT && rightMode == MODE_DEFAULT) return model
+        val outerGlow = ConfigManager.getBoolean(PREF_OUTER_GLOW, false)
+        if (leftMode == MODE_DEFAULT && rightMode == MODE_DEFAULT && !outerGlow) return model
 
         debug(
             module,
@@ -302,8 +304,24 @@ object ChargeIslandHook : BaseHook() {
                 nextModel = copied
             } ?: debug(module, "right replacement skipped: no value for mode=$rightMode snapshot=${battery.toLogString()}")
         }
+        nextModel = copyGlowEffect(nextModel, outerGlow, module)
         debug(module, "replaceChargeModel result=$nextModel")
         return nextModel
+    }
+
+    private fun copyGlowEffect(model: Any, outerGlow: Boolean, module: XposedModule): Any {
+        val accessors = modelAccessorsByClass.getOrPut(model.javaClass) { ModelAccessors.from(model) }
+        val glowEffect = accessors.getGlowEffect.invoke(model)
+        val newGlowEffect = when {
+            glowEffect != null -> accessors.glowAccessors(glowEffect.javaClass).copy.invoke(glowEffect, outerGlow)
+            outerGlow -> accessors.createGlowEffect(true)
+            else -> null
+        }
+        if (newGlowEffect == glowEffect) return model
+        val currentLeft = accessors.getLeft.invoke(model)
+        val currentRight = accessors.getRight.invoke(model)
+        debug(module, "charge outer glow overridden: enable=$outerGlow")
+        return accessors.copy.invoke(model, currentLeft, currentRight, newGlowEffect)
     }
 
     private fun copySideText(module: XposedModule, model: Any, left: Boolean, pattern: Regex, replacement: String): Any {
@@ -435,6 +453,7 @@ object ChargeIslandHook : BaseHook() {
         val copy: Method,
         private val sideAccessorsByClass: ConcurrentMap<Class<*>, SideAccessors> = ConcurrentHashMap(),
         private val textAccessorsByClass: ConcurrentMap<Class<*>, TextAccessors> = ConcurrentHashMap(),
+        private val glowAccessorsByClass: ConcurrentMap<Class<*>, GlowAccessors> = ConcurrentHashMap(),
     ) {
         // 动画期间会每帧刷新电量，反射 Method 只按类缓存一次。
         fun sideAccessors(clazz: Class<*>): SideAccessors =
@@ -442,6 +461,13 @@ object ChargeIslandHook : BaseHook() {
 
         fun textAccessors(clazz: Class<*>): TextAccessors =
             textAccessorsByClass.getOrPut(clazz) { TextAccessors.from(clazz) }
+
+        fun glowAccessors(clazz: Class<*>): GlowAccessors =
+            glowAccessorsByClass.getOrPut(clazz) { GlowAccessors.from(clazz) }
+
+        fun createGlowEffect(enable: Boolean): Any? = runCatching {
+            copy.parameterTypes[2].getConstructor(Boolean::class.javaPrimitiveType).newInstance(enable)
+        }.getOrNull()
 
         companion object {
             fun from(model: Any): ModelAccessors {
@@ -482,6 +508,14 @@ object ChargeIslandHook : BaseHook() {
                 getTextColor = clazz.publicMethod("getTextColor"),
                 getTurnAnim = clazz.publicMethod("getTurnAnim"),
                 copy = clazz.copyMethod(3),
+            )
+        }
+    }
+
+    private class GlowAccessors(val copy: Method) {
+        companion object {
+            fun from(clazz: Class<*>): GlowAccessors = GlowAccessors(
+                copy = clazz.copyMethod(1),
             )
         }
     }

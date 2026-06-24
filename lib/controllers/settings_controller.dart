@@ -35,6 +35,7 @@ const kPrefChargeIslandLeftMode = 'pref_charge_island_left_mode';
 const kPrefChargeIslandRightMode = 'pref_charge_island_right_mode';
 const kPrefChargeIslandDurationMode = 'pref_charge_island_duration_mode';
 const kPrefChargeIslandDurationSeconds = 'pref_charge_island_duration_seconds';
+const kPrefChargeIslandOuterGlow = 'pref_charge_island_outer_glow';
 const kPrefThemeMode = 'pref_theme_mode';
 const kPrefLocale = 'pref_locale';
 const kPrefCheckUpdateOnLaunch = 'pref_check_update_on_launch';
@@ -191,6 +192,7 @@ class SettingsController extends ChangeNotifier {
   String chargeIslandRightMode = kChargeIslandModeDefault;
   String chargeIslandDurationMode = kChargeIslandDurationDefault;
   int chargeIslandDurationSeconds = 10;
+  bool chargeIslandOuterGlow = false;
   bool checkUpdateOnLaunch = true;
   bool defaultFirstFloat = false;
   bool defaultEnableFloat = false;
@@ -293,6 +295,7 @@ class SettingsController extends ChangeNotifier {
     chargeIslandDurationSeconds = _normalizeChargeIslandDurationSeconds(
       prefs.getInt(kPrefChargeIslandDurationSeconds),
     );
+    chargeIslandOuterGlow = prefs.getBool(kPrefChargeIslandOuterGlow) ?? false;
     checkUpdateOnLaunch = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
     defaultFirstFloat = prefs.getBool(kPrefDefaultFirstFloat) ?? false;
     defaultEnableFloat = prefs.getBool(kPrefDefaultEnableFloat) ?? false;
@@ -608,6 +611,14 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setInt(kPrefChargeIslandDurationSeconds, normalized);
     chargeIslandDurationSeconds = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setChargeIslandOuterGlow(bool value) async {
+    if (chargeIslandOuterGlow == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefChargeIslandOuterGlow, value);
+    chargeIslandOuterGlow = value;
     notifyListeners();
   }
 
