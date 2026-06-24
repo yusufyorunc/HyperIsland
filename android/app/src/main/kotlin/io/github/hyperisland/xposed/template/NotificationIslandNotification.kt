@@ -121,6 +121,7 @@ object NotificationIslandNotification : IslandTemplate {
         val showNotification   = data.focusNotif != "off" && data.showNotification != "off"
         val shouldPreserveIcon = showNotification && data.preserveStatusBarSmallIcon != "off"
 
+        val safeProgress = data.progress.coerceIn(0, 100)
         val baseVm = IslandViewModel(
             templateId        = TEMPLATE_ID,
             leftTitle         = data.title,
@@ -129,7 +130,7 @@ object NotificationIslandNotification : IslandTemplate {
             focusContent      = data.subtitle.ifEmpty { data.title },
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
-            circularProgress  = null,
+            circularProgress  = if (data.progress in 0..100) safeProgress else null,
             actions           = data.actions,
             updatable         = data.isOngoing,
             showNotification  = showNotification,

@@ -293,6 +293,7 @@ $userPrompt
         val focusIcon        = (data.largeIcon ?: data.appIconRaw ?: data.notifIcon ?: fallbackIcon).toRounded(context)
         val showNotification = data.focusNotif != "off" && data.showNotification != "off"
 
+        val safeProgress = data.progress.coerceIn(0, 100)
         val baseVm = IslandViewModel(
             templateId        = TEMPLATE_ID,
             leftTitle         = leftText,
@@ -301,7 +302,7 @@ $userPrompt
             focusContent      = data.subtitle.ifEmpty { data.title },
             islandIcon        = islandIcon,
             focusIcon         = focusIcon,
-            circularProgress  = null,
+            circularProgress  = if (data.progress in 0..100) safeProgress else null,
             actions           = data.actions,
             updatable         = data.isOngoing,
             showNotification  = showNotification,
