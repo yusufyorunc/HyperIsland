@@ -30,6 +30,11 @@ const kPrefSmoothIsland = 'pref_smooth_island';
 const kPrefSmoothIslandSmoothing = 'pref_smooth_island_smoothing';
 const kPrefUnlockAllFocus = 'pref_unlock_all_focus';
 const kPrefUnlockFocusAuth = 'pref_unlock_focus_auth';
+const kPrefChargeIsland = 'pref_charge_island';
+const kPrefChargeIslandLeftMode = 'pref_charge_island_left_mode';
+const kPrefChargeIslandRightMode = 'pref_charge_island_right_mode';
+const kPrefChargeIslandDurationMode = 'pref_charge_island_duration_mode';
+const kPrefChargeIslandDurationSeconds = 'pref_charge_island_duration_seconds';
 const kPrefThemeMode = 'pref_theme_mode';
 const kPrefLocale = 'pref_locale';
 const kPrefCheckUpdateOnLaunch = 'pref_check_update_on_launch';
@@ -90,6 +95,17 @@ const kIslandTextColorFollowBackground = 'follow_background';
 const kIslandTextColorInvertBackground = 'invert_background';
 const kIslandTextColorFollowStatusBar = 'follow_status_bar';
 const kIslandTextColorInvertStatusBar = 'invert_status_bar';
+
+const kChargeIslandModeDefault = 'default';
+const kChargeIslandModePower = 'power';
+const kChargeIslandModeVoltage = 'voltage';
+const kChargeIslandModeCurrent = 'current';
+const kChargeIslandModeLevel = 'level';
+const kChargeIslandModeTemperature = 'temperature';
+
+const kChargeIslandDurationDefault = 'default';
+const kChargeIslandDurationCustom = 'custom';
+const kChargeIslandDurationPersistent = 'persistent';
 
 class AiLogEntry {
   const AiLogEntry({
@@ -170,6 +186,11 @@ class SettingsController extends ChangeNotifier {
   double smoothIslandSmoothing = 0.8;
   bool unlockAllFocus = false;
   bool unlockFocusAuth = false;
+  bool chargeIsland = false;
+  String chargeIslandLeftMode = kChargeIslandModeDefault;
+  String chargeIslandRightMode = kChargeIslandModeDefault;
+  String chargeIslandDurationMode = kChargeIslandDurationDefault;
+  int chargeIslandDurationSeconds = 10;
   bool checkUpdateOnLaunch = true;
   bool defaultFirstFloat = false;
   bool defaultEnableFloat = false;
@@ -259,6 +280,19 @@ class SettingsController extends ChangeNotifier {
     smoothIslandSmoothing = prefs.getDouble(kPrefSmoothIslandSmoothing) ?? 0.8;
     unlockAllFocus = prefs.getBool(kPrefUnlockAllFocus) ?? false;
     unlockFocusAuth = prefs.getBool(kPrefUnlockFocusAuth) ?? false;
+    chargeIsland = prefs.getBool(kPrefChargeIsland) ?? false;
+    chargeIslandLeftMode = _normalizeChargeIslandMode(
+      prefs.getString(kPrefChargeIslandLeftMode),
+    );
+    chargeIslandRightMode = _normalizeChargeIslandMode(
+      prefs.getString(kPrefChargeIslandRightMode),
+    );
+    chargeIslandDurationMode = _normalizeChargeIslandDurationMode(
+      prefs.getString(kPrefChargeIslandDurationMode),
+    );
+    chargeIslandDurationSeconds = _normalizeChargeIslandDurationSeconds(
+      prefs.getInt(kPrefChargeIslandDurationSeconds),
+    );
     checkUpdateOnLaunch = prefs.getBool(kPrefCheckUpdateOnLaunch) ?? true;
     defaultFirstFloat = prefs.getBool(kPrefDefaultFirstFloat) ?? false;
     defaultEnableFloat = prefs.getBool(kPrefDefaultEnableFloat) ?? false;
@@ -533,6 +567,50 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChargeIsland(bool value) async {
+    if (chargeIsland == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefChargeIsland, value);
+    chargeIsland = value;
+    notifyListeners();
+  }
+
+  Future<void> setChargeIslandLeftMode(String value) async {
+    final normalized = _normalizeChargeIslandMode(value);
+    if (chargeIslandLeftMode == normalized) return;
+    final prefs = await _getPrefs();
+    await prefs.setString(kPrefChargeIslandLeftMode, normalized);
+    chargeIslandLeftMode = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setChargeIslandRightMode(String value) async {
+    final normalized = _normalizeChargeIslandMode(value);
+    if (chargeIslandRightMode == normalized) return;
+    final prefs = await _getPrefs();
+    await prefs.setString(kPrefChargeIslandRightMode, normalized);
+    chargeIslandRightMode = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setChargeIslandDurationMode(String value) async {
+    final normalized = _normalizeChargeIslandDurationMode(value);
+    if (chargeIslandDurationMode == normalized) return;
+    final prefs = await _getPrefs();
+    await prefs.setString(kPrefChargeIslandDurationMode, normalized);
+    chargeIslandDurationMode = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setChargeIslandDurationSeconds(int value) async {
+    final normalized = _normalizeChargeIslandDurationSeconds(value);
+    if (chargeIslandDurationSeconds == normalized) return;
+    final prefs = await _getPrefs();
+    await prefs.setInt(kPrefChargeIslandDurationSeconds, normalized);
+    chargeIslandDurationSeconds = normalized;
+    notifyListeners();
+  }
+
   Future<void> setCheckUpdateOnLaunch(bool value) async {
     if (checkUpdateOnLaunch == value) return;
     final prefs = await _getPrefs();
@@ -733,6 +811,29 @@ class SettingsController extends ChangeNotifier {
       'expand' => 'expand',
       _ => 'off',
     };
+  }
+
+  String _normalizeChargeIslandMode(String? value) {
+    return switch (value) {
+      kChargeIslandModePower => kChargeIslandModePower,
+      kChargeIslandModeVoltage => kChargeIslandModeVoltage,
+      kChargeIslandModeCurrent => kChargeIslandModeCurrent,
+      kChargeIslandModeLevel => kChargeIslandModeLevel,
+      kChargeIslandModeTemperature => kChargeIslandModeTemperature,
+      _ => kChargeIslandModeDefault,
+    };
+  }
+
+  String _normalizeChargeIslandDurationMode(String? value) {
+    return switch (value) {
+      kChargeIslandDurationCustom => kChargeIslandDurationCustom,
+      kChargeIslandDurationPersistent => kChargeIslandDurationPersistent,
+      _ => kChargeIslandDurationDefault,
+    };
+  }
+
+  int _normalizeChargeIslandDurationSeconds(int? value) {
+    return (value ?? 10).clamp(1, 86400);
   }
 
   Future<void> setHideDesktopIcon(bool value) async {

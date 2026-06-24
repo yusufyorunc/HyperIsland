@@ -789,6 +789,32 @@
   "bluetoothIslandEnableSubtitle": "关闭后重启 SystemUI 生效，且不会注册蓝牙 Hook",
   "bluetoothIslandShowDeviceNameTitle": "显示设备名称",
   "bluetoothIslandShowDeviceNameSubtitle": "连接时右侧先显示设备名称，2 秒后再显示连接状态",
+  "chargeIslandTitle": "充电超级岛",
+  "chargeIslandSubtitle": "{status} · 替换充电超级岛中的功率或电量片段",
+  "@chargeIslandSubtitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "chargeIslandSettingsTitle": "充电超级岛设置",
+  "chargeIslandEnableTitle": "启用充电超级岛 Hook",
+  "chargeIslandEnableSubtitle": "关闭后重启 SystemUI 生效，Hook 将完全旁路",
+  "chargeIslandLeftModeTitle": "左侧行为",
+  "chargeIslandRightModeTitle": "右侧行为",
+  "chargeIslandModeDefault": "默认",
+  "chargeIslandModePower": "真实功率",
+  "chargeIslandModeVoltage": "真实电压",
+  "chargeIslandModeCurrent": "真实电流",
+  "chargeIslandModeLevel": "真实电量",
+  "chargeIslandModeTemperature": "电池温度",
+  "chargeIslandDurationModeTitle": "持续时间",
+  "chargeIslandDurationDefault": "默认",
+  "chargeIslandDurationCustom": "自定义",
+  "chargeIslandDurationPersistent": "常驻",
+  "chargeIslandDurationSecondsTitle": "自定义时长",
+  "chargeIslandDurationSecondsUnit": "秒",
   "outerGlowTitle": "外圈光效",
   "bluetoothIslandOuterGlowSubtitle": "控制蓝牙超级岛的外圈光效",
   "outerGlowColorTitle": "外圈光效颜色",

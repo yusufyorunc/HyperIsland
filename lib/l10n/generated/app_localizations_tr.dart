@@ -1642,6 +1642,66 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlandığında önce sağda cihaz adını gösterir, 2 saniye sonra bağlantı durumunu gösterir';
 
   @override
+  String get chargeIslandTitle => 'Şarj Adası';
+
+  @override
+  String chargeIslandSubtitle(String status) {
+    return '$status · Şarj Adasındaki güç veya pil bölümünü değiştirir';
+  }
+
+  @override
+  String get chargeIslandSettingsTitle => 'Şarj Adası Ayarları';
+
+  @override
+  String get chargeIslandEnableTitle => 'Şarj Adası Hook\'unu Etkinleştir';
+
+  @override
+  String get chargeIslandEnableSubtitle =>
+      'Devre dışı bıraktıktan sonra geçerli olması için Sistem UI\'ı yeniden başlatın. Hook tamamen atlanır';
+
+  @override
+  String get chargeIslandLeftModeTitle => 'Sol Davranış';
+
+  @override
+  String get chargeIslandRightModeTitle => 'Sağ Davranış';
+
+  @override
+  String get chargeIslandModeDefault => 'Varsayılan';
+
+  @override
+  String get chargeIslandModePower => 'Gerçek Güç';
+
+  @override
+  String get chargeIslandModeVoltage => 'Gerçek Voltaj';
+
+  @override
+  String get chargeIslandModeCurrent => 'Gerçek Akım';
+
+  @override
+  String get chargeIslandModeLevel => 'Gerçek Pil';
+
+  @override
+  String get chargeIslandModeTemperature => 'Pil Sıcaklığı';
+
+  @override
+  String get chargeIslandDurationModeTitle => 'Süre';
+
+  @override
+  String get chargeIslandDurationDefault => 'Varsayılan';
+
+  @override
+  String get chargeIslandDurationCustom => 'Özel';
+
+  @override
+  String get chargeIslandDurationPersistent => 'Kalıcı';
+
+  @override
+  String get chargeIslandDurationSecondsTitle => 'Özel Süre';
+
+  @override
+  String get chargeIslandDurationSecondsUnit => 'sn';
+
+  @override
   String get outerGlowTitle => 'Dış Parlama';
 
   @override

@@ -501,6 +501,32 @@
   "bluetoothIslandEnableSubtitle": "オフにした後は System UI を再起動すると反映され、Bluetooth Hook は登録されません",
   "bluetoothIslandShowDeviceNameTitle": "デバイス名を表示",
   "bluetoothIslandShowDeviceNameSubtitle": "接続時は右側にデバイス名を先に表示し、2 秒後に接続状態を表示します",
+  "chargeIslandTitle": "Charging Island",
+  "chargeIslandSubtitle": "{status} · Charging Island の電力または電池表示部分を置き換えます",
+  "@chargeIslandSubtitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "chargeIslandSettingsTitle": "Charging Island 設定",
+  "chargeIslandEnableTitle": "Charging Island Hook を有効化",
+  "chargeIslandEnableSubtitle": "オフにした後は System UI を再起動すると反映され、Hook は完全にバイパスされます",
+  "chargeIslandLeftModeTitle": "左側の動作",
+  "chargeIslandRightModeTitle": "右側の動作",
+  "chargeIslandModeDefault": "デフォルト",
+  "chargeIslandModePower": "実電力",
+  "chargeIslandModeVoltage": "実電圧",
+  "chargeIslandModeCurrent": "実電流",
+  "chargeIslandModeLevel": "実電池残量",
+  "chargeIslandModeTemperature": "電池温度",
+  "chargeIslandDurationModeTitle": "表示時間",
+  "chargeIslandDurationDefault": "デフォルト",
+  "chargeIslandDurationCustom": "カスタム",
+  "chargeIslandDurationPersistent": "常駐",
+  "chargeIslandDurationSecondsTitle": "カスタム時間",
+  "chargeIslandDurationSecondsUnit": "秒",
   "outerGlowTitle": "外側のグロー",
   "bluetoothIslandOuterGlowSubtitle": "Bluetooth Island の外側のグロー効果を制御します",
   "outerGlowColorTitle": "外側のグローの色",

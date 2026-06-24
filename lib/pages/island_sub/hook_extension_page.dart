@@ -33,6 +33,11 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
     _ctrl.smoothIslandSmoothing,
     _ctrl.unlockAllFocus,
     _ctrl.unlockFocusAuth,
+    _ctrl.chargeIsland,
+    _ctrl.chargeIslandLeftMode,
+    _ctrl.chargeIslandRightMode,
+    _ctrl.chargeIslandDurationMode,
+    _ctrl.chargeIslandDurationSeconds,
   ]);
 
   void _onChanged() {
@@ -140,6 +145,41 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
           await _ctrl.setBluetoothIslandOuterGlowColor(outerGlowColor);
           await _ctrl.setBluetoothIslandWhitelistEnabled(whitelistEnabled);
           await _ctrl.setBluetoothIslandWhitelistAddresses(whitelistAddresses);
+          if (mounted && enabledChanged) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.restartScopeApp),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+          return true;
+        },
+      ),
+    );
+  }
+
+  Future<void> _showChargeIslandSettings() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _ChargeIslandSettingsDialog(
+        enabled: _ctrl.chargeIsland,
+        leftMode: _ctrl.chargeIslandLeftMode,
+        rightMode: _ctrl.chargeIslandRightMode,
+        durationMode: _ctrl.chargeIslandDurationMode,
+        durationSeconds: _ctrl.chargeIslandDurationSeconds,
+        onApply: (enabled, leftMode, rightMode, durationMode, durationSeconds) async {
+          final enabledChanged = enabled != _ctrl.chargeIsland;
+          if (!await _requestScopesIfEnabled(enabled, const [
+            'com.android.systemui',
+          ])) {
+            return false;
+          }
+          await _ctrl.setChargeIsland(enabled);
+          await _ctrl.setChargeIslandLeftMode(leftMode);
+          await _ctrl.setChargeIslandRightMode(rightMode);
+          await _ctrl.setChargeIslandDurationMode(durationMode);
+          await _ctrl.setChargeIslandDurationSeconds(durationSeconds);
           if (mounted && enabledChanged) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -302,6 +342,33 @@ class _HookExtensionPageState extends State<HookExtensionPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerHighest,
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    title: Text(l10n.chargeIslandTitle, style: titleStyle),
+                    subtitle: Text(
+                      l10n.chargeIslandSubtitle(
+                        _ctrl.chargeIsland
+                            ? l10n.bluetoothIslandStatusEnabled
+                            : l10n.bluetoothIslandStatusDisabled,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: InteractionHaptics.interceptButton(
+                      _showChargeIslandSettings,
+                    ),
+                    onLongPress: InteractionHaptics.interceptButton(
+                      _showChargeIslandSettings,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 _SectionLabel(l10n.hookScopeXMSF),
                 const SizedBox(height: 8),
                 Card(
@@ -421,6 +488,236 @@ class _BluetoothIslandSettingsDialog extends StatefulWidget {
   @override
   State<_BluetoothIslandSettingsDialog> createState() =>
       _BluetoothIslandSettingsDialogState();
+}
+
+class _ChargeIslandSettingsDialog extends StatefulWidget {
+  const _ChargeIslandSettingsDialog({
+    required this.enabled,
+    required this.leftMode,
+    required this.rightMode,
+    required this.durationMode,
+    required this.durationSeconds,
+    required this.onApply,
+  });
+
+  final bool enabled;
+  final String leftMode;
+  final String rightMode;
+  final String durationMode;
+  final int durationSeconds;
+  final Future<bool> Function(
+    bool enabled,
+    String leftMode,
+    String rightMode,
+    String durationMode,
+    int durationSeconds,
+  )
+  onApply;
+
+  @override
+  State<_ChargeIslandSettingsDialog> createState() =>
+      _ChargeIslandSettingsDialogState();
+}
+
+class _ChargeIslandSettingsDialogState
+    extends State<_ChargeIslandSettingsDialog> {
+  late bool _enabled;
+  late String _leftMode;
+  late String _rightMode;
+  late String _durationMode;
+  late final TextEditingController _durationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _enabled = widget.enabled;
+    _leftMode = widget.leftMode;
+    _rightMode = widget.rightMode;
+    _durationMode = widget.durationMode;
+    _durationController = TextEditingController(
+      text: widget.durationSeconds.toString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _durationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.chargeIslandSettingsTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.chargeIslandEnableTitle),
+              subtitle: Text(l10n.chargeIslandEnableSubtitle),
+              value: _enabled,
+              onChanged: (value) => setState(() => _enabled = value),
+            ),
+            const Divider(height: 24),
+            _ChargeIslandModeDropdown(
+              title: l10n.chargeIslandLeftModeTitle,
+              value: _leftMode,
+              onChanged: (value) => setState(() => _leftMode = value),
+            ),
+            const SizedBox(height: 12),
+            _ChargeIslandModeDropdown(
+              title: l10n.chargeIslandRightModeTitle,
+              value: _rightMode,
+              onChanged: (value) => setState(() => _rightMode = value),
+            ),
+            const SizedBox(height: 12),
+            _ChargeIslandDurationDropdown(
+              value: _durationMode,
+              onChanged: (value) => setState(() => _durationMode = value),
+            ),
+            if (_durationMode == kChargeIslandDurationCustom) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _durationController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.chargeIslandDurationSecondsTitle,
+                  suffixText: l10n.chargeIslandDurationSecondsUnit,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: InteractionHaptics.interceptButton(() {
+            Navigator.pop(context);
+          }),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: InteractionHaptics.interceptButton(() async {
+            final applied = await widget.onApply(
+              _enabled,
+              _leftMode,
+              _rightMode,
+              _durationMode,
+              _parseDurationSeconds(),
+            );
+            if (!applied) return;
+            if (context.mounted) Navigator.pop(context);
+          }),
+          child: Text(l10n.apply),
+        ),
+      ],
+    );
+  }
+
+  int _parseDurationSeconds() {
+    final raw = int.tryParse(_durationController.text.trim()) ?? 10;
+    return raw.clamp(1, 86400);
+  }
+}
+
+class _ChargeIslandModeDropdown extends StatelessWidget {
+  const _ChargeIslandModeDropdown({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: title,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      items: [
+        DropdownMenuItem(
+          value: kChargeIslandModeDefault,
+          child: Text(l10n.chargeIslandModeDefault),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandModePower,
+          child: Text(l10n.chargeIslandModePower),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandModeVoltage,
+          child: Text(l10n.chargeIslandModeVoltage),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandModeCurrent,
+          child: Text(l10n.chargeIslandModeCurrent),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandModeLevel,
+          child: Text(l10n.chargeIslandModeLevel),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandModeTemperature,
+          child: Text(l10n.chargeIslandModeTemperature),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+    );
+  }
+}
+
+class _ChargeIslandDurationDropdown extends StatelessWidget {
+  const _ChargeIslandDurationDropdown({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: l10n.chargeIslandDurationModeTitle,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      items: [
+        DropdownMenuItem(
+          value: kChargeIslandDurationDefault,
+          child: Text(l10n.chargeIslandDurationDefault),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandDurationCustom,
+          child: Text(l10n.chargeIslandDurationCustom),
+        ),
+        DropdownMenuItem(
+          value: kChargeIslandDurationPersistent,
+          child: Text(l10n.chargeIslandDurationPersistent),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+    );
+  }
 }
 
 class _BluetoothIslandSettingsDialogState

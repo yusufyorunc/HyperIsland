@@ -1581,6 +1581,66 @@ class AppLocalizationsJa extends AppLocalizations {
       '接続時は右側にデバイス名を先に表示し、2 秒後に接続状態を表示します';
 
   @override
+  String get chargeIslandTitle => 'Charging Island';
+
+  @override
+  String chargeIslandSubtitle(String status) {
+    return '$status · Charging Island の電力または電池表示部分を置き換えます';
+  }
+
+  @override
+  String get chargeIslandSettingsTitle => 'Charging Island 設定';
+
+  @override
+  String get chargeIslandEnableTitle => 'Charging Island Hook を有効化';
+
+  @override
+  String get chargeIslandEnableSubtitle =>
+      'オフにした後は System UI を再起動すると反映され、Hook は完全にバイパスされます';
+
+  @override
+  String get chargeIslandLeftModeTitle => '左側の動作';
+
+  @override
+  String get chargeIslandRightModeTitle => '右側の動作';
+
+  @override
+  String get chargeIslandModeDefault => 'デフォルト';
+
+  @override
+  String get chargeIslandModePower => '実電力';
+
+  @override
+  String get chargeIslandModeVoltage => '実電圧';
+
+  @override
+  String get chargeIslandModeCurrent => '実電流';
+
+  @override
+  String get chargeIslandModeLevel => '実電池残量';
+
+  @override
+  String get chargeIslandModeTemperature => '電池温度';
+
+  @override
+  String get chargeIslandDurationModeTitle => '表示時間';
+
+  @override
+  String get chargeIslandDurationDefault => 'デフォルト';
+
+  @override
+  String get chargeIslandDurationCustom => 'カスタム';
+
+  @override
+  String get chargeIslandDurationPersistent => '常駐';
+
+  @override
+  String get chargeIslandDurationSecondsTitle => 'カスタム時間';
+
+  @override
+  String get chargeIslandDurationSecondsUnit => '秒';
+
+  @override
   String get outerGlowTitle => '外側のグロー';
 
   @override

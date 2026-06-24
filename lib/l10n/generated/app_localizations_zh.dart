@@ -1561,6 +1561,65 @@ class AppLocalizationsZh extends AppLocalizations {
       '连接时右侧先显示设备名称，2 秒后再显示连接状态';
 
   @override
+  String get chargeIslandTitle => '充电超级岛';
+
+  @override
+  String chargeIslandSubtitle(String status) {
+    return '$status · 替换充电超级岛中的功率或电量片段';
+  }
+
+  @override
+  String get chargeIslandSettingsTitle => '充电超级岛设置';
+
+  @override
+  String get chargeIslandEnableTitle => '启用充电超级岛 Hook';
+
+  @override
+  String get chargeIslandEnableSubtitle => '关闭后重启 SystemUI 生效，Hook 将完全旁路';
+
+  @override
+  String get chargeIslandLeftModeTitle => '左侧行为';
+
+  @override
+  String get chargeIslandRightModeTitle => '右侧行为';
+
+  @override
+  String get chargeIslandModeDefault => '默认';
+
+  @override
+  String get chargeIslandModePower => '真实功率';
+
+  @override
+  String get chargeIslandModeVoltage => '真实电压';
+
+  @override
+  String get chargeIslandModeCurrent => '真实电流';
+
+  @override
+  String get chargeIslandModeLevel => '真实电量';
+
+  @override
+  String get chargeIslandModeTemperature => '电池温度';
+
+  @override
+  String get chargeIslandDurationModeTitle => '持续时间';
+
+  @override
+  String get chargeIslandDurationDefault => '默认';
+
+  @override
+  String get chargeIslandDurationCustom => '自定义';
+
+  @override
+  String get chargeIslandDurationPersistent => '常驻';
+
+  @override
+  String get chargeIslandDurationSecondsTitle => '自定义时长';
+
+  @override
+  String get chargeIslandDurationSecondsUnit => '秒';
+
+  @override
   String get outerGlowTitle => '外圈光效';
 
   @override

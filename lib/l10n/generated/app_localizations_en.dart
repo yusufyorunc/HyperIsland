@@ -1642,6 +1642,66 @@ class AppLocalizationsEn extends AppLocalizations {
       'On connection, show the device name on the right first, then show the connection status after 2 seconds';
 
   @override
+  String get chargeIslandTitle => 'Charging Island';
+
+  @override
+  String chargeIslandSubtitle(String status) {
+    return '$status · Replace the power or battery segment in Charging Island';
+  }
+
+  @override
+  String get chargeIslandSettingsTitle => 'Charging Island Settings';
+
+  @override
+  String get chargeIslandEnableTitle => 'Enable Charging Island Hook';
+
+  @override
+  String get chargeIslandEnableSubtitle =>
+      'After disabling, restart System UI to take effect. The hook will be bypassed completely';
+
+  @override
+  String get chargeIslandLeftModeTitle => 'Left Behavior';
+
+  @override
+  String get chargeIslandRightModeTitle => 'Right Behavior';
+
+  @override
+  String get chargeIslandModeDefault => 'Default';
+
+  @override
+  String get chargeIslandModePower => 'Real Power';
+
+  @override
+  String get chargeIslandModeVoltage => 'Real Voltage';
+
+  @override
+  String get chargeIslandModeCurrent => 'Real Current';
+
+  @override
+  String get chargeIslandModeLevel => 'Real Battery';
+
+  @override
+  String get chargeIslandModeTemperature => 'Battery Temperature';
+
+  @override
+  String get chargeIslandDurationModeTitle => 'Duration';
+
+  @override
+  String get chargeIslandDurationDefault => 'Default';
+
+  @override
+  String get chargeIslandDurationCustom => 'Custom';
+
+  @override
+  String get chargeIslandDurationPersistent => 'Persistent';
+
+  @override
+  String get chargeIslandDurationSecondsTitle => 'Custom Duration';
+
+  @override
+  String get chargeIslandDurationSecondsUnit => 's';
+
+  @override
   String get outerGlowTitle => 'Outer Glow';
 
   @override

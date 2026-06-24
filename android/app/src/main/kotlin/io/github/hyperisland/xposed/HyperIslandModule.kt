@@ -4,6 +4,7 @@ import io.github.hyperisland.xposed.hook.SystemUI.BigIslandMinWidthHook
 import io.github.hyperisland.xposed.hook.SystemUI.IslandTopOffsetHook
 import io.github.hyperisland.xposed.hook.SystemUI.SmoothIslandHook
 import io.github.hyperisland.xposed.hook.BluetoothIslandHook
+import io.github.hyperisland.xposed.hook.ChargeIslandHook
 import io.github.hyperisland.xposed.hook.DownloadHook
 import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.hook.SystemUI.GenericProgressHook
@@ -59,6 +60,9 @@ class HyperIslandModule : XposedModule() {
                 KeepIslandHook.init(this, param)
                 if (ConfigManager.getBoolean("pref_bluetooth_island", false)) {
                     BluetoothIslandHook.init(this, param)
+                }
+                if (ConfigManager.getBoolean("pref_charge_island", false)) {
+                    ChargeIslandHook.init(this, param)
                 }
             }
 

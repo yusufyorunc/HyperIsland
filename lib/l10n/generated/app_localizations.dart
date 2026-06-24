@@ -3042,6 +3042,120 @@ abstract class AppLocalizations {
   /// **'连接时右侧先显示设备名称，2 秒后再显示连接状态'**
   String get bluetoothIslandShowDeviceNameSubtitle;
 
+  /// No description provided for @chargeIslandTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'充电超级岛'**
+  String get chargeIslandTitle;
+
+  /// No description provided for @chargeIslandSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'{status} · 替换充电超级岛中的功率或电量片段'**
+  String chargeIslandSubtitle(String status);
+
+  /// No description provided for @chargeIslandSettingsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'充电超级岛设置'**
+  String get chargeIslandSettingsTitle;
+
+  /// No description provided for @chargeIslandEnableTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用充电超级岛 Hook'**
+  String get chargeIslandEnableTitle;
+
+  /// No description provided for @chargeIslandEnableSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭后重启 SystemUI 生效，Hook 将完全旁路'**
+  String get chargeIslandEnableSubtitle;
+
+  /// No description provided for @chargeIslandLeftModeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'左侧行为'**
+  String get chargeIslandLeftModeTitle;
+
+  /// No description provided for @chargeIslandRightModeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'右侧行为'**
+  String get chargeIslandRightModeTitle;
+
+  /// No description provided for @chargeIslandModeDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get chargeIslandModeDefault;
+
+  /// No description provided for @chargeIslandModePower.
+  ///
+  /// In zh, this message translates to:
+  /// **'真实功率'**
+  String get chargeIslandModePower;
+
+  /// No description provided for @chargeIslandModeVoltage.
+  ///
+  /// In zh, this message translates to:
+  /// **'真实电压'**
+  String get chargeIslandModeVoltage;
+
+  /// No description provided for @chargeIslandModeCurrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'真实电流'**
+  String get chargeIslandModeCurrent;
+
+  /// No description provided for @chargeIslandModeLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'真实电量'**
+  String get chargeIslandModeLevel;
+
+  /// No description provided for @chargeIslandModeTemperature.
+  ///
+  /// In zh, this message translates to:
+  /// **'电池温度'**
+  String get chargeIslandModeTemperature;
+
+  /// No description provided for @chargeIslandDurationModeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'持续时间'**
+  String get chargeIslandDurationModeTitle;
+
+  /// No description provided for @chargeIslandDurationDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get chargeIslandDurationDefault;
+
+  /// No description provided for @chargeIslandDurationCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get chargeIslandDurationCustom;
+
+  /// No description provided for @chargeIslandDurationPersistent.
+  ///
+  /// In zh, this message translates to:
+  /// **'常驻'**
+  String get chargeIslandDurationPersistent;
+
+  /// No description provided for @chargeIslandDurationSecondsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义时长'**
+  String get chargeIslandDurationSecondsTitle;
+
+  /// No description provided for @chargeIslandDurationSecondsUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'秒'**
+  String get chargeIslandDurationSecondsUnit;
+
   /// No description provided for @outerGlowTitle.
   ///
   /// In zh, this message translates to:
