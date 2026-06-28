@@ -1524,6 +1524,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Gerçek bildirim geldiğinde boş adayı otomatik gizle, bildirim kalktığında geri yükle';
 
   @override
+  String get keepIslandHideLandscapeTitle => 'Yatayda Gizle';
+
+  @override
+  String get keepIslandHideLandscapeSubtitle =>
+      'Yatay ekranda sürekli adayı gizle, dikeye dönünce gerçek bildirim yoksa geri yükle';
+
+  @override
   String get keepIslandHighlightColorTitle => 'Vurgu Rengi';
 
   @override

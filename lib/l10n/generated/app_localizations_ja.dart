@@ -1470,6 +1470,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'リアル通知が来た時に空白アイランドを自動的に隠し、通知が消えた後に自動的に復元';
 
   @override
+  String get keepIslandHideLandscapeTitle => '横画面で非表示';
+
+  @override
+  String get keepIslandHideLandscapeSubtitle =>
+      '横画面では常時アイランドを隠し、縦画面に戻りリアル通知がない時に復元します';
+
+  @override
   String get keepIslandHighlightColorTitle => 'ハイライトカラー';
 
   @override

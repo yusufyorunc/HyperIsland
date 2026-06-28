@@ -2834,6 +2834,18 @@ abstract class AppLocalizations {
   /// **'真实通知到来时自动隐藏空白岛，通知消失后自动恢复'**
   String get keepIslandAutoHideSubtitle;
 
+  /// No description provided for @keepIslandHideLandscapeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'横屏时隐藏'**
+  String get keepIslandHideLandscapeTitle;
+
+  /// No description provided for @keepIslandHideLandscapeSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'横屏时自动隐藏常驻岛，回到竖屏时恢复'**
+  String get keepIslandHideLandscapeSubtitle;
+
   /// No description provided for @keepIslandHighlightColorTitle.
   ///
   /// In zh, this message translates to:

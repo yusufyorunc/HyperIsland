@@ -2,12 +2,17 @@ package io.github.hyperisland.xposed.hook
 
 import android.app.Application
 import android.app.ActivityManager
+import android.content.ComponentCallbacks
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Rect
+import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.service.notification.StatusBarNotification
+import android.view.Display
+import android.view.Surface
 import android.view.View
 import io.github.hyperisland.xposed.ConfigManager
 import io.github.hyperisland.xposed.islanddispatch.IslandDispatcher
@@ -23,6 +28,8 @@ object KeepIslandHook : BaseHook() {
     private const val PREF_KEY = "pref_keep_island"
 
     private const val PREF_KEY_AUTO_HIDE = "pref_keep_island_auto_hide"
+
+    private const val PREF_KEY_HIDE_LANDSCAPE = "pref_keep_island_hide_landscape"
 
     private const val PREF_KEY_HIGHLIGHT_COLOR = "pref_keep_island_highlight_color"
 
@@ -40,13 +47,16 @@ object KeepIslandHook : BaseHook() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var appContext: android.content.Context? = null
     private var posted = false
-    private var suppressed = false
 
     private var cachedModule: XposedModule? = null
 
     private val activeRealKeys = ConcurrentHashMap.newKeySet<String>()
 
     private var restoreRunnable: Runnable? = null
+
+    private var configurationCallbacksRegistered = false
+
+    private var displayListenerRegistered = false
 
     private val hookedAnimationClassLoaders = ConcurrentHashMap.newKeySet<Int>()
     private val hookedContentControllerClassLoaders = ConcurrentHashMap.newKeySet<Int>()
@@ -56,13 +66,6 @@ object KeepIslandHook : BaseHook() {
     override fun getTag() = TAG
 
     override fun onConfigChanged() {
-        val autoHide = ConfigManager.getBoolean(PREF_KEY_AUTO_HIDE, true)
-        if (!autoHide && suppressed) {
-            activeRealKeys.clear()
-            cancelPendingRestore()
-            val ctx = appContext
-            if (ctx != null) postKeepIsland(ctx, restore = true)
-        }
         mainHandler.postDelayed({ evaluateKeepIsland() }, 500)
     }
 
@@ -85,6 +88,8 @@ object KeepIslandHook : BaseHook() {
                 val app = chain.thisObject as? Application
                 if (app != null) {
                     appContext = app.applicationContext
+                    registerConfigurationCallbacks(app.applicationContext)
+                    registerDisplayListener(app.applicationContext)
                     mainHandler.postDelayed({ evaluateKeepIsland() }, 3000)
                 }
                 result
@@ -165,7 +170,6 @@ object KeepIslandHook : BaseHook() {
         val ctx = appContext ?: return
         val enabled = ConfigManager.getBoolean(PREF_KEY, false)
         if (!enabled) return
-        if (!posted && !suppressed) return
 
         val autoHide = ConfigManager.getBoolean(PREF_KEY_AUTO_HIDE, true)
         if (!autoHide) return
@@ -192,15 +196,15 @@ object KeepIslandHook : BaseHook() {
                 if (contentControllerHooked) return
                 cancelPendingRestore()
                 if (key != null) activeRealKeys.add(key)
-                if (posted && !suppressed) {
-                    cancelKeepIsland(ctx, suppress = true)
+                if (posted) {
+                    cancelKeepIsland(ctx)
                 }
             }
 
             isDeleted || (!isBigIsland && !isExpanded && !isSmallIsland) -> {
                 if (key != null) activeRealKeys.remove(key)
-                if (suppressed && activeRealKeys.isEmpty()) {
-                    scheduleRestore(ctx)
+                if (!posted) {
+                    scheduleRestore()
                 }
             }
         }
@@ -240,15 +244,15 @@ object KeepIslandHook : BaseHook() {
 
         cancelPendingRestore()
         activeRealKeys.add(key)
-        if (posted && !suppressed) {
-            cancelKeepIsland(ctx, suppress = true)
+        if (posted) {
+            cancelKeepIsland(ctx)
         }
     }
 
     private fun removeActiveRealKey(ctx: Context, key: String) {
         activeRealKeys.remove(key)
-        if (suppressed && activeRealKeys.isEmpty()) {
-            scheduleRestore(ctx)
+        if (!posted) {
+            scheduleRestore()
         }
     }
 
@@ -266,15 +270,25 @@ object KeepIslandHook : BaseHook() {
     private fun evaluateKeepIsland() {
         val ctx = appContext ?: return
         val enabled = ConfigManager.getBoolean(PREF_KEY, false)
-        if (enabled && !posted && !suppressed) {
-            activeRealKeys.clear()
+        val autoHide = ConfigManager.getBoolean(PREF_KEY_AUTO_HIDE, true)
+        if (!enabled || !autoHide) activeRealKeys.clear()
+        if (shouldShowKeepIsland(ctx)) {
             cancelPendingRestore()
-            postKeepIsland(ctx, restore = false)
-        } else if (!enabled && (posted || suppressed)) {
-            activeRealKeys.clear()
+            if (!posted) postKeepIsland(ctx, restore = true)
+        } else {
             cancelPendingRestore()
-            cancelKeepIsland(ctx, suppress = false)
+            if (posted) cancelKeepIsland(ctx)
         }
+    }
+
+    private fun shouldShowKeepIsland(context: Context): Boolean {
+        if (!ConfigManager.getBoolean(PREF_KEY, false)) return false
+        val hideForRealNotification = ConfigManager.getBoolean(PREF_KEY_AUTO_HIDE, true) &&
+            activeRealKeys.isNotEmpty()
+        if (hideForRealNotification) return false
+        val hideForLandscape = ConfigManager.getBoolean(PREF_KEY_HIDE_LANDSCAPE, false) &&
+            isLandscape(context)
+        return !hideForLandscape
     }
 
     private fun postKeepIsland(context: android.content.Context, restore: Boolean) {
@@ -303,30 +317,26 @@ object KeepIslandHook : BaseHook() {
             )
             IslandDispatcher.post(context, request)
             posted = true
-            suppressed = false
             cachedModule?.let { log(it, "keep island ${if (restore) "restored" else "posted"}") }
         } catch (e: Exception) {
             cachedModule?.let { logError(it, "keep island post failed: ${e.message}") }
         }
     }
 
-    private fun cancelKeepIsland(context: android.content.Context, suppress: Boolean) {
+    private fun cancelKeepIsland(context: android.content.Context) {
         try {
             IslandDispatcher.cancel(context, KEEP_ISLAND_NOTIF_ID)
             posted = false
-            suppressed = suppress
-            cachedModule?.let { log(it, "keep island ${if (suppress) "suppressed" else "cancelled"}") }
+            cachedModule?.let { log(it, "keep island cancelled") }
         } catch (e: Exception) {
             cachedModule?.let { logError(it, "keep island cancel failed: ${e.message}") }
         }
     }
 
-    private fun scheduleRestore(ctx: android.content.Context) {
+    private fun scheduleRestore() {
         cancelPendingRestore()
         restoreRunnable = Runnable {
-            if (suppressed && activeRealKeys.isEmpty()) {
-                postKeepIsland(ctx, restore = true)
-            }
+            evaluateKeepIsland()
         }
         mainHandler.postDelayed(restoreRunnable!!, RESTORE_DELAY_MS)
     }
@@ -334,6 +344,50 @@ object KeepIslandHook : BaseHook() {
     private fun cancelPendingRestore() {
         restoreRunnable?.let { mainHandler.removeCallbacks(it) }
         restoreRunnable = null
+    }
+
+    private fun registerConfigurationCallbacks(context: Context) {
+        if (configurationCallbacksRegistered) return
+        configurationCallbacksRegistered = true
+        context.registerComponentCallbacks(object : ComponentCallbacks {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                mainHandler.post { evaluateKeepIsland() }
+            }
+
+            @Suppress("OVERRIDE_DEPRECATION")
+            override fun onLowMemory() = Unit
+        })
+    }
+
+    private fun registerDisplayListener(context: Context) {
+        if (displayListenerRegistered) return
+        val displayManager = context.getSystemService(DisplayManager::class.java) ?: return
+        displayListenerRegistered = true
+        displayManager.registerDisplayListener(
+            object : DisplayManager.DisplayListener {
+                override fun onDisplayAdded(displayId: Int) = Unit
+
+                override fun onDisplayRemoved(displayId: Int) = Unit
+
+
+                override fun onDisplayChanged(displayId: Int) {
+                    mainHandler.post { evaluateKeepIsland() }
+                }
+            },
+            mainHandler,
+        )
+    }
+
+    private fun isLandscape(context: Context): Boolean {
+        if (context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            return true
+        }
+        val rotation = runCatching {
+            context.getSystemService(DisplayManager::class.java)
+                ?.getDisplay(Display.DEFAULT_DISPLAY)
+                ?.rotation
+        }.getOrNull()
+        return rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
     }
 
     private fun extractKeyFromState(stateObj: Any): String? {

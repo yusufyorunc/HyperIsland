@@ -432,6 +432,8 @@
 "keepIslandSubtitle": "空白通知を投稿してアイランドを常に表示",
 "keepIslandAutoHideTitle": "自動非表示",
 "keepIslandAutoHideSubtitle": "リアル通知が来た時に空白アイランドを自動的に隠し、通知が消えた後に自動的に復元",
+"keepIslandHideLandscapeTitle": "横画面で非表示",
+"keepIslandHideLandscapeSubtitle": "横画面では常時アイランドを隠し、縦画面に戻りリアル通知がない時に復元します",
 "keepIslandHighlightColorTitle": "ハイライトカラー",
 "keepIslandHighlightColorSubtitle": "常時アイランドのハイライトテキストカラーをカスタマイズ",
 

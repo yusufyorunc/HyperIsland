@@ -552,6 +552,8 @@
   "keepIslandSubtitle": "Отправлять пустое уведомление, чтобы Остров всегда был виден",
   "keepIslandAutoHideTitle": "Автоскрытие",
   "keepIslandAutoHideSubtitle": "Автоматически скрывать пустой остров при поступлении реального уведомления и восстанавливать при его закрытии",
+  "keepIslandHideLandscapeTitle": "Скрывать в альбомной ориентации",
+  "keepIslandHideLandscapeSubtitle": "Скрывать постоянный Остров в альбомной ориентации и восстанавливать в портретной, если нет реального уведомления",
   "keepIslandHighlightColorTitle": "Цвет подсветки",
   "keepIslandHighlightColorSubtitle": "Настроить цвет текста подсветки для режима удержания Острова",
 

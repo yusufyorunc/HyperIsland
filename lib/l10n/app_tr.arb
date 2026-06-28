@@ -540,6 +540,8 @@
 "keepIslandSubtitle": "Adayı sürekli görünür tutmak için boş bir bildirim gönder",
 "keepIslandAutoHideTitle": "Otomatik Gizle",
 "keepIslandAutoHideSubtitle": "Gerçek bildirim geldiğinde boş adayı otomatik gizle, bildirim kalktığında geri yükle",
+"keepIslandHideLandscapeTitle": "Yatayda Gizle",
+"keepIslandHideLandscapeSubtitle": "Yatay ekranda sürekli adayı gizle, dikeye dönünce gerçek bildirim yoksa geri yükle",
 "keepIslandHighlightColorTitle": "Vurgu Rengi",
 "keepIslandHighlightColorSubtitle": "Sürekli adanın vurgu metin rengini özelleştir",
 

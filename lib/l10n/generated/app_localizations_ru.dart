@@ -1546,6 +1546,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Автоматически скрывать пустой остров при поступлении реального уведомления и восстанавливать при его закрытии';
 
   @override
+  String get keepIslandHideLandscapeTitle => 'Скрывать в альбомной ориентации';
+
+  @override
+  String get keepIslandHideLandscapeSubtitle =>
+      'Скрывать постоянный Остров в альбомной ориентации и восстанавливать в портретной, если нет реального уведомления';
+
+  @override
   String get keepIslandHighlightColorTitle => 'Цвет подсветки';
 
   @override

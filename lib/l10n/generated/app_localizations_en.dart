@@ -1529,6 +1529,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatically hide the blank island when a real notification arrives, and restore it when dismissed';
 
   @override
+  String get keepIslandHideLandscapeTitle => 'Hide in Landscape';
+
+  @override
+  String get keepIslandHideLandscapeSubtitle =>
+      'Hide the keep island in landscape, then restore in portrait when no real notification is active';
+
+  @override
   String get keepIslandHighlightColorTitle => 'Highlight Color';
 
   @override

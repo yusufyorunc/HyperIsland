@@ -78,6 +78,7 @@ const kPrefIslandTopOffset = 'pref_island_top_offset';
 const kPrefIslandTextColorMode = 'pref_island_text_color_mode';
 const kPrefKeepIsland = 'pref_keep_island';
 const kPrefKeepIslandAutoHide = 'pref_keep_island_auto_hide';
+const kPrefKeepIslandHideLandscape = 'pref_keep_island_hide_landscape';
 const kPrefKeepIslandHighlightColor = 'pref_keep_island_highlight_color';
 const kPrefTempHideBehaviorEnabled = 'pref_temp_hide_behavior_enabled';
 const kPrefTempHideScreenPinning = 'pref_temp_hide_screen_pinning';
@@ -233,6 +234,7 @@ class SettingsController extends ChangeNotifier {
   String islandTextColorMode = kIslandTextColorDefault;
   bool keepIsland = false;
   bool keepIslandAutoHide = true;
+  bool keepIslandHideLandscape = false;
   String keepIslandHighlightColor = '';
   bool tempHideBehaviorEnabled = false;
   bool tempHideScreenPinning = true;
@@ -362,6 +364,8 @@ class SettingsController extends ChangeNotifier {
     );
     keepIsland = prefs.getBool(kPrefKeepIsland) ?? false;
     keepIslandAutoHide = prefs.getBool(kPrefKeepIslandAutoHide) ?? true;
+    keepIslandHideLandscape =
+        prefs.getBool(kPrefKeepIslandHideLandscape) ?? false;
     keepIslandHighlightColor =
         prefs.getString(kPrefKeepIslandHighlightColor) ?? '';
     tempHideBehaviorEnabled =
@@ -1091,6 +1095,14 @@ class SettingsController extends ChangeNotifier {
     final prefs = await _getPrefs();
     await prefs.setBool(kPrefKeepIslandAutoHide, value);
     keepIslandAutoHide = value;
+    notifyListeners();
+  }
+
+  Future<void> setKeepIslandHideLandscape(bool value) async {
+    if (keepIslandHideLandscape == value) return;
+    final prefs = await _getPrefs();
+    await prefs.setBool(kPrefKeepIslandHideLandscape, value);
+    keepIslandHideLandscape = value;
     notifyListeners();
   }
 

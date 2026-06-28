@@ -25,6 +25,7 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
     _ctrl.marqueeSpeed,
     _ctrl.keepIsland,
     _ctrl.keepIslandAutoHide,
+    _ctrl.keepIslandHideLandscape,
     _ctrl.keepIslandHighlightColor,
   ]);
 
@@ -292,6 +293,22 @@ class _IslandOtherPageState extends State<IslandOtherPage> {
                           value: _ctrl.keepIslandAutoHide,
                           onChanged: InteractionHaptics.interceptToggle(
                             (v) => _ctrl.setKeepIslandAutoHide(v),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          title: Text(
+                            l10n.keepIslandHideLandscapeTitle,
+                            style: titleStyle,
+                          ),
+                          subtitle: Text(l10n.keepIslandHideLandscapeSubtitle),
+                          value: _ctrl.keepIslandHideLandscape,
+                          onChanged: InteractionHaptics.interceptToggle(
+                            (v) => _ctrl.setKeepIslandHideLandscape(v),
                           ),
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),

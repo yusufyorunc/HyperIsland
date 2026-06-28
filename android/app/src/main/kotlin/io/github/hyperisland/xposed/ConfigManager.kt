@@ -212,6 +212,7 @@ object ConfigManager {
         "pref_island_text_color_mode",
         "pref_keep_island",
         "pref_keep_island_auto_hide",
+        "pref_keep_island_hide_landscape",
         "pref_temp_hide_screen_pinning",
         "pref_temp_hide_bouncer_showing",
         "pref_temp_hide_fullscreen",

@@ -743,6 +743,8 @@
   "keepIslandSubtitle": "显示一条空白通知使岛始终可见",
   "keepIslandAutoHideTitle": "自动隐藏",
   "keepIslandAutoHideSubtitle": "真实通知到来时自动隐藏空白岛，通知消失后自动恢复",
+  "keepIslandHideLandscapeTitle": "横屏时隐藏",
+  "keepIslandHideLandscapeSubtitle": "横屏时自动隐藏常驻岛，回到竖屏时恢复",
   "keepIslandHighlightColorTitle": "高亮颜色",
   "keepIslandHighlightColorSubtitle": "自定义常驻岛的高亮文字颜色",
 

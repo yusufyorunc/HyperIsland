@@ -1453,6 +1453,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keepIslandAutoHideSubtitle => '真实通知到来时自动隐藏空白岛，通知消失后自动恢复';
 
   @override
+  String get keepIslandHideLandscapeTitle => '横屏时隐藏';
+
+  @override
+  String get keepIslandHideLandscapeSubtitle => '横屏时自动隐藏常驻岛，回到竖屏时恢复';
+
+  @override
   String get keepIslandHighlightColorTitle => '高亮颜色';
 
   @override
